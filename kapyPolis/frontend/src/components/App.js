@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import {render} from 'react-dom';
+import HomePage from './HomePage';
 
-export default class App extends Component { // main component
-    constructor(props) {
-        super(props);
-    }
 
-    render() {
-        return <h1>React Component Test - ZABIL SOM TONU CASU :)))))</h1>;
-    }
+export default function App() { // main component
+        return (
+        <div>
+            <HomePage />
+        </div>
+        )
 }
 
 const appDiv = document.getElementById('app');
