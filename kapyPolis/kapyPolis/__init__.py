@@ -3,5 +3,3 @@ sys.path.append(r'c:\Users\Delta\Desktop\Programming\AIN_Data\3.rocnik\Bakalarsk
 
 # for path in sys.path:
 #     print(path)
-
-import api
