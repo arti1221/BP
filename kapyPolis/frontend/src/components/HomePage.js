@@ -8,6 +8,8 @@ export default function HomePage() {
     <BrowserRouter>
         <Routes>
             <Route path='/' element={<p> Home Page. </p>}/>
+            <Route path='/join' element={<RoomJoin />}/>
+            <Route path='/create' element={<CreateRoom />}/>
             <Route path='*' element={<h1>ERROR 404 PAGE NOT FOUND.</h1>}/> // 404 not found page, every route that is valid has to be above this root.
         </Routes>
     </BrowserRouter>
