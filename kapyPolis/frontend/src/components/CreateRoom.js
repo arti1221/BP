@@ -1,6 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { Button, Grid, Typography, TextField, FormHelperText, FormControl, FormControlLabel, RadioGroup, Radio } from "@mui/material";
+// import { CSRFToken } from 'django-react-csrftoken';
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + '=') {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
 
 export default function CreateRoom() {
     // return <p>Create Room Page ee.</p>;
@@ -11,7 +27,8 @@ export default function CreateRoom() {
     // const currentNumberOfPlayers = 1;
 
     const [currentNumberOfPlayers, setCurrentNumberOfPlayers] = useState(2);
-    const [maxPlayers, setMaxPlayers] = useState(4); // default value of max players is 4 as in django db
+    const csrftoken = getCookie('csrftoken');
+
 
     // useEffect(() => {
     //     fetch('/api/get_max_players/')
@@ -24,22 +41,35 @@ export default function CreateRoom() {
     // handles the amount of players after room creation
     const handleNumberOfPlayersChange = (e) => {
       setCurrentNumberOfPlayers(parseInt(e.target.value));
+      console.log(currentNumberOfPlayers);
     };
 
     const handlePlayersChange = () => {
         console.log("Button pressed");
         const requestOptions = {
             method: 'POST',
-            headers: { "Content-Type": "application/json"},
+            headers: { 
+                "Content-Type": "application/json",
+                'X-CSRFToken': csrftoken, // include the CSRF token in the headers
+            },
             body: JSON.stringify(
                 {
-                    max_players: maxPlayers,
+                    max_players: currentNumberOfPlayers,
                 }
             ),
         }
         fetch("/api/create-room", requestOptions)
-        .then((response) => response.json()) // take response and convert it to json obj
-        .then((data) => console.log(data)); // log data
+        .then((response) => {
+            console.log(response);
+            console.log(currentNumberOfPlayers);
+            return response.json();
+        }
+            ) // take response and convert it to json obj
+        .then((data) => {
+            console.log("here");
+            console.log(data);
+        }) // log data
+        .catch((error) => console.error(error));
     };
   
 
