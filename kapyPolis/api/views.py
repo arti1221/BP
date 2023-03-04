@@ -36,10 +36,12 @@ class CreateRoomView(APIView):
                 room = queryset[0]
                 room.max_players = max_players
                 room.save(update_fields=['max_players'])
+                self.request.session['room_code'] = room.code
                 return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
             else:
                 room = Room(host=host, max_players=max_players)
                 room.save()
+                self.request.session['room_code'] = room.code
                 return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
 
         return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST, headers=response)
@@ -58,3 +60,28 @@ class GetRoomView(APIView):
                 return Response(data, status=status.HTTP_200_OK)
             return Response({'Room does not exist': 'Invalid data...'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'Bad Request': 'Code param is invalid...'}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+# ROOM JOINING:
+
+class JoinRoomView(APIView):
+    lookup_url_kwarg = 'code'
+    
+    def post(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+        
+        code = request.data.get('code', None)
+        if code is not None:
+            room = Room.objects.filter(code=code).first()
+            if room is not None:
+                serializer = RoomSerializer(room)
+                if room.current_players < room.max_players:
+                    room.current_players += 1
+                    room.save(update_fields=['current_players'])
+                    return Response(serializer.data)
+                else:
+                    return Response({'Room is Full': 'Cannot Join Room.'}, status=status.HTTP_403_FORBIDDEN)
+            else:
+                return Response({'Room Not Found': 'Invalid Room Code.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)

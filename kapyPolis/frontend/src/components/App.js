@@ -5,7 +5,7 @@ import HomePage from './HomePage';
 
 export default function App() { // main component
         return (
-        <div>
+        <div id='main'>
             <HomePage />
         </div>
         )
