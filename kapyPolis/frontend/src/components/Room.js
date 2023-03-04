@@ -7,7 +7,7 @@ export default function Room() {
     const { roomCode } = useParams();
     
 
-    useEffect(() => {
+    useEffect(() => { // applies the method on render
         getRoomDetails();
     }, []);
 

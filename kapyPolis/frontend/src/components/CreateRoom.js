@@ -31,14 +31,6 @@ export default function CreateRoom() {
     const csrftoken = getCookie('csrftoken');
     const navigate = useNavigate();
 
-    // useEffect(() => {
-    //     fetch('/api/get_max_players/')
-    //         .then(response => response.json())
-    //         .then(data => {
-    //             setMaxPlayers(data.max_players);
-    //         });
-    // }, []);
-
     // handles the amount of players after room creation
     const handleNumberOfPlayersChange = (e) => {
       setCurrentNumberOfPlayers(parseInt(e.target.value));
@@ -94,6 +86,7 @@ export default function CreateRoom() {
                     inputProps={{ min: 2 }}
                     label="Number of Players"
                     helperText="Enter the number of players required for the room"
+                    variant="outlined"
                     fullWidth
                     />
             </FormControl>
