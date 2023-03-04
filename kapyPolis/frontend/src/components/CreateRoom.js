@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 import { Button, Grid, Typography, TextField, FormHelperText, FormControl, FormControlLabel, RadioGroup, Radio } from "@mui/material";
 // import { CSRFToken } from 'django-react-csrftoken';
 
@@ -28,7 +29,7 @@ export default function CreateRoom() {
 
     const [currentNumberOfPlayers, setCurrentNumberOfPlayers] = useState(2);
     const csrftoken = getCookie('csrftoken');
-
+    const navigate = useNavigate();
 
     // useEffect(() => {
     //     fetch('/api/get_max_players/')
@@ -59,15 +60,15 @@ export default function CreateRoom() {
             ),
         }
         fetch("/api/create-room", requestOptions)
-        .then((response) => {
+        .then((response) => { 
             console.log(response);
             console.log(currentNumberOfPlayers);
             return response.json();
         }
             ) // take response and convert it to json obj
-        .then((data) => {
-            console.log("here");
+        .then((data) => { 
             console.log(data);
+            navigate(`/room/${data.code}`);
         }) // log data
         .catch((error) => console.error(error));
     };

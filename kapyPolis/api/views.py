@@ -9,7 +9,7 @@ from api.models import Room
 from api.serializers import RoomSerializer, CreateRoomSerializer
 
 
-class RoomView(generics.CreateAPIView):
+class RoomView(generics.ListAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
 
@@ -43,3 +43,18 @@ class CreateRoomView(APIView):
                 return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
 
         return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST, headers=response)
+
+class GetRoomView(APIView):
+    serializer_class = RoomSerializer
+    lookup_url_kwarg = 'code' # pass a param 
+
+    def get(self, req, format=None):
+        code = req.GET.get(self.lookup_url_kwarg) # get request for param code
+        if (code != None):
+            room = Room.objects.filter(code=code)
+            if (len(room)):
+                data = RoomSerializer(room[0]).data # serializing and accessing the room, getting the first one and extracting it's data
+                data['is_host'] = self.request.session.session_key == room[0].host
+                return Response(data, status=status.HTTP_200_OK)
+            return Response({'Room does not exist': 'Invalid data...'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'Bad Request': 'Code param is invalid...'}, status=status.HTTP_400_BAD_REQUEST)
