@@ -1,15 +1,16 @@
 from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseNotFound
 from django.shortcuts import redirect
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.http import Http404
 from api.models import Room
 from api.serializers import RoomSerializer, CreateRoomSerializer
 
+# TODO: if response 400 or bad, throw exception to go to catch blyat :)
 
 class RoomView(generics.ListAPIView):
     queryset = Room.objects.all()
@@ -60,7 +61,7 @@ class GetRoomView(APIView):
                 data = RoomSerializer(room[0]).data # serializing and accessing the room, getting the first one and extracting it's data
                 data['is_host'] = self.request.session.session_key == room[0].host
                 return Response(data, status=status.HTTP_200_OK)
-            return Response({'Room does not exist': 'Invalid data...'}, status=status.HTTP_404_NOT_FOUND)
+            raise Http404("Room does not exist.")
         return Response({'Bad Request': 'Code param is invalid...'}, status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -96,6 +97,10 @@ class UsersRoomView(APIView): # to differentiate whether the player is in the ro
         data = {
             'code' : self.request.session.get('room_code')
         }
+        print('HERE')
+        if (Room.objects.filter(code=self.request.session.get('room_code')).first() is None):
+           print('here :)')
+           raise Http404("Room does not exist.")
         return JsonResponse(data=data, status=status.HTTP_200_OK) # json serializer that takes dict instead of obj or db model
     
     # WORKING!!

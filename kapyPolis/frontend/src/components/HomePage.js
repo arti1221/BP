@@ -11,10 +11,13 @@ export default function HomePage() {
 
     useEffect(() => {
         // This will be called only once after the component is mounted
+        if (!roomCode) {
+            return;
+        }
         fetchData();
-      }, []);
+      }, [roomCode]);
 
-    const fetchData = async () => {
+    const fetchData = async () => { // TODO FIX
         fetch('/api/users-room')
         .then((response) => {
             return response.json();
