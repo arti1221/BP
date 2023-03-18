@@ -44,7 +44,8 @@ export default function RoomJoin(){
                 }
             )
         };
-    
+        console.log('ROOM CODE: ')
+        console.log(roomCode);
         fetch("/api/join-room", requestOptions)
             .then((response) => {
                 if (response.ok) {
@@ -62,7 +63,7 @@ export default function RoomJoin(){
             });
     };
 
-    return <Grid container spacing={1} align="center">
+    return <Grid container spacing={3} align="center">
 
         {/* Header */}
         <Grid item xs={12} align="center">

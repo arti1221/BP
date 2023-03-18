@@ -1,6 +1,8 @@
 from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
+from django.http import JsonResponse
+from django.shortcuts import redirect
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -85,3 +87,66 @@ class JoinRoomView(APIView):
             else:
                 return Response({'Room Not Found': 'Invalid Room Code.'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)
+
+class UsersRoomView(APIView): # to differentiate whether the player is in the room or not so he can not be in 2 rooms in the same time
+    def get(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+
+        data = {
+            'code' : self.request.session.get('room_code')
+        }
+        return JsonResponse(data=data, status=status.HTTP_200_OK) # json serializer that takes dict instead of obj or db model
+    
+    # WORKING!!
+# class LeaveRoomView(APIView):
+#     def post(self, request, format=None):
+#         if 'room_code' in self.request.session:
+#             room_code = self.request.session['room_code']
+#             self.request.session.pop('room_code')
+#             try:
+#                 room = Room.objects.get(code=room_code)
+#                 room.current_players -= 1
+#                 if room.current_players < 1:
+#                     room.delete()
+#                 else:
+#                     if room.id is None:
+#                         room.save()
+#                     else:
+#                         room.save(update_fields=['current_players'])
+#                 return Response({'success': 'Left the room'}, status=status.HTTP_200_OK)
+#             except Room.DoesNotExist:
+#                 pass
+#         return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+class LeaveRoomView(APIView):
+  def post(self, request, format=None):
+    print("SOM TU")
+    print(request.data)
+    if "code" in request.data:
+      room_code = request.data["code"]
+      try:
+        room = Room.objects.get(code=room_code)
+        room.current_players -= 1
+        if room.current_players < 1:
+          room.delete()
+          return Response(
+            {
+              "success": "Left the room and room has been deleted",
+              "redirect_url": "/",
+            },
+            status=status.HTTP_200_OK,
+          )
+        else:
+          if room.id is None:
+            room.save()
+          else:
+            room.save(update_fields=["current_players"])
+        return Response({"success": "Left the room"}, status=status.HTTP_200_OK)
+      except Room.DoesNotExist:
+        pass
+    return Response({"Bad Request": "Invalid Data..."}, status=status.HTTP_400_BAD_REQUEST)
+
+
