@@ -20,12 +20,6 @@ function getCookie(name) {
   }
 
 export default function CreateRoom() {
-    // return <p>Create Room Page ee.</p>;
-    // upper Grid is always a CONTAINER used in mui - uses css flexbox!
-    // xs={12} is full grid so it fills the full grid.
-    // typography = header
-    // inputProps minimum of players = 1;
-    // const currentNumberOfPlayers = 1;
 
     const [currentNumberOfPlayers, setCurrentNumberOfPlayers] = useState(2);
     const csrftoken = getCookie('csrftoken');
@@ -38,7 +32,7 @@ export default function CreateRoom() {
     };
 
     const handlePlayersChange = () => {
-        console.log("Button pressed");
+        console.log("My csrf token", csrftoken);
         const requestOptions = {
             method: 'POST',
             headers: { 
