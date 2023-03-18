@@ -29,19 +29,27 @@ export default function Room() {
 
     useEffect(() => { // applies the method on render
         getRoomDetails();
-    }, []);
+    }, [roomCode]);
 
     const getRoomDetails = () => { 
         console.log("Retrieving room details for code " + roomCode);
+        if (!roomCode) {
+            return;
+        }
         fetch(`/api/get-room?code=${roomCode}`, { credentials: 'include' })
         .then((response) => {
             // add if statement to differentiate whether the room exists or not. If not, clear the code and navigate to the HP
             console.log(response);
+            setCurrentNumberOfPlayers(response.current_players);
+            setMaxNumberOfPlayers(response.max_players);
             return response.json();
         })
         .then((data) => {
             setCurrentNumberOfPlayers(data.current_players);
             setMaxNumberOfPlayers(data.max_players);
+        })
+        .catch((e) => {
+            console.log("e");
         })
         console.log("the token " + csrftoken);
     }
@@ -67,11 +75,15 @@ export default function Room() {
           const response = await fetch("/api/leave-room", requestOptions);
           const data = await response.json();
           console.log(data);
-          if (data.success === "Left the room and room has been deleted") {
+          console.log(data.status);
+            // todo change it to status!
+          if (data.success === "Left the room and room has been deleted" || data.success === "Left the room") { 
             console.log("Leaving room and redirecting to homepage");
              // todo: Reset the roomCode state to an empty string
             navigate(`/`);
           } else {
+            console.log('Error after navigate')
+            console.log(data.success)
             throw new Error(`Error: ${data}`);
           }
         } catch (error) {
@@ -125,7 +137,7 @@ export default function Room() {
             <Button
                 variant="contained"
                 size="large"
-                onClick={leaveRoom}
+                onClick={() => leaveRoom()}
                 sx={{
                     backgroundColor: '#e74c3c',
                     color: '#fff',
