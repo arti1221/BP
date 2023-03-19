@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button, Grid, Typography, TextField, FormHelperText, FormControl, FormControlLabel, RadioGroup, Radio } from "@mui/material";
 import { Link } from "react-router-dom";
-
+import CreateRoom from "./CreateRoom"
 
 function getCookie(name) {
     let cookieValue = null;
@@ -22,31 +22,43 @@ function getCookie(name) {
 export default function Room() {
     const [currentNumberOfPlayers, setCurrentNumberOfPlayers] = useState(0);
     const [maxNumberOfPlayers, setMaxNumberOfPlayers] = useState(0);
+    const [showUpdate, setshowUpdate] = useState(false); // to show update in update max players
     const { roomCode } = useParams();
+    const [isHost, setIsHost] = useState(false);
     const csrftoken = getCookie('csrftoken');
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => { // applies the method on render
         getRoomDetails();
-    }, [roomCode]);
+        console.log("Is host after fetch: ", isHost);
+    }, [roomCode, isHost, showUpdate]);
 
     const getRoomDetails = () => { 
         console.log("Retrieving room details for code " + roomCode);
         if (!roomCode) {
             return;
         }
-        fetch(`/api/get-room?code=${roomCode}`, { credentials: 'include' })
+        fetch(`/api/get-room?code=${roomCode}`, { credentials: 'include' }) // include headers
         .then((response) => {
             // add if statement to differentiate whether the room exists or not. If not, clear the code and navigate to the HP
-            console.log(response);
-            setCurrentNumberOfPlayers(response.current_players);
-            setMaxNumberOfPlayers(response.max_players);
-            return response.json();
+            if (!response.ok) {
+              navigate("/");
+              throw new Error(`Failed to fetch room with code ${roomCode}`);
+            } else {
+              console.log(response);
+              console.log("Current players in response:", response.current_players);
+              console.log("Current players in room:", currentNumberOfPlayers);
+              return response.json();
+            }
         })
         .then((data) => {
+            const dataIsHost = data.is_host;
+            console.log("logging data from response: Curr. Players: " , data.current_players, "host: ", dataIsHost);
+            setIsHost(dataIsHost);
             setCurrentNumberOfPlayers(data.current_players);
             setMaxNumberOfPlayers(data.max_players);
+            console.log("Is host after fetch in getRoomDetails: ", dataIsHost, "local var", isHost);
         })
         .catch((e) => {
             console.log("e");
@@ -79,6 +91,7 @@ export default function Room() {
             // todo change it to status!
           if (data.success === "Left the room and room has been deleted" || data.success === "Left the room") { 
             console.log("Leaving room and redirecting to homepage");
+            // socket.emit("leave-room", { roomCode }); // emit the message to the server to handle players in the room.
              // todo: Reset the roomCode state to an empty string
             navigate(`/`);
           } else {
@@ -92,9 +105,68 @@ export default function Room() {
         }
       };
       
+      const showUpdateButtonIfHost = () => {
+        // Update Max Players Button
+        return (
+          <Grid item xs={12} align="center">
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => setshowUpdate(true)}
+              sx={{
+                backgroundColor: '#3f51b5',
+                color: '#fff',
+                '&:hover': {
+                  backgroundColor: '#07da63',
+                },
+              }}
+            >
+              Update Max Players
+            </Button>
+          </Grid>
+        );
+      };
       
-      
+      // room is in update mode and retrieves the max players
+      const showUpdateRoom = () => {
+        return (
+        <Grid container spacing={1} align="center">
+          <Grid item xs={12} align="center">
+                <CreateRoom 
+                  update={true} 
+                  max_players={maxNumberOfPlayers}
+                  roomCode={roomCode}
+                  onUpdateCallback={() => {}}
+                  >
+                </CreateRoom> 
+            </Grid>
 
+            {/* for now show settings */}
+            <Grid item xs={12} align="center">
+            <Button
+                variant="contained"
+                size="large"
+                onClick={() => setshowUpdate(false)}
+                sx={{
+                    backgroundColor: '#e74c3c',
+                    color: '#fff',
+                    '&:hover': {
+                    backgroundColor: '#c0392b',
+                    },
+                }}
+                // to="/"
+                // component={Link}
+                >
+                Go Back
+            </Button>
+        </Grid>
+        </Grid>
+        );
+      };
+
+    if (showUpdate) {
+      return showUpdateRoom();
+    }
     return (
         <Grid container spacing={1} align="center">
 
@@ -113,25 +185,8 @@ export default function Room() {
             </Grid>
 
         {/* Update Max Players Button */}
-        <Grid item xs={12} align="center">
-            <Button
-                variant="contained"
-                size="large"
-                // onClick={handleRoomJoin}
-                sx={{
-                    backgroundColor: '#3f51b5',
-                    color: '#fff',
-                    '&:hover': {
-                    backgroundColor: '#07da63',
-                    },
-                }}
-                to="/"
-                component={Link}
-                >
-                Update Max Players
-            </Button>
-        </Grid>
-        
+        {isHost ? showUpdateButtonIfHost() : null}
+
         {/* Leave Room Button  */}
         <Grid item xs={12} align="center">
             <Button
