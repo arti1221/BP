@@ -136,7 +136,7 @@ export default function Room() {
                   update={true} 
                   max_players={maxNumberOfPlayers}
                   roomCode={roomCode}
-                  onUpdateCallback={() => {}}
+                  onUpdateCallback={getRoomDetails}
                   >
                 </CreateRoom> 
             </Grid>

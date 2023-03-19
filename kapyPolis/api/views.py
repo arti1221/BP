@@ -59,7 +59,7 @@ class GetRoomView(APIView):
             room = Room.objects.filter(code=code)
             if (len(room)):
                 data = RoomSerializer(room[0]).data # serializing and accessing the room, getting the first one and extracting it's data
-                data['is_host'] = self.request.session.session_key == room[0].host
+                data['is_host'] = self.request.session.session_key == room[0].host # to differenciate whether this is the host(admin) or not
                 return Response(data, status=status.HTTP_200_OK)
             raise Http404("Room does not exist.")
         return Response({'Bad Request': 'Code param is invalid...'}, status=status.HTTP_400_BAD_REQUEST)
@@ -150,6 +150,10 @@ class UpdateRoomView(APIView):
 
         if room.host != user_id: # only the host can update the room
             return Response({'Message': 'You are not the room admin, can not update the room.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        if (max_players < room.current_players) :
+           return Response({'Message': 'You are trying to update the room when there is more player joined.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         room.max_players = max_players
         room.save(update_fields=['max_players']) 
         
