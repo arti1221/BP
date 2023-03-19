@@ -49,6 +49,7 @@ export default function RoomJoin(){
         fetch("/api/join-room", requestOptions)
             .then((response) => {
                 if (response.ok) {
+                    // socket.emit("join-room", { roomCode });
                     navigate(`/room/${roomCode}`);
                 } else if (response.status === 403) { // room is full
                     setError("Room is Full': 'Cannot Join Room.");

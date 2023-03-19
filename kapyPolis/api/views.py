@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
 from api.models import Room
-from api.serializers import RoomSerializer, CreateRoomSerializer
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer
 
 # TODO: if response 400 or bad, throw exception to go to catch blyat :)
 
@@ -102,29 +102,6 @@ class UsersRoomView(APIView): # to differentiate whether the player is in the ro
            print('here :)')
            raise Http404("Room does not exist.")
         return JsonResponse(data=data, status=status.HTTP_200_OK) # json serializer that takes dict instead of obj or db model
-    
-    # WORKING!!
-# class LeaveRoomView(APIView):
-#     def post(self, request, format=None):
-#         if 'room_code' in self.request.session:
-#             room_code = self.request.session['room_code']
-#             self.request.session.pop('room_code')
-#             try:
-#                 room = Room.objects.get(code=room_code)
-#                 room.current_players -= 1
-#                 if room.current_players < 1:
-#                     room.delete()
-#                 else:
-#                     if room.id is None:
-#                         room.save()
-#                     else:
-#                         room.save(update_fields=['current_players'])
-#                 return Response({'success': 'Left the room'}, status=status.HTTP_200_OK)
-#             except Room.DoesNotExist:
-#                 pass
-#         return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)
-        
-
 
 class LeaveRoomView(APIView):
   def post(self, request, format=None):
@@ -154,4 +131,27 @@ class LeaveRoomView(APIView):
         pass
     return Response({"Bad Request": "Invalid Data..."}, status=status.HTTP_400_BAD_REQUEST)
 
+class UpdateRoomView(APIView):
+   serializer_class = UpdateRoomSerializer
 
+   def patch(self, request, format=None):
+      if not self.request.session.exists(self.request.session.session_key):
+        self.request.session.create()
+      serializer = self.serializer_class(data=self.request.data)
+      if (serializer.is_valid()):
+        code = serializer.data.get('code')
+        max_players = serializer.data.get('max_players') 
+        query = Room.objects.filter(code=code) # retrieve the queryset
+        if not query.exists():
+            raise Http404("Room does not exist.")
+         
+        room = query[0] # get the first room
+        user_id = self.request.session.session_key
+
+        if room.host != user_id: # only the host can update the room
+            return Response({'Message': 'You are not the room admin, can not update the room.'}, status=status.HTTP_403_FORBIDDEN)
+        room.max_players = max_players
+        room.save(update_fields=['max_players']) 
+        
+        print('Room got updated. Returning response')
+        return Response(RoomSerializer(room).data, status=status.HTTP_200_OK) # room updated
