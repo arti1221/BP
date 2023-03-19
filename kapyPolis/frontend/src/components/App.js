@@ -3,7 +3,7 @@ import {render} from 'react-dom';
 import HomePage from './HomePage';
 
 
-export default function App() { // main component
+export default function App() { 
         return (
         <div id='main'>
             <HomePage />
