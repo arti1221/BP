@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Link, Navigate} from 'react-router-dom';
 import RoomJoin from './RoomJoin';
 import CreateRoom from './CreateRoom';
 import Room from './Room';
+import Template from './Template';
+import CreateTemplate from './CreateTemplate';
+import Help from './help';
 import { Button, Grid, Typography, TextField, FormHelperText, FormControl, FormControlLabel, RadioGroup, Radio, ButtonGroup } from "@mui/material";
 
 export default function HomePage() {
@@ -85,7 +88,7 @@ export default function HomePage() {
                             backgroundColor: '#008ba3',
                             },
                         }}
-                        to="/"
+                        to="/template"
                         component={Link}
                         >
                         Create a Template
@@ -102,7 +105,7 @@ export default function HomePage() {
                             backgroundColor: '#c0392b',
                             },
                         }}
-                        to="/"
+                        to="/help"
                         component={Link}
                         >
                         Help
@@ -132,6 +135,9 @@ export default function HomePage() {
             <Route path='/join' element={<RoomJoin />}/>
             <Route path='/create' element={<CreateRoom />}/>
             <Route path='/room/:roomCode' element={<Room/>}/>
+            <Route path='/template' element={<CreateTemplate/>}/>
+            <Route path='/help' element={<Help/>}/>
+
             {/* <Route path='/room/:roomCode' element={<Room clearRoomCode={clearRoomCode} />} /> */}
             <Route path='*' element={<h1>ERROR 404 PAGE NOT FOUND.</h1>}/> // 404 not found page, every route that is valid has to be above this root.
         </Routes>

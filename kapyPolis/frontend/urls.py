@@ -3,8 +3,9 @@ from .views import index
 
 urlpatterns = [
     path('', index), # homePage
-    path('join', index), # joinPage
-    path('create', index), # createPage
-    path('room/<str:roomCode>', index) # to set up dynamic url as String.
-
+    path('join', index), # joinPage for room
+    path('create', index), # createPage for room
+    path('room/<str:roomCode>', index), # to set up dynamic url as String.
+    path('template', index), # template page
+    path('help', index), # help page
 ]
