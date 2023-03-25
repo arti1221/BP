@@ -7,8 +7,8 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
-from api.models import Room
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer
+from api.models import Room, Template
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer
 
 # TODO: if response 400 or bad, throw exception to go to catch blyat :)
 
@@ -159,3 +159,11 @@ class UpdateRoomView(APIView):
         
         print('Room got updated. Returning response')
         return Response(RoomSerializer(room).data, status=status.HTTP_200_OK) # room updated
+      
+class TemplateView(generics.ListAPIView):
+    queryset = Template.objects.all()
+    serializer_class = TemplateSerializer
+
+# TODO
+class CreateTemplateView(APIView):
+   pass

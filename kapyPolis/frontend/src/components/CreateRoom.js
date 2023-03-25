@@ -193,8 +193,8 @@ export default function CreateRoom(props) {
       sx={{
         textAlign: 'center',
         justifyContent: 'center',
-        margin: 'auto',
-        width: '20%',
+        margin: '0 auto',
+        width: '18%',
       }}
     >
       Room Updated successfully.

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import Room
+from api.models import Room, Template
 
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,3 +17,13 @@ class UpdateRoomSerializer(serializers.ModelSerializer): # serializes the update
     class Meta:
         model = Room
         fields = ('max_players', 'code') # ID of the template should be added here.
+
+class TemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Template
+        fields = ['id', 'name', 'bg', 'bgcaption', 'shop_name', 'shop_image', 
+                  'card_type1_name', 'card_type1_image',
+                  'card_type2_name', 'card_type2_image',
+                  'card_type3_name', 'card_type3_image',
+                  'card_type4_name', 'card_type4_image',
+                  ]
