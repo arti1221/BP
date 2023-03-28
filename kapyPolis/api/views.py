@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
 from api.models import Room, Template
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer
 
 # TODO: if response 400 or bad, throw exception to go to catch blyat :)
 
@@ -159,11 +159,173 @@ class UpdateRoomView(APIView):
         
         print('Room got updated. Returning response')
         return Response(RoomSerializer(room).data, status=status.HTTP_200_OK) # room updated
-      
+
+###################################################### TEMPLATES ############################################################
+
 class TemplateView(generics.ListAPIView):
-    queryset = Template.objects.all()
+    queryset = Template.objects.prefetch_related('shopitem_set')
     serializer_class = TemplateSerializer
 
-# TODO
+
+@method_decorator(csrf_protect, name='dispatch')
 class CreateTemplateView(APIView):
-   pass
+    serializer_class = CreateTemplateSerializer
+    def post(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+
+        # Set CSRF token in response
+        response = Response()
+        response['X-CSRFToken'] = get_token(request)
+
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            name = serializer.data.get('name')
+            bg = serializer.data.get('bg')
+            bgcaption = serializer.data.get('bgcaption')
+            shop_name = serializer.data.get('shop_name')
+            shop_image = serializer.data.get('shop_image')
+
+            card_type1_name = serializer.data.get('card_type1_name')
+            card_type1_image = serializer.data.get('card_type1_image')
+
+            card_type2_name = serializer.data.get('card_type2_name')
+            card_type2_image = serializer.data.get('card_type2_image')
+
+            card_type3_name = serializer.data.get('card_type3_name')
+            card_type3_image = serializer.data.get('card_type3_image')
+
+            card_type4_name = serializer.data.get('card_type4_name')
+            card_type4_image = serializer.data.get('card_type4_image')
+
+            queryset = Template.objects.filter(name=name)
+            if queryset.exists(): # updating existing Template.
+                template = queryset[0]
+                template.name = name
+                template.bg = bg
+                template.bgcaption = bgcaption
+                template.shop_name = shop_name
+                template.shop_image = shop_image
+
+                template.card_type1_name = card_type1_name
+                template.card_type1_image = card_type1_image
+
+                template.card_type2_name = card_type2_name
+                template.card_type2_image = card_type2_image
+
+                template.card_type3_name = card_type3_name
+                template.card_type3_image = card_type3_image
+
+                template.card_type4_name = card_type4_name
+                template.card_type4_image = card_type4_image
+
+                template.save(update_fields=['name', 'bg', 'bgcaption', 'shop_name', 'shop_image', 
+                  'card_type1_name', 'card_type1_image',
+                  'card_type2_name', 'card_type2_image',
+                  'card_type3_name', 'card_type3_image',
+                  'card_type4_name', 'card_type4_image',
+                  'shop_items'])
+                print('if')
+                print(serializer.errors)
+                return Response(TemplateSerializer(template).data, status=status.HTTP_200_OK)
+            else: # creates a new Template with set params.
+                print('else')
+                print(serializer.errors)
+                template = Template(name=name, bg=bg, bgcaption=bgcaption, shop_name=shop_name, shop_image=shop_image,
+                                    card_type1_name=card_type1_name, card_type1_image=card_type1_image,
+                                    card_type2_name=card_type2_name, card_type2_image=card_type2_image,
+                                    card_type3_name=card_type3_name, card_type3_image=card_type3_image,
+                                    card_type4_name=card_type4_name, card_type4_image=card_type4_image)
+                template.save()
+                return Response(TemplateSerializer(template).data, status=status.HTTP_201_CREATED)
+        print('here')
+        print(serializer.errors)
+        return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST, headers=response)
+
+
+# TODO IN CASE OF LIST MODULE INSTALL: for the list;
+# @method_decorator(csrf_protect, name='dispatch')
+# class CreateTemplateView(APIView):
+#     serializer_class = CreateTemplateSerializer
+    
+#     def post(self, request, format=None):
+#         if not self.request.session.exists(self.request.session.session_key):
+#             self.request.session.create()
+
+#         # Set CSRF token in response
+#         response = Response()
+#         response['X-CSRFToken'] = get_token(request)
+
+#         serializer = self.serializer_class(data=request.data)
+
+#         if serializer.is_valid():
+#             name = serializer.data.get('name')
+#             bg = serializer.data.get('bg')
+#             bgcaption = serializer.data.get('bgcaption')
+#             shop_name = serializer.data.get('shop_name')
+#             shop_image = serializer.data.get('shop_image')
+
+#             card_type1_name = serializer.data.get('card_type1_name')
+#             card_type1_image = serializer.data.get('card_type1_image')
+
+#             card_type2_name = serializer.data.get('card_type2_name')
+#             card_type2_image = serializer.data.get('card_type2_image')
+
+#             card_type3_name = serializer.data.get('card_type3_name')
+#             card_type3_image = serializer.data.get('card_type3_image')
+
+#             card_type4_name = serializer.data.get('card_type4_name')
+#             card_type4_image = serializer.data.get('card_type4_image')
+
+#             queryset = Template.objects.filter(name=name)
+#             if queryset.exists(): # updating existing Template.
+#                 template = queryset[0]
+#                 template.name = name
+#                 template.bg = bg
+#                 template.bgcaption = bgcaption
+#                 template.shop_name = shop_name
+#                 template.shop_image = shop_image
+
+#                 template.card_type1_name = card_type1_name
+#                 template.card_type1_image = card_type1_image
+
+#                 template.card_type2_name = card_type2_name
+#                 template.card_type2_image = card_type2_image
+
+#                 template.card_type3_name = card_type3_name
+#                 template.card_type3_image = card_type3_image
+
+#                 template.card_type4_name = card_type4_name
+#                 template.card_type4_image = card_type4_image
+
+#                 template.save(update_fields=['name', 'bg', 'bgcaption', 'shop_name', 'shop_image', 
+#                   'card_type1_name', 'card_type1_image',
+#                   'card_type2_name', 'card_type2_image',
+#                   'card_type3_name', 'card_type3_image',
+#                   'card_type4_name', 'card_type4_image',
+#                   'shop_items'])
+#                 print('if')
+#                 print(serializer.errors)
+#                 return Response(TemplateSerializer(template).data, status=status.HTTP_200_OK)
+#             else: # creates a new Template with set params.
+#                 print('else')
+#                 print(serializer.errors)
+#                 template = Template(name=name, bg=bg, bgcaption=bgcaption, shop_name=shop_name, shop_image=shop_image,
+#                                     card_type1_name=card_type1_name, card_type1_image=card_type1_image,
+#                                     card_type2_name=card_type2_name, card_type2_image=card_type2_image,
+#                                     card_type3_name=card_type3_name, card_type3_image=card_type3_image,
+#                                     card_type4_name=card_type4_name, card_type4_image=card_type4_image)
+#                 template.save()
+
+#                 # Create new ShopItem instances and add them to the template
+#                 for shop_item_data in shop_items_data:
+#                     shop_item_name = shop_item_data.get('name')
+#                     shop_item_price = shop_item_data.get('price')
+#                     shop_item_template = template
+#                     shop_item_image = shop_item_data.get('image')
+#                     shop_item = ShopItem.objects.create(name=shop_item_name, price=shop_item_price, template=shop_item_template, image=shop_item_image)
+#                     template.shop_items.add(shop_item)
+
+#                 return Response(TemplateSerializer(template).data, status=status.HTTP_201_CREATED)
+
