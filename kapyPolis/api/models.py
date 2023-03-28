@@ -34,3 +34,9 @@ class Template(models.Model): # ID of the Template will be automatically added. 
     shop_name = models.CharField(max_length=20, default='Card Type 4')
     shop_image = models.ImageField(upload_to='images/', blank=True, null=True)
     created_at = models.DateField(auto_now_add=True) # auto timestamp of the creation
+
+class ShopItem(models.Model):
+    template = models.ForeignKey(Template, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+    image = models.ImageField(upload_to='images/')
+    price = models.DecimalField(max_digits=6, decimal_places=2)
