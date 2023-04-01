@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from django.http import Http404
 from api.models import Room, Template
 from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer
+from rest_framework.parsers import MultiPartParser
 
 # TODO: if response 400 or bad, throw exception to go to catch blyat :)
 
@@ -170,6 +171,8 @@ class TemplateView(generics.ListAPIView):
 @method_decorator(csrf_protect, name='dispatch')
 class CreateTemplateView(APIView):
     serializer_class = CreateTemplateSerializer
+    parser_classes = [MultiPartParser]  # Add this line to use the correct parser for file uploads
+
     def post(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
@@ -182,22 +185,27 @@ class CreateTemplateView(APIView):
 
         if serializer.is_valid():
             name = serializer.data.get('name')
-            bg = serializer.data.get('bg')
+            bg = request.FILES.get('bg')
             bgcaption = serializer.data.get('bgcaption')
             shop_name = serializer.data.get('shop_name')
-            shop_image = serializer.data.get('shop_image')
+            shop_image = request.FILES.get('shop_image')
+            start_balance = serializer.data.get('start_balance')
 
             card_type1_name = serializer.data.get('card_type1_name')
-            card_type1_image = serializer.data.get('card_type1_image')
+            card_type1_image = request.FILES.get('card_type1_image')
+            card_type1_mvup = serializer.data.get('card_type1_mvup')
 
             card_type2_name = serializer.data.get('card_type2_name')
-            card_type2_image = serializer.data.get('card_type2_image')
+            card_type2_image = request.FILES.get('card_type2_image')
+            card_type2_mvdown = serializer.data.get('card_type2_mvdown')
 
             card_type3_name = serializer.data.get('card_type3_name')
-            card_type3_image = serializer.data.get('card_type3_image')
+            card_type3_image = request.FILES.get('card_type3_image')
+            card_type3_reset = serializer.data.get('card_type3_reset')
 
             card_type4_name = serializer.data.get('card_type4_name')
-            card_type4_image = serializer.data.get('card_type4_image')
+            card_type4_image = request.FILES.get('card_type4_image')
+            card_type4_round_stop = serializer.data.get('card_type4_round_stop')
 
             queryset = Template.objects.filter(name=name)
             if queryset.exists(): # updating existing Template.
@@ -205,43 +213,47 @@ class CreateTemplateView(APIView):
                 template.name = name
                 template.bg = bg
                 template.bgcaption = bgcaption
+                template.start_balance = start_balance
+
                 template.shop_name = shop_name
                 template.shop_image = shop_image
 
                 template.card_type1_name = card_type1_name
                 template.card_type1_image = card_type1_image
+                template.card_type1_mvup = card_type1_mvup
 
                 template.card_type2_name = card_type2_name
                 template.card_type2_image = card_type2_image
+                template.card_type2_mvdown = card_type2_mvdown
 
                 template.card_type3_name = card_type3_name
                 template.card_type3_image = card_type3_image
+                template.card_type3_reset = card_type3_reset
 
                 template.card_type4_name = card_type4_name
                 template.card_type4_image = card_type4_image
+                template.card_type4_round_stop = card_type4_round_stop
 
-                template.save(update_fields=['name', 'bg', 'bgcaption', 'shop_name', 'shop_image', 
-                  'card_type1_name', 'card_type1_image',
-                  'card_type2_name', 'card_type2_image',
-                  'card_type3_name', 'card_type3_image',
-                  'card_type4_name', 'card_type4_image',
-                  'shop_items'])
-                print('if')
-                print(serializer.errors)
-                return Response(TemplateSerializer(template).data, status=status.HTTP_200_OK)
-            else: # creates a new Template with set params.
-                print('else')
-                print(serializer.errors)
-                template = Template(name=name, bg=bg, bgcaption=bgcaption, shop_name=shop_name, shop_image=shop_image,
-                                    card_type1_name=card_type1_name, card_type1_image=card_type1_image,
-                                    card_type2_name=card_type2_name, card_type2_image=card_type2_image,
-                                    card_type3_name=card_type3_name, card_type3_image=card_type3_image,
-                                    card_type4_name=card_type4_name, card_type4_image=card_type4_image)
                 template.save()
-                return Response(TemplateSerializer(template).data, status=status.HTTP_201_CREATED)
-        print('here')
-        print(serializer.errors)
-        return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST, headers=response)
+
+                return Response({'status': 'Template updated successfully'}) # TODO edit response
+
+            else: # creating new Template.
+                template = Template(name=name, bg=bg, bgcaption=bgcaption, start_balance=start_balance,
+                                    shop_name=shop_name, shop_image=shop_image, 
+                                    card_type1_name=card_type1_name, card_type1_image=card_type1_image, card_type1_mvup=card_type1_mvup,
+                                    card_type2_name=card_type2_name, card_type2_image=card_type2_image, card_type2_mvdown=card_type2_mvdown,
+                                    card_type3_name=card_type3_name, card_type3_image=card_type3_image, card_type3_reset=card_type3_reset,
+                                    card_type4_name=card_type4_name, card_type4_image=card_type4_image, card_type4_round_stop=card_type4_round_stop
+                                    )
+                template.save()
+
+                return Response({'status': 'Template created successfully'})
+        # invalid
+        else: 
+           print(serializer.data)
+           return Response({'status': 'Invalid data', 'errors': serializer.errors})
+
 
 
 # TODO IN CASE OF LIST MODULE INSTALL: for the list;
