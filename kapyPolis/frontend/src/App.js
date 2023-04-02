@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {render} from 'react-dom';
-import HomePage from './HomePage';
-
+import HomePage from './components/HomePage';
+import "./output.css"
 
 export default function App() { 
         return (

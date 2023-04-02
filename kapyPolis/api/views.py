@@ -7,7 +7,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
-from api.models import Room, Template
+from api.models import Room, Template, ShopItem
 from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer
 from rest_framework.parsers import MultiPartParser
 
@@ -169,7 +169,7 @@ class TemplateView(generics.ListAPIView):
 
 
 @method_decorator(csrf_protect, name='dispatch')
-class CreateTemplateView(APIView):
+class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
     serializer_class = CreateTemplateSerializer
     parser_classes = [MultiPartParser]  # Add this line to use the correct parser for file uploads
 
@@ -253,6 +253,16 @@ class CreateTemplateView(APIView):
         else: 
            print(serializer.data)
            return Response({'status': 'Invalid data', 'errors': serializer.errors})
+
+
+
+############################################################################################################
+# class ShopItemsView(generics.ListAPIView):
+#     queryset = ShopItem.objects.all()
+#     serializer_class = ShopItemSerializer
+
+# class CreateShopItemsView():
+#    pass
 
 
 

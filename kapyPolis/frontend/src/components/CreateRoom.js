@@ -214,9 +214,6 @@ export default function CreateRoom(props) {
   </Collapse>
 </Grid>
 
-
-
-
         {/* Header */}
         <Grid item xs={12} align="center">
             <Typography component='h1' variant='h1'>

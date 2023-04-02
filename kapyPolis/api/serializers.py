@@ -101,6 +101,8 @@ class CreateTemplateSerializer(serializers.ModelSerializer):
 
         return instance
 
+###########################################################################################
+
 
 # TODO IN CASE OF LIST MODULE INSTALL: for the list;
 # class CreateShopItemSerializer(serializers.ModelSerializer):
