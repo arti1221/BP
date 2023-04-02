@@ -13,4 +13,6 @@ urlpatterns = [
     # Template Req. 
     path('template', TemplateView.as_view()),
     path('create-template', CreateTemplateView.as_view()),
+    # path('shop-items', ShopItemsView.as_view()),
+    # path('create-shop-items', CreateShopItemsView.as_view()),
 ]

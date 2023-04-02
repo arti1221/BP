@@ -9,7 +9,9 @@ import { create } from '@mui/material/styles/createTransitions';
 export default function Help() { // todo add props as in CreateRoom
 
     return <div>
-        <p>Help</p>
+        <p className='bg-pink-50'>
+jhnizdguyhasbghdfbg
+        </p>
     </div>
 
 }
