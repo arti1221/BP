@@ -41,23 +41,17 @@ class Room(models.Model):
 
 class Template(models.Model): # ID of the Template will be automatically added. Matching the template to the room settings will be processed through the ID/Code
     name = models.CharField(max_length=20, unique=True) # Template name
-    bg = models.ImageField(upload_to=upload_path)
-    bgcaption = models.CharField(max_length=20, unique=True) # bg image name(caption)
     start_balance = models.IntegerField(null=False, default=1000) # default starting balance before the game starts.
     
-    card_type1_name = models.CharField(max_length=20, default='Card Type 1')
     card_type1_image = models.ImageField(upload_to=upload_path, blank=True, null=True)
     card_type1_mvup = models.IntegerField(null=False, default=3) # moves the player that took this card forwards
 
-    card_type2_name = models.CharField(max_length=20, default='Card Type 2')
     card_type2_image = models.ImageField(upload_to=upload_path, blank=True, null=True)
     card_type2_mvdown = models.IntegerField(null=False, default=3) # moves the player that took this card backwards
 
-    card_type3_name = models.CharField(max_length=20, default='Card Type 3')
     card_type3_image = models.ImageField(upload_to=upload_path, blank=True, null=True)
     card_type3_reset = models.BooleanField(default=False) # tells whether to reset the player on the start or he's lucky and got empty card
     
-    card_type4_name = models.CharField(max_length=20, default='Card Type 4')
     card_type4_image = models.ImageField(upload_to=upload_path, blank=True, null=True)
     card_type4_round_stop = models.IntegerField(null=False, default=1) # how many rounds the player could not move.
     
@@ -70,3 +64,6 @@ class ShopItem(models.Model):
     name = models.CharField(max_length=50)
     image = models.ImageField(upload_to=upload_path) # todo template instead of name!
     price = models.DecimalField(max_digits=6, decimal_places=2)
+    
+    def __str__(self) -> str:
+        return self.name

@@ -32,14 +32,14 @@ export default function HomePage() {
 
     const createHomePage = () => {
         return (
-        <Grid container spacing={3} align="center">
+        <div className='flex flex-col flex-wrap gap-4'>
             
             {/* Header */}
-            <Grid item xs={12} align="center">
-                <Typography component='h3' variant='h3'>
-                    KapyPolis
-                </Typography>
-            </Grid>
+            <div className='flex justify-center'> 
+                <h1 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
+                    Create a Template
+                </h1>
+            </div>
             
             <Grid item xs={12} align="center">
                 <ButtonGroup color="primary" aria-label="outlined primary button group" orientation="vertical">
@@ -114,7 +114,7 @@ export default function HomePage() {
 
             </Grid>
 
-          </Grid>
+          </div>
         );
       }
 

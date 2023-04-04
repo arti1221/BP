@@ -168,21 +168,21 @@ export default function Room() {
       return showUpdateRoom();
     }
     return (
-        <Grid container spacing={1} align="center">
+      <div className='flex flex-col flex-wrap gap-4'>
 
             {/* Header */}
-            <Grid item xs={12} align="center">
-                <Typography component='h4' variant='h4'>
-                    RoomCode: {roomCode}
-                </Typography>
-            </Grid>
+            <div className='flex justify-center'> 
+              <h4 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
+                RoomCode: {roomCode}
+              </h4>
+            </div>
             
             {/* Number of players in the room */}
-            <Grid item xs={12} align="center">
-                <Typography component='h6' variant='h6'>
-                    Current number of players: {currentNumberOfPlayers} / {maxNumberOfPlayers}
-                </Typography>
-            </Grid>
+            <div className='flex justify-center'> 
+              <h6 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
+                  Current number of players: {currentNumberOfPlayers} / {maxNumberOfPlayers}
+              </h6>
+            </div>
 
         {/* Update Max Players Button */}
         {isHost ? showUpdateButtonIfHost() : null}
@@ -207,6 +207,6 @@ export default function Room() {
             </Button>
         </Grid>
 
-        </Grid> 
+        </div> 
     )
 }
