@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
-import { Button, Grid, Typography, TextField, FormHelperText, Box,
-    FormControl, FormControlLabel, RadioGroup, Radio, Alert, Collapse 
-} from "@mui/material";
-import { create } from '@mui/material/styles/createTransitions';
+import { Button, Grid, Alert, Collapse } from "@mui/material";
 // import { CSRFToken } from 'django-react-csrftoken';
 
 
@@ -119,7 +116,7 @@ export default function CreateRoom(props) {
 
     const createRoom = () => {
         return (
-        <Grid container spacing={1}>         
+          <div className='flex flex-col flex-wrap gap-4'>     
             <Grid item xs={12} align="center">
                 <Button
                     variant="contained"
@@ -154,14 +151,14 @@ export default function CreateRoom(props) {
                     Cancel
                 </Button>
             </Grid>
-        </Grid>
+        </div>
         );
     };
 
     // the reason this is being separated is that I'm passing a button in the Room.js component when updating room - I do not want the user to be able to move back to the homepage.
     const updateRoom = () => {
         return (
-          <Grid container spacing={1}>
+          <div className='flex flex-col flex-wrap gap-4'>
             <Grid item xs={12} align="center">
               <Button
                 variant="contained"
@@ -178,12 +175,13 @@ export default function CreateRoom(props) {
                 {labelToShow}
               </Button>
             </Grid>
-          </Grid>
+          </div>
         );
       };
       
 
-    return (<Grid container spacing={1}> 
+    return (        
+    <div className='flex flex-col flex-wrap gap-4'> 
 
 <Grid item xs={12} align="center">
   <Collapse in={showSuccessMsg}>
@@ -215,28 +213,27 @@ export default function CreateRoom(props) {
 </Grid>
 
         {/* Header */}
-        <Grid item xs={12} align="center">
-            <Typography component='h1' variant='h1'>
-                {labelToShow}
-            </Typography>
-        </Grid>
-        
+        <div className='flex justify-center'> 
+            <h1 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
+              {labelToShow}
+            </h1>
+        </div>
         {/* Amount of Players TextField */}
-        <Grid item xs={12} align="center">
-            <FormControl>
-                <TextField 
-                    required
-                    type="number"
-                    value={currentNumberOfPlayers}
-                    onChange={handleNumberOfPlayersChange}
-                    inputProps={{ min: 2 }}
-                    label="Number of Players"
-                    helperText="Enter the number of players required for the room"
-                    variant="outlined"
-                    fullWidth
-                    />
-            </FormControl>
-        </Grid>
+        <div className='flex flex-row justify-center'>       
+          <div className='flex flex-col gap-4'>
+              <label for="num-of-players" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                  Number of players:
+              </label>
+              <input type="number" 
+                      id="num-of-players" 
+                      value={currentNumberOfPlayers}
+                      onChange={handleNumberOfPlayersChange}
+                      min="2"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      placeholder="2"
+              />
+              </div>
+         </div> 
         {props.update ? updateRoom() : createRoom()}
-    </Grid>);
+    </div>);
 }

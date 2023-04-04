@@ -1,7 +1,7 @@
-import React, { Component, useState } from 'react';
-import { Button, Grid, Typography, TextField, FormHelperText, FormControl, FormControlLabel, RadioGroup, Radio } from "@mui/material";
+import React, { useState } from 'react';
+import { Button, Grid } from "@mui/material";
 import { Link } from "react-router-dom";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate} from 'react-router-dom';
 
 function getCookie(name) {
     let cookieValue = null;
@@ -64,17 +64,37 @@ export default function RoomJoin(){
             });
     };
 
-    return <Grid container spacing={3} align="center">
+    return (<div className='flex flex-col flex-wrap gap-4'>
 
         {/* Header */}
-        <Grid item xs={12} align="center">
-            <Typography component='h1' variant='h1'>
-                Join a Room
-            </Typography>
-        </Grid>
+        <div className='flex justify-center'> 
+            <h1 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
+              Join a Room
+            </h1>
+        </div>
      
         {/* TextField */}
-        <Grid item xs={12} align="center">
+        <div className='flex flex-row justify-center'>
+            <div className='flex flex-col gap-4'>
+                <label htmlFor="room-code-input" className="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                Enter Room Code:
+                </label>
+                <input 
+                type="text" 
+                id="room-code-input" 
+                value={roomCode}
+                onChange={handleCodeChangeTextField}
+                className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 ${error ? 'border-red-500' : ''}`}
+                placeholder="Code"
+                required
+                />
+                {error && (
+                <p className="text-red-500 text-sm">{error}</p>
+                )}
+            </div>
+        </div>
+
+        {/* <Grid item xs={12} align="center">
             <TextField 
                 error={error}
                 label="Code"
@@ -84,7 +104,7 @@ export default function RoomJoin(){
                 variant="outlined"
                 onChange={handleCodeChangeTextField}
                 />
-        </Grid>
+        </Grid> */}
 
         {/* Room join Button */}
         <Grid item xs={12} align="center">
@@ -123,5 +143,5 @@ export default function RoomJoin(){
             </Button>
         </Grid>
 
-    </Grid>
+    </div>)
 }

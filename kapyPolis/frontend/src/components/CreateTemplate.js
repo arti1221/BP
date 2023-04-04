@@ -1,297 +1,200 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
-import { useNavigate } from 'react-router-dom';
-import { Button, Grid, Typography, TextField, FormHelperText, Box,
-    FormControl, FormControlLabel, RadioGroup, Radio, Alert, Collapse, InputLabel  
-} from "@mui/material";
-import { create } from '@mui/material/styles/createTransitions';
+import { Button, Grid} from "@mui/material";
 
 export default function CreateTemplate() { // todo add props as in CreateRoom
 
     return (
         <div className='flex flex-col flex-wrap gap-4'>
           {/* Header */}
-          <Grid item xs={12} align="center">
-
-            <Typography component='h1' variant='h1'>
-                Create Template
-            </Typography>
-          </Grid>
+            <div className='flex justify-center'> 
+                <h1 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
+                    Create a Template
+                </h1>
+            </div>
 
           <div className='flex flex-row gap-4'>            
                         {/* Inner content for the input data of */}
-          <div className='flex flex-col gap-4'>
-                <FormControl style={{ marginBottom: 10 }}>
-                        <TextField 
-                            required
-                            type="text"
-                            value=""
-                            // onChange={handleNumberOfPlayersChange}
-                            inputProps={{ min: 2 }}
-                            label="Template name"
-                            helperText="Enter the template name with max length of 20 characters."
-                            variant="outlined"
-                            fullWidth
-                            />
-                </FormControl>
-
-                <FormControl style={{ marginBottom: 10 }}>
-                        <TextField 
-                            required
-                            type="text"
-                            value=""
-                            // onChange={handleNumberOfPlayersChange}
-                            inputProps={{ min: 2 }}
-                            label="Background Caption"
-                            helperText="Enter the Caption for the game after start."
-                            variant="outlined"
-                            fullWidth
-                            />
-                </FormControl>
-            
-                <InputLabel htmlFor="image-input-1"
-                    >Select bg image
-                </InputLabel>
-                <input
-                    accept="image/*"
-                    id="image-input-1"
-                    type="file"
-                />
-
-                <FormControl style={{ marginBottom: 10, marginTop: 10}}>
-                        <TextField 
-                            required
-                            type="number"
-                            value=""
-                            // onChange={handleNumberOfPlayersChange}
-                            inputProps={{ min: 1000 }}
-                            label="Starting balance"
-                            helperText="Enter players starting balance."
-                            variant="outlined"
-                            fullWidth
-                            />
-                </FormControl>
-
-                <FormControl style={{ marginBottom: 10 }}>
-                        <TextField 
-                            required
-                            type="text"
-                            value=""
-                            // onChange={handleNumberOfPlayersChange}
-                            inputProps={{ min: 2 }}
-                            label="Shop name"
-                            helperText="Enter the Shop name with max length of 20 characters."
-                            variant="outlined"
-                            fullWidth
-                            />
-                </FormControl>
-
-                <InputLabel htmlFor="image-input-2"
-                    >Select shop image
-                </InputLabel>
-                <input
-                    accept="image/*"
-                    id="image-input-2"
-                    type="file"
-                />
-          </div>
-    
-          {/* Column 2 */}
-
-          <div className='flex flex-col gap-4'>
-                    <FormControl style={{ marginBottom: 10 }}>
-                        <TextField 
-                            required
-                            type="text"
-                            value=""
-                            // onChange={handleNumberOfPlayersChange}
-                            inputProps={{ min: 2 }}
-                            label="Card 1 name"
-                            helperText="Enter the Card 1 name with max length of 20 characters."
-                            variant="outlined"
-                            fullWidth
-                            />
-                    </FormControl>
-                    <InputLabel htmlFor="image-input-3"
-                        >Select Card 1 image
-                    </InputLabel>
-                    <input
-                        accept="image/*"
-                        id="image-input-3"
-                        type="file"
+                <div className='flex flex-col gap-4'>
+                    <label for="template-text" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                        Template name
+                    </label>
+                    <input type="text" 
+                            id="template-text" 
+                            aria-describedby="helper-text-explanation"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="Enter the template name with max length of 20 characters."
                     />
-
-                    
-                    <FormControl style={{ marginBottom: 10, marginTop: 10}}>
-                            <TextField 
-                                required
-                                type="number"
-                                value=""
-                                // onChange={handleNumberOfPlayersChange}
-                                inputProps={{ min: 1 }}
-                                label="Move forwards Rule"
-                                helperText="Enter amount of fields to move forward."
-                                variant="outlined"
-                                fullWidth
-                                />
-                    </FormControl>
-
-                    {/* card 2 */}
-                    <FormControl style={{ marginBottom: 10 }}>
-                        <TextField 
-                            required
-                            type="text"
-                            value=""
-                            // onChange={handleNumberOfPlayersChange}
-                            inputProps={{ min: 2 }}
-                            label="Card 2 name"
-                            helperText="Enter the Card 2 name with max length of 20 characters."
-                            variant="outlined"
-                            fullWidth
-                            />
-                    </FormControl>
-                    <InputLabel htmlFor="image-input-4"
-                        >Select Card 2 image
-                    </InputLabel>
-                    <input
-                        accept="image/*"
-                        id="image-input-4"
-                        type="file"
+                </div>
+                <div className='flex flex-col gap-4'>
+                    <label for="shop-name" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                        Shop-Name
+                    </label>
+                    <input type="text" 
+                            id="shop-name" 
+                            aria-describedby="helper-text-explanation"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                            placeholder="Enter the shop name with max length of 20 characters."
                     />
-
-                    <FormControl style={{ marginBottom: 10, marginTop: 10}}>
-                            <TextField 
-                                required
-                                type="number"
-                                value=""
-                                // onChange={handleNumberOfPlayersChange}
-                                inputProps={{ min: 1 }}
-                                label="Move backwards Rule"
-                                helperText="Enter amount of fields to move backwards."
-                                variant="outlined"
-                                fullWidth
-                                />
-                    </FormControl>
-
-                    {/* Card 3 */}
-                    <FormControl style={{ marginBottom: 10 }}>
-                        <TextField 
-                            required
-                            type="text"
-                            value=""
-                            // onChange={handleNumberOfPlayersChange}
-                            inputProps={{ min: 2 }}
-                            label="Card 3 name"
-                            helperText="Enter the Card 3 name with max length of 20 characters."
-                            variant="outlined"
-                            fullWidth
-                            />
-                    </FormControl>
-                    <InputLabel htmlFor="image-input-5"
-                        >Select Card 3 image
-                    </InputLabel>
-                    <input
-                        accept="image/*"
-                        id="image-input-5"
-                        type="file"
+                </div>
+                <div className='flex flex-col gap-4'>
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                           for="shop_image">Upload shop image</label>
+                    <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                           id="shop_image" 
+                           type="file"
                     />
-
-                    
-                    <FormControl style={{ marginBottom: 10, marginTop: 10}}>
-                            <TextField 
-                                required
-                                type="number"
-                                value=""
-                                // onChange={handleNumberOfPlayersChange}
-                                inputProps={{ min: 1 }}
-                                label="Move backwards Rule"
-                                helperText="Enter amount of fields to move backwards."
-                                variant="outlined"
-                                fullWidth
-                                />
-                    </FormControl>
-
-                    {/* Card 4 */}
-                    <FormControl style={{ marginBottom: 10 }}>
-                        <TextField 
-                            required
-                            type="text"
-                            value=""
-                            // onChange={handleNumberOfPlayersChange}
-                            inputProps={{ min: 2 }}
-                            label="Card 4 name"
-                            helperText="Enter the Card 4 name with max length of 20 characters."
-                            variant="outlined"
-                            fullWidth
-                            />
-                    </FormControl>
-                    <InputLabel htmlFor="image-input-6"
-                        >Select Card 4 image
-                    </InputLabel>
-                    <input
-                        accept="image/*"
-                        id="image-input-6"
-                        type="file"
+                </div>
+                <div className='flex flex-col gap-4'>
+                    <label for="start-balance" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                        Starting balance
+                    </label>
+                    <input type="text" 
+                            id="start-balance" 
+                            aria-describedby="helper-text-explanation"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                            placeholder="Min. 1000"
                     />
-
-                    <FormControl style={{ marginBottom: 10, marginTop: 10}}>
-                            <TextField 
-                                required
-                                type="number"
-                                value=""
-                                // onChange={handleNumberOfPlayersChange}
-                                inputProps={{ min: 1 }}
-                                label="Move backwards Rule"
-                                helperText="Enter amount of fields to move backwards."
-                                variant="outlined"
-                                fullWidth
-                                />
-                    </FormControl>
-          </div>
-    
-          {/* Column 3 */}
-          <div className='flex flex-col gap-4'>
-              <h2>Image Input 2</h2>
-              {/* Image input content goes here */}
-          </div>
+                </div>
         </div>
-                    {/* BUTTONS */}
-        <div className='flex flex-row gap-4 mx-auto'>
-            <Grid item xs={12} align="center">
-                <Button
-                    variant="contained"
-                    size="large"
-                    // onClick={() => handlePlayersChange()}
-                    sx={{
-                        backgroundColor: '#3f51b5',
-                        color: '#fff',
-                        '&:hover': {
-                        backgroundColor: '#07da63',
-                        },
-                    }}
-                    >
-                    Create a Template
-                </Button>
-            </Grid>
-            <Grid item xs={12} align="center">
-                <Button
-                    variant="contained"
-                    size="large"
-                    sx={{
-                        backgroundColor: '#e74c3c',
-                        color: '#fff',
-                        '&:hover': {
-                        backgroundColor: '#c0392b',
-                        },
-                    }}
-                    to="/"
-                    component={Link}
-                    >
-                    Back
-                </Button>
-            </Grid>  
+
+        {/* card 1: */}
+        <div className='flex flex-row gap-4'>  
+            <div className='flex flex-col gap-4'>
+                <label for="card1-rule" 
+                       class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
+                       >
+                    Card 1 Rule
+                </label>
+                <input type="number" 
+                        id="card1-rule" 
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        min={1}
+                        placeholder="Set num of spaces to move fwd"
+                />
+            </div>
+            <div className='flex flex-col gap-4'>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                       for="card1-image">Upload card 1 image</label>
+                <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                       id="card1-image" 
+                       type="file"
+                    />
+                </div>
+        </div>
+
+        {/* card 2 */}
+        <div className='flex flex-row gap-4'>  
+            <div className='flex flex-col gap-4'>
+                <label for="card2-rule" 
+                       class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
+                       >
+                    Card 2 Rule
+                </label>
+                <input type="number" 
+                        id="card2-rule" 
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        min={1}
+                        placeholder="Set num of spaces to move bwd"
+                />
+            </div>
+            <div className='flex flex-col gap-4'>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                       for="card2-image">Upload card 2 image</label>
+                <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                       id="card2-image" 
+                       type="file"
+                    />
+                </div>
+        </div>
+        {/* Card 3 */}
+        <div className='flex flex-row gap-4'>  
+            <label for="card3-rule" 
+                class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                Card 3 Rule
+            </label>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" 
+                    id="card3-rule" 
+                    value="" 
+                    class="sr-only peer"/>
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                    Enable reset to start
+                </span>
+            </label>
+        </div>
+          {/* card 4 */}
+        <div className='flex flex-row gap-4'>  
+            <div className='flex flex-col gap-4'>
+                <label for="card4-rule" 
+                       class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
+                       >
+                    Card 4 Rule
+                </label>
+                <input type="number" 
+                        id="card4-rule" 
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        min={1}
+                        placeholder="Set stop rounds."
+                />
+            </div>
+            <div className='flex flex-col gap-4'>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                       for="card4-image">Upload card 4 image</label>
+                <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                       id="card4-image" 
+                       type="file"
+                    />
+                </div>
+        </div>      
+
+                        {/* BUTTONS */}
+        <div className='flex flex-row gap-4 justify-center'>            
+            <div className='flex flex-col flex-wrap gap-4'>     
+                <Grid item xs={12} align="center">
+                    <Button
+                        variant="contained"
+                        size="large"
+                        onClick={() => handlePlayersChange()}
+                        sx={{
+                            backgroundColor: '#3f51b5',
+                            color: '#fff',
+                            '&:hover': {
+                            backgroundColor: '#07da63',
+                            },
+                        }}
+                        >
+                        CREATE A TEMPLATE
+                    </Button>
+                </Grid>
+            </div>
+            <div className='flex flex-col flex-wrap gap-4'>     
+                <Grid item xs={12} align="center">
+                    <Button
+                        variant="contained"
+                        size="large"
+                        sx={{
+                            backgroundColor: '#e74c3c',
+                            color: '#fff',
+                            '&:hover': {
+                            backgroundColor: '#c0392b',
+                            },
+                        }}
+                        to="/"
+                        component={Link}
+                        >
+                        CANCEL
+                    </Button>
+                </Grid>
+                </div>
             </div>
         </div>
+
       );
 
 

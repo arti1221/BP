@@ -21,17 +21,17 @@ class UpdateRoomSerializer(serializers.ModelSerializer): # serializes the update
 class ShopItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
-        fields = ['id', 'name', 'image', 'price']
+        fields = ['id', 'template', 'name', 'image', 'price']
 
 class TemplateSerializer(serializers.ModelSerializer):
     shop_items = ShopItemSerializer(many=True, read_only=True, source='shopitem_set')
     class Meta:
         model = Template
-        fields = ['id', 'name', 'bg', 'bgcaption', 'shop_name', 'shop_image', 'start_balance',
-                  'card_type1_name', 'card_type1_image', 'card_type1_mvup',
-                  'card_type2_name', 'card_type2_image', 'card_type2_mvdown',
-                  'card_type3_name', 'card_type3_image', 'card_type3_reset',
-                  'card_type4_name', 'card_type4_image', 'card_type4_round_stop',
+        fields = ['id', 'name', 'shop_name', 'shop_image', 'start_balance',
+                  'card_type1_image', 'card_type1_mvup',
+                  'card_type2_image', 'card_type2_mvdown',
+                  'card_type3_image', 'card_type3_reset',
+                  'card_type4_image', 'card_type4_round_stop',
                   'shop_items']
         
 # WORKS WITHOUT SHOP ITEMS ON CEATION. Shop items are gonna be handled separately.
@@ -40,11 +40,11 @@ class CreateTemplateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Template
-        fields = ('id', 'name', 'bg', 'bgcaption', 'start_balance',
-                  'card_type1_name', 'card_type1_image', 'card_type1_mvup',
-                  'card_type2_name', 'card_type2_image', 'card_type2_mvdown',
-                  'card_type3_name', 'card_type3_image', 'card_type3_reset',
-                  'card_type4_name', 'card_type4_image', 'card_type4_round_stop',
+        fields = ('id', 'name', 'start_balance',
+                  'card_type1_image', 'card_type1_mvup',
+                  'card_type2_image', 'card_type2_mvdown',
+                  'card_type3_image', 'card_type3_reset',
+                  'card_type4_image', 'card_type4_round_stop',
                   'shop_name', 'shop_image', 'shop_items')
 
     def create(self, validated_data):
@@ -60,23 +60,17 @@ class CreateTemplateSerializer(serializers.ModelSerializer):
         shop_items = instance.shop_items.all()
 
         instance.name = validated_data.get('name', instance.name)
-        instance.bg = validated_data.get('bg', instance.bg)
-        instance.bgcaption = validated_data.get('bgcaption', instance.bgcaption)
         instance.start_balance = validated_data.get('start_balance', instance.start_balance)
 
-        instance.card_type1_name = validated_data.get('card_type1_name', instance.card_type1_name)
         instance.card_type1_image = validated_data.get('card_type1_image', instance.card_type1_image)
         instance.card_type1_mvup = validated_data.get('card_type1_mvup', instance.card_type1_mvup)
 
-        instance.card_type2_name = validated_data.get('card_type2_name', instance.card_type2_name)
         instance.card_type2_image = validated_data.get('card_type2_image', instance.card_type2_image)
         instance.card_type2_mvdown = validated_data.get('card_type2_mvdown', instance.card_type2_mvdown)
 
-        instance.card_type3_name = validated_data.get('card_type3_name', instance.card_type3_name)
         instance.card_type3_image = validated_data.get('card_type3_image', instance.card_type3_image)
         instance.card_type3_reset = validated_data.get('card_type3_reset', instance.card_type3_reset)
 
-        instance.card_type4_name = validated_data.get('card_type4_name', instance.card_type4_name)
         instance.card_type4_image = validated_data.get('card_type4_image', instance.card_type4_image)
         instance.card_type4_round_stop = validated_data.get('card_type4_round_stop', instance.card_type4_round_stop)
 
