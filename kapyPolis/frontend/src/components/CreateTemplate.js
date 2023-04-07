@@ -1,8 +1,143 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { Button, Grid} from "@mui/material";
+// import getCookie from "./CreateRoom"
+import { useNavigate} from 'react-router-dom';
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + '=') {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
 
 export default function CreateTemplate() { // todo add props as in CreateRoom
+    const csrftoken = getCookie('csrftoken');
+    const [balance, setBalance] = useState(1000);
+    const [templateName, setTemplateName] = useState("");
+    const [shopName, setShopName] = useState("");
+    const [shopImage, setShopImage] = useState(null);
+    // cards
+    const [card1Image, setCard1Image] = useState(null);
+    const [card1Rule, setCard1Rule] = useState(1);
+
+    const [card3Image, setCard3Image] = useState(null);
+    const [card3Rule, setCard3Rule] = useState(false);
+
+    const [card2Image, setCard2Image] = useState(null);
+    const [card2Rule, setCard2Rule] = useState(1);
+
+    const [card4Image, setCard4Image] = useState(null);
+    const [card4Rule, setCard4Rule] = useState(1);
+    const navigate = useNavigate();
+
+    const handleBalanceChange  = (e) => {
+        setBalance(parseInt(e.target.value));
+        console.log("Balance filled to: ", balance);
+    };
+
+    const handleTemplateNameChange  = (e) => {
+        setTemplateName(e.target.value);
+        console.log("Template name changed to: ", templateName);
+    };
+
+    // shop
+    const handleShopNameChange  = (e) => {
+        setShopName(e.target.value);
+        console.log("Template name changed to: ", shopName);
+    };
+
+    const handleImageChange = (e, setter) => {
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedFile);
+          reader.onloadend = () => {
+            setter(reader.result);
+          };
+        }
+      };
+
+    const handleCard1RuleChange  = (e) => {
+        setCard1Rule(parseInt(e.target.value));
+        console.log("Card rule 1 changed to: ", card1Rule);
+    };
+
+    const handleCard2RuleChange  = (e) => {
+        setCard2Rule(parseInt(e.target.value));
+        console.log("Card rule 2 changed to: ", card2Rule);
+    };
+
+    const handleCard4RuleChange  = (e) => {
+        setCard4Rule(parseInt(e.target.value));
+        console.log("Card rule 3 changed to: ", card4Rule);
+    };
+
+
+    const handleCard3RuleChange = (e) => {
+      setCard3Rule(e.target.checked);
+    };
+
+    // TEMPLATE CREATION:
+    const handleCreateTemplate = async () => {
+        console.log("My csrf token: ", csrftoken);
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                "Content-Type": "application/json",
+                'X-CSRFToken': csrftoken, // include the CSRF token in the headers
+            },
+            body: JSON.stringify(
+                {
+                    name: templateName,
+                    start_balance: balance,
+                    card_type1_image: card1Image,
+                    card_type1_mvup: card1Rule,
+                    card_type2_image: card2Image,
+                    card_type2_mvdown: card2Rule,
+                    card_type3_image: card3Image,
+                    card_type3_reset: card3Rule,
+                    card_type4_image: card4Image,
+                    card_type4_round_stop: card4Rule,
+                    shop_name: shopName,
+                    shop_image: shopImage,
+                    shop_items: []  // add an empty list for shop_items since they are gonna be added on next page.
+                }
+            ),
+        };
+
+        console.log(requestOptions);
+
+        try {
+            console.log("here");
+            const response = await fetch("/api/create-template", requestOptions);
+            console.log("here again");
+            if (response.ok) {
+              console.log("Template created, navigating to the home page");
+              navigate(`/`);
+            } else {
+              console.log(response.json)
+              console.log
+              const data = await response.json();
+              console.log('Error after navigate')
+              console.log(data.success)
+              throw new Error(`Error: ${data}`);
+            }
+          } catch (error) {
+            console.log(error);
+            console.log(await response.text());
+            // setError("An error occurred while leaving the room.");
+          }
+    };
+
 
     return (
         <div className='flex flex-col flex-wrap gap-4'>
@@ -21,6 +156,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                     </label>
                     <input type="text" 
                             id="template-text" 
+                            onChange={handleTemplateNameChange}
                             aria-describedby="helper-text-explanation"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="Enter the template name with max length of 20 characters."
@@ -35,6 +171,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                             aria-describedby="helper-text-explanation"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                             placeholder="Enter the shop name with max length of 20 characters."
+                            onChange={handleShopNameChange}
                     />
                 </div>
                 <div className='flex flex-col gap-4'>
@@ -43,6 +180,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                     <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                            id="shop_image" 
                            type="file"
+                           onChange={(e) => handleImageChange(e, setShopImage)}
                     />
                 </div>
                 <div className='flex flex-col gap-4'>
@@ -51,6 +189,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                     </label>
                     <input type="text" 
                             id="start-balance" 
+                            onChange={handleBalanceChange}
                             aria-describedby="helper-text-explanation"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                             placeholder="Min. 1000"
@@ -72,6 +211,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                         min={1}
                         placeholder="Set num of spaces to move fwd"
+                        onChange={handleCard1RuleChange}
                 />
             </div>
             <div className='flex flex-col gap-4'>
@@ -80,8 +220,9 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card1-image" 
                        type="file"
-                    />
-                </div>
+                       onChange={(e) => handleImageChange(e, setCard1Image)}
+                       />
+            </div>
         </div>
 
         {/* card 2 */}
@@ -98,6 +239,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                         min={1}
                         placeholder="Set num of spaces to move bwd"
+                        onChange={handleCard2RuleChange}
                 />
             </div>
             <div className='flex flex-col gap-4'>
@@ -106,26 +248,40 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card2-image" 
                        type="file"
-                    />
-                </div>
+                       onChange={(e) => handleImageChange(e, setCard2Image)}
+                       />
+            </div>
         </div>
         {/* Card 3 */}
         <div className='flex flex-row gap-4'>  
-            <label for="card3-rule" 
-                class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                Card 3 Rule
-            </label>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" 
-                    id="card3-rule" 
-                    value="" 
-                    class="sr-only peer"/>
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                    Enable reset to start
-                </span>
-            </label>
+            <div className='flex flex-col gap-4'>
+                <label for="card3-rule" 
+                    class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                    Card 3 Rule
+                </label>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" 
+                        id="card3-rule" 
+                        value="" 
+                        class="sr-only peer"
+                        onChange={handleCard3RuleChange}
+                        />
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                    <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                        Enable reset to start
+                    </span>
+                </label>
+            </div>
+            <div className='flex flex-col gap-4'>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                       for="card3-image">Upload card 3 image</label>
+                <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                       id="card3-image" 
+                       type="file"
+                       onChange={(e) => handleImageChange(e, setCard3Image)}
+                       />
+            </div>
         </div>
           {/* card 4 */}
         <div className='flex flex-row gap-4'>  
@@ -141,6 +297,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                         min={1}
                         placeholder="Set stop rounds."
+                        onChange={handleCard4RuleChange}
                 />
             </div>
             <div className='flex flex-col gap-4'>
@@ -149,7 +306,8 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card4-image" 
                        type="file"
-                    />
+                       onChange={(e) => handleImageChange(e, setCard4Image)}
+                       />
                 </div>
         </div>      
 
@@ -160,7 +318,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                     <Button
                         variant="contained"
                         size="large"
-                        onClick={() => handlePlayersChange()}
+                        onClick={() => handleCreateTemplate()}
                         sx={{
                             backgroundColor: '#3f51b5',
                             color: '#fff',
@@ -194,8 +352,5 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                 </div>
             </div>
         </div>
-
-      );
-
-
+    );
 }
