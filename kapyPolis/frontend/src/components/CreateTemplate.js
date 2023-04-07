@@ -57,6 +57,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
 
     const handleImageChange = (e, setter) => {
         const selectedFile = e.target.files[0];
+        console.log(selectedFile)
         if (selectedFile) {
           const reader = new FileReader();
           reader.readAsDataURL(selectedFile);
@@ -89,58 +90,40 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
     // TEMPLATE CREATION:
     const handleCreateTemplate = async () => {
         console.log("My csrf token: ", csrftoken);
-        const requestOptions = {
+        console.log("card image: ", card1Image);
+        console.log("card image from list: ", card1Image);
+        const uploadData = new FormData();
+        uploadData.append('name', templateName);
+        uploadData.append('start_balance', balance);
+        uploadData.append('card_type1_image', card1Image);
+        uploadData.append('card_type1_mvup', card1Rule);
+        uploadData.append('card_type2_image', card2Image);
+        uploadData.append('card_type2_mvdown', card2Rule);
+        uploadData.append('card_type3_image', card3Image);
+        uploadData.append('card_type3_reset', card3Rule);
+        uploadData.append('card_type4_image', card4Image);
+        uploadData.append('card_type4_round_stop', card4Rule);
+        uploadData.append('shop_name', shopName);
+        uploadData.append('shop_image', shopImage);
+        // uploadData.append('shop_items', []); // add an empty list for shop_items since they are gonna be added on next page.
+        
+        fetch("/api/create-template", {
             method: 'POST',
             headers: { 
-                "Content-Type": "application/json",
                 'X-CSRFToken': csrftoken, // include the CSRF token in the headers
             },
-            body: JSON.stringify(
-                {
-                    name: templateName,
-                    start_balance: balance,
-                    card_type1_image: card1Image,
-                    card_type1_mvup: card1Rule,
-                    card_type2_image: card2Image,
-                    card_type2_mvdown: card2Rule,
-                    card_type3_image: card3Image,
-                    card_type3_reset: card3Rule,
-                    card_type4_image: card4Image,
-                    card_type4_round_stop: card4Rule,
-                    shop_name: shopName,
-                    shop_image: shopImage,
-                    shop_items: []  // add an empty list for shop_items since they are gonna be added on next page.
-                }
-            ),
-        };
-
-        console.log(requestOptions);
-
-        try {
-            console.log("here");
-            const response = await fetch("/api/create-template", requestOptions);
-            console.log("here again");
-            if (response.ok) {
-              console.log("Template created, navigating to the home page");
-              navigate(`/`);
-            } else {
-              console.log(response.json)
-              console.log
-              const data = await response.json();
-              console.log('Error after navigate')
-              console.log(data.success)
-              throw new Error(`Error: ${data}`);
-            }
-          } catch (error) {
-            console.log(error);
-            console.log(await response.text());
-            // setError("An error occurred while leaving the room.");
-          }
+            body: uploadData
+        })
+        .then(res => console.log(res))
+        .catch(err => console.log(err))
     };
 
 
     return (
-        <div className='flex flex-col flex-wrap gap-4'>
+        <form
+        enctype="multipart/form-data"
+        onSubmit={(e) => {e.preventDefault();}}
+         className='flex flex-col flex-wrap gap-4'>
           {/* Header */}
             <div className='flex justify-center'> 
                 <h1 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
@@ -351,6 +334,6 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                 </Grid>
                 </div>
             </div>
-        </div>
+        </form>
     );
 }
