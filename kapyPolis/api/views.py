@@ -10,6 +10,12 @@ from django.http import Http404
 from api.models import Room, Template, ShopItem
 from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer
 from rest_framework.parsers import MultiPartParser
+import base64
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import io
+from PIL import Image
+import sys
 
 # TODO: if response 400 or bad, throw exception to go to catch blyat :)
 
@@ -173,6 +179,30 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
     serializer_class = CreateTemplateSerializer
     parser_classes = [MultiPartParser]  # Add this line to use the correct parser for file uploads
 
+    def to_file(self, file_from_POST, fieldName):
+        """base64 encoded file to Django InMemoryUploadedFile that can be placed into request.FILES."""
+        # 'data:image/png;base64,<base64 encoded string>'
+        try:
+            idx = file_from_POST[:50].find(',')  # comma should be pretty early on
+
+            if not idx or not file_from_POST.startswith('data:image/'):
+                raise Exception()
+
+            base64file = file_from_POST[idx+1:]
+            attributes = file_from_POST[:idx]
+            content_type = attributes[len('data:'):attributes.find(';')]
+        except Exception as e:
+            raise Exception("Invalid picture")
+        print(content_type)
+        f = io.BytesIO(base64.b64decode(base64file))
+        image = InMemoryUploadedFile(f,
+        field_name=fieldName,
+        name=fieldName + ".png",  # use UUIDv4 or something
+        content_type=content_type,
+        size=sys.getsizeof(f),
+        charset=None)
+        return image
+    
     def post(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
@@ -182,24 +212,43 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
         response['X-CSRFToken'] = get_token(request)
 
         serializer = self.serializer_class(data=request.data)
+        request_after_formatting = request.POST.copy() # copy it here
+        request_after_formatting.pop('csrfmiddlewaretoken', None)  # remove csrf token if present
+
+        # Decode base64 image data
+        for fieldName in ['shop_image', 'card_type1_image', 'card_type2_image', 'card_type3_image', 'card_type4_image']:
+            if fieldName in request.data:
+                try:
+                    file_data = request.data.get(fieldName)
+                    image_file = self.to_file(file_data, fieldName)
+                    request_after_formatting[fieldName] = image_file
+                    request.FILES[fieldName] = image_file
+                except Exception as e:
+                    pass
+            else:
+                request_after_formatting[fieldName] = request.data.get(fieldName)        
+
+        wasInvalid = False
+        if not serializer.is_valid():
+            # in case the call is made through FE, the serializer contains the BASE64 Image encoded data hence the queryset has to be overriden
+            serializer = self.serializer_class(data=request_after_formatting)
+            wasInvalid = True
 
         if serializer.is_valid():
             name = serializer.data.get('name')
             shop_name = serializer.data.get('shop_name')
-            shop_image = request.FILES.get('shop_image')
             start_balance = serializer.data.get('start_balance')
-
-            card_type1_image = request.FILES.get('card_type1_image')
             card_type1_mvup = serializer.data.get('card_type1_mvup')
-
-            card_type2_image = request.FILES.get('card_type2_image')
             card_type2_mvdown = serializer.data.get('card_type2_mvdown')
-
-            card_type3_image = request.FILES.get('card_type3_image')
             card_type3_reset = serializer.data.get('card_type3_reset')
-
-            card_type4_image = request.FILES.get('card_type4_image')
             card_type4_round_stop = serializer.data.get('card_type4_round_stop')
+            
+            # images
+            shop_image = request.FILES.get('shop_image')
+            card_type1_image = request.FILES.get('card_type1_image')
+            card_type2_image = request.FILES.get('card_type2_image')
+            card_type3_image = request.FILES.get('card_type3_image')
+            card_type4_image = request.FILES.get('card_type4_image')
 
             queryset = Template.objects.filter(name=name)
             if queryset.exists(): # updating existing Template.
@@ -223,7 +272,7 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
                 template.card_type4_image = card_type4_image
                 template.card_type4_round_stop = card_type4_round_stop
 
-                template.save()
+                template.save() ## add update fields
 
                 return Response({'status': 'Template updated successfully'}) # TODO edit response
 
@@ -241,7 +290,9 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
                 return Response({'success': True, 'status': 'Template created successfully'}, status=status.HTTP_200_OK)
         # invalid
         else: 
-           print(serializer.data)
+        #    print(serializer.data)
+           print('error')
+           print(serializer.errors)
            return Response({'status': 'Invalid data', 'errors': serializer.errors})
 
 
