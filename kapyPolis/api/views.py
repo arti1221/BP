@@ -203,6 +203,7 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
 
             queryset = Template.objects.filter(name=name)
             if queryset.exists(): # updating existing Template.
+                print('exist')
                 template = queryset[0]
                 template.name = name
                 template.start_balance = start_balance
@@ -227,6 +228,7 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
                 return Response({'status': 'Template updated successfully'}) # TODO edit response
 
             else: # creating new Template.
+                print('som tu')
                 template = Template(name=name, start_balance=start_balance,
                                     shop_name=shop_name, shop_image=shop_image, 
                                     card_type1_image=card_type1_image, card_type1_mvup=card_type1_mvup,
@@ -235,8 +237,8 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
                                     card_type4_image=card_type4_image, card_type4_round_stop=card_type4_round_stop
                                     )
                 template.save()
-
-                return Response({'status': 'Template created successfully'})
+                print('aj tu')
+                return Response({'success': True, 'status': 'Template created successfully'}, status=status.HTTP_200_OK)
         # invalid
         else: 
            print(serializer.data)
