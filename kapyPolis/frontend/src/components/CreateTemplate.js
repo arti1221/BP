@@ -114,8 +114,18 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
             },
             body: uploadData
         })
-        .then(res => console.log(res))
-        .catch(err => console.log(err))
+        .then((response) => { 
+            return response.json();
+        })
+        .then((data) => { 
+            console.log("Response data: ", data);
+            console.log("Navigating to: /template/", data.name);
+            navigate(`/template/${data.name}`);
+        })
+        .catch((error) => {
+            console.log("ERROR");
+            console.error(error);
+        });
     };
 
 

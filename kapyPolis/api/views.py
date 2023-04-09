@@ -174,34 +174,35 @@ class TemplateView(generics.ListAPIView):
     serializer_class = TemplateSerializer
 
 
+def to_file(file_from_POST, fieldName):
+    """base64 encoded file to Django InMemoryUploadedFile that can be placed into request.FILES."""
+    # 'data:image/png;base64,<base64 encoded string>'
+    try:
+        idx = file_from_POST[:50].find(',')  # comma should be pretty early on
+
+        if not idx or not file_from_POST.startswith('data:image/'):
+            raise Exception()
+
+        base64file = file_from_POST[idx+1:]
+        attributes = file_from_POST[:idx]
+        content_type = attributes[len('data:'):attributes.find(';')]
+
+    except Exception as e:
+        raise Exception("Invalid picture")
+    print(content_type)
+    f = io.BytesIO(base64.b64decode(base64file))
+    image = InMemoryUploadedFile(f,
+    field_name=fieldName,
+    name=fieldName + ".png",  # use UUIDv4 or something
+    content_type=content_type,
+    size=sys.getsizeof(f),
+    charset=None)
+    return image
+
 @method_decorator(csrf_protect, name='dispatch')
 class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
     serializer_class = CreateTemplateSerializer
     parser_classes = [MultiPartParser]  # Add this line to use the correct parser for file uploads
-
-    def to_file(self, file_from_POST, fieldName):
-        """base64 encoded file to Django InMemoryUploadedFile that can be placed into request.FILES."""
-        # 'data:image/png;base64,<base64 encoded string>'
-        try:
-            idx = file_from_POST[:50].find(',')  # comma should be pretty early on
-
-            if not idx or not file_from_POST.startswith('data:image/'):
-                raise Exception()
-
-            base64file = file_from_POST[idx+1:]
-            attributes = file_from_POST[:idx]
-            content_type = attributes[len('data:'):attributes.find(';')]
-        except Exception as e:
-            raise Exception("Invalid picture")
-        print(content_type)
-        f = io.BytesIO(base64.b64decode(base64file))
-        image = InMemoryUploadedFile(f,
-        field_name=fieldName,
-        name=fieldName + ".png",  # use UUIDv4 or something
-        content_type=content_type,
-        size=sys.getsizeof(f),
-        charset=None)
-        return image
     
     def post(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
@@ -212,6 +213,9 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
         response['X-CSRFToken'] = get_token(request)
 
         serializer = self.serializer_class(data=request.data)
+        # The copy has to be made since the request QuerySet is immutable hence it could not
+        # be overriden with any image data correction from base 64 for example to png.
+        # after that the original response should be used
         request_after_formatting = request.POST.copy() # copy it here
         request_after_formatting.pop('csrfmiddlewaretoken', None)  # remove csrf token if present
 
@@ -220,7 +224,7 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
             if fieldName in request.data:
                 try:
                     file_data = request.data.get(fieldName)
-                    image_file = self.to_file(file_data, fieldName)
+                    image_file = to_file(file_data, fieldName)
                     request_after_formatting[fieldName] = image_file
                     request.FILES[fieldName] = image_file
                 except Exception as e:
@@ -228,11 +232,9 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
             else:
                 request_after_formatting[fieldName] = request.data.get(fieldName)        
 
-        wasInvalid = False
         if not serializer.is_valid():
             # in case the call is made through FE, the serializer contains the BASE64 Image encoded data hence the queryset has to be overriden
             serializer = self.serializer_class(data=request_after_formatting)
-            wasInvalid = True
 
         if serializer.is_valid():
             name = serializer.data.get('name')
@@ -272,12 +274,16 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
                 template.card_type4_image = card_type4_image
                 template.card_type4_round_stop = card_type4_round_stop
 
-                template.save() ## add update fields
+                template.save(update_fields=['id', 'name', 'start_balance',
+                  'card_type1_image', 'card_type1_mvup',
+                  'card_type2_image', 'card_type2_mvdown',
+                  'card_type3_image', 'card_type3_reset',
+                  'card_type4_image', 'card_type4_round_stop',
+                  'shop_name', 'shop_image', 'shop_items'])
 
-                return Response({'status': 'Template updated successfully'}) # TODO edit response
+                return Response(CreateTemplateSerializer(template).data, status=status.HTTP_200_OK)
 
             else: # creating new Template.
-                print('som tu')
                 template = Template(name=name, start_balance=start_balance,
                                     shop_name=shop_name, shop_image=shop_image, 
                                     card_type1_image=card_type1_image, card_type1_mvup=card_type1_mvup,
@@ -286,8 +292,8 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
                                     card_type4_image=card_type4_image, card_type4_round_stop=card_type4_round_stop
                                     )
                 template.save()
-                print('aj tu')
-                return Response({'success': True, 'status': 'Template created successfully'}, status=status.HTTP_200_OK)
+                return Response(CreateTemplateSerializer(template).data, status=status.HTTP_200_OK)
+                # return Response({'success': True, 'status': 'Template created successfully'}, status=status.HTTP_200_OK)
         # invalid
         else: 
         #    print(serializer.data)
@@ -295,7 +301,19 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
            print(serializer.errors)
            return Response({'status': 'Invalid data', 'errors': serializer.errors})
 
+class GetTemplateView(APIView):
+    serializer_class = TemplateSerializer
+    lookup_url_kwarg = 'name' # pass a param 
 
+    def get(self, req, format=None):
+        name = req.GET.get(self.lookup_url_kwarg) # get request for param code
+        if (name != None):
+            template = Template.objects.filter(name=name)
+            if (len(template)):
+                data = TemplateSerializer(template[0]).data # serializing and accessing the template, getting the first one and extracting it's data
+                return Response(data, status=status.HTTP_200_OK)
+            raise Http404("Template does not exist.")
+        return Response({'Bad Request': 'Name param is invalid...'}, status=status.HTTP_400_BAD_REQUEST)
 
 ############################################################################################################
 class ShopItemsView(generics.ListAPIView):
@@ -314,10 +332,49 @@ class CreateShopItemsView(APIView):
         response['X-CSRFToken'] = get_token(request)
 
         serializer = self.serializer_class(data=request.data)
+        # The copy has to be made since the request QuerySet is immutable hence it could not
+        # be overriden with any image data correction from base 64 for example to png.
+        # after that the original response should be used
+        request_after_formatting = request.POST.copy() # copy it here
+        request_after_formatting.pop('csrfmiddlewaretoken', None)  # remove csrf token if present
 
+        # in case the call is made through FE, the serializer contains the BASE64 Image encoded data hence the queryset has to be overriden
+        # Decode base64 image data
+        field_name = 'image'
+        if 'image' in request.data:
+            try:
+                file_data = request.data.get(field_name)
+                image_file = to_file(file_data, field_name)
+                request_after_formatting[field_name] = image_file
+                request.FILES[field_name] = image_file
+            except Exception as e:
+                pass
+        else:
+            request_after_formatting[field_name] = request.data.get(field_name)        
+
+        if not serializer.is_valid():
+            print("req: ", request_after_formatting)
+            print("Serializer data: ", print(serializer.data))
+            # in case the call is made through FE, the template is accessed and lookuped through kwarg 'name'
+            try:
+                template_instance = get_object_or_404(Template, id=serializer.data.get('template'))
+            except Exception as e:
+                print("temp name is send instead of ID")
+                template = Template.objects.get(name=serializer.data.get('template'))
+                template_id = template.id
+                print("temp id:", template_id)
+                template_instance = get_object_or_404(Template, id=template_id)
+
+            # handle the data since they are coming in different order:
+            request_after_formatting['template'] = template_instance.id
+            serializer = self.serializer_class(data=request_after_formatting)
+
+
+        print("som tu")
+        print(serializer.is_valid())
+        print(serializer.data)
         if serializer.is_valid():
-            print(Template.objects.filter(id=serializer.data.get('template')))
-            template_instance = get_object_or_404(Template, id=serializer.data.get('template'))
+            
             template = template_instance
             name = serializer.data.get('name')
             image = request.FILES.get('image')
@@ -330,10 +387,13 @@ class CreateShopItemsView(APIView):
                 shop_item.name = name
                 shop_item.image = image
                 shop_item.price = price
+                # update fields
+                shop_item.save(update_fields=['template', 'name', 'image', 'price'])
 
-                return Response({'status': 'Shop Item updated successfully'}) # TODO edit response
+                return Response({'status': 'Shop Item updated successfully'}) # Serializer should be retrieved if future usage is needed.
 
             else: # creating new Template.
+                print("creating a new item")
                 shop_item = ShopItem(template=template, 
                                      name=name,
                                      image=image,

@@ -7,5 +7,6 @@ urlpatterns = [
     path('create', index), # createPage for room
     path('room/<str:roomCode>', index), # to set up dynamic url as String.
     path('template', index), # template page
+    path("template/<str:name>", index),
     path('help', index), # help page
 ]
