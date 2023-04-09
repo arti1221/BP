@@ -44,7 +44,7 @@ export default function Room() {
             // add if statement to differentiate whether the room exists or not. If not, clear the code and navigate to the HP
             if (!response.ok) {
               navigate("/");
-              throw new Error(`Failed to fetch room with code ${roomCode}`);
+              navigate("/", {state: {errorMsg: `Failed to fetch room with code ${roomCode}`}});
             } else {
               console.log(response);
               console.log("Current players in response:", response.current_players);
@@ -117,11 +117,32 @@ export default function Room() {
                 backgroundColor: '#3f51b5',
                 color: '#fff',
                 '&:hover': {
-                  backgroundColor: '#07da63',
+                  backgroundColor: '#2196F3',
                 },
               }}
             >
               Update Max Players
+            </Button>
+          </Grid>
+        );
+      };
+
+      const showStartGameIfHost = () => {
+        return (
+          <Grid item xs={12} align="center">
+            <Button
+              variant="contained"
+              size="large"
+              // onClick={() => setshowUpdate(true)} // TODO
+              sx={{
+                backgroundColor: '#07da63',
+                color: '#fff',
+                '&:hover': {
+                  backgroundColor: '#05a549',
+                },
+              }}
+            >
+              Start The Game
             </Button>
           </Grid>
         );
@@ -185,6 +206,7 @@ export default function Room() {
             </div>
 
         {/* Update Max Players Button */}
+        {isHost ? showStartGameIfHost() : null}
         {isHost ? showUpdateButtonIfHost() : null}
 
         {/* Leave Room Button  */}

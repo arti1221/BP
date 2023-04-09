@@ -36,8 +36,7 @@ class TemplateSerializer(serializers.ModelSerializer):
         
 # WORKS WITHOUT SHOP ITEMS ON CEATION. Shop items are gonna be handled separately.
 class CreateTemplateSerializer(serializers.ModelSerializer):
-    shop_items = serializers.PrimaryKeyRelatedField(many=True, queryset=ShopItem.objects.all())
-
+    shop_items = ShopItemSerializer(many=True, read_only=True, source='shopitem_set')
     class Meta:
         model = Template
         fields = ('id', 'name', 'start_balance',
