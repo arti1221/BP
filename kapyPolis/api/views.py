@@ -7,8 +7,8 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
-from api.models import Room, Template, ShopItem
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer
+from api.models import Room, Template, ShopItem, Player
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer
 from rest_framework.parsers import MultiPartParser
 import base64
 from django.core.files.base import ContentFile
@@ -20,9 +20,8 @@ import sys
 # TODO: if response 400 or bad, throw exception to go to catch blyat :)
 
 class RoomView(generics.ListAPIView):
-    queryset = Room.objects.all()
+    queryset = Room.objects.prefetch_related('player_set')
     serializer_class = RoomSerializer
-
 
 @method_decorator(csrf_protect, name='dispatch')
 class CreateRoomView(APIView):
@@ -52,9 +51,16 @@ class CreateRoomView(APIView):
                 room = Room(host=host, max_players=max_players)
                 room.save()
                 self.request.session['room_code'] = room.code
+
+                # Creates a new player instance for the room after room creation
+                player_name = request.data.get('player_name') # Data are being retrieved through request since the serializer does not handle player Name.
+                player = Player(room=room, session_id=self.request.session.session_key, player_name=player_name)
+                player.save()
+
                 return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
 
         return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST, headers=response)
+
 
 class GetRoomView(APIView):
     serializer_class = RoomSerializer
@@ -67,6 +73,7 @@ class GetRoomView(APIView):
             if (len(room)):
                 data = RoomSerializer(room[0]).data # serializing and accessing the room, getting the first one and extracting it's data
                 data['is_host'] = self.request.session.session_key == room[0].host # to differenciate whether this is the host(admin) or not
+                data['session_id'] = self.request.session.session_key
                 return Response(data, status=status.HTTP_200_OK)
             raise Http404("Room does not exist.")
         return Response({'Bad Request': 'Code param is invalid...'}, status=status.HTTP_400_BAD_REQUEST)
@@ -89,6 +96,12 @@ class JoinRoomView(APIView):
                 if room.current_players < room.max_players:
                     room.current_players += 1
                     room.save(update_fields=['current_players'])
+
+                    # Creates a new player instance for the room after room creation
+                    player_name = request.data.get('player_name') # Data are being retrieved through request since the serializer does not handle player Name.
+                    player = Player(room=room, session_id=self.request.session.session_key, player_name=player_name)
+                    player.save()
+
                     return Response(serializer.data)
                 else:
                     return Response({'Room is Full': 'Cannot Join Room.'}, status=status.HTTP_403_FORBIDDEN)
@@ -118,6 +131,9 @@ class LeaveRoomView(APIView):
       room_code = request.data["code"]
       try:
         room = Room.objects.get(code=room_code)
+        # player_name = request.data.get("player_name")
+        # player = Player.objects.get(room=room, player_name=player_name)  # retrieve player object using room and player name
+        # player.delete()  # delete player object
         room.current_players -= 1
         if room.current_players < 1:
           room.delete()
@@ -406,3 +422,25 @@ class CreateShopItemsView(APIView):
         else: 
            print(serializer.data)
            return Response({'status': 'Invalid data', 'errors': serializer.errors})
+######################################################################################################
+
+class PlayersView(generics.ListAPIView):
+    queryset = Player.objects.all()
+    serializer_class = PlayerSerializer
+
+class RemovePlayerView(APIView):
+    def post(self, request, format=None):
+        if not request.session.exists(request.session.session_key):
+            return Response({'Bad Request': 'Invalid session...'}, status=status.HTTP_400_BAD_REQUEST)
+
+        session_id = request.session.session_key
+        room_code = request.data.get('code')
+        print("Session id: ", session_id)
+        try:
+            room = Room.objects.get(code=room_code)
+            # remove the player based on the room code and session Id. (Double check required)
+            player = Player.objects.get(session_id=session_id, room=room.id)
+            player.delete()
+            return Response({'success': 'Player removed successfully'}, status=status.HTTP_200_OK)
+        except Player.DoesNotExist:
+            raise Http404('Player does not exist.')

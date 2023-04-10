@@ -37,7 +37,12 @@ class Room(models.Model):
     created_at = models.DateField(auto_now_add=True) # auto timestamp of the creation
     max_players = models.IntegerField(null=False, default=4) # max players in the room
     current_players = models.IntegerField(null=False, default=1) # be default, the host is in the room after creation
-    # templateid = models.IntegerField(null=False, default=1)
+    game_started = models.BooleanField(null=False, default=False)
+
+class Player(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    session_id = models.CharField(max_length=50)
+    player_name = models.CharField(max_length=20)
 
 class Template(models.Model): # ID of the Template will be automatically added. Matching the template to the room settings will be processed through the ID/Code
     name = models.CharField(max_length=20, unique=True) # Template name
