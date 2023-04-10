@@ -27,6 +27,8 @@ export default function Room() {
     const [isHost, setIsHost] = useState(false);
     const csrftoken = getCookie('csrftoken');
     const [error, setError] = useState("");
+    const [playerName, setPlayerName] = useState("");
+    const [sessionId, setSessionId] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => { // applies the method on render
@@ -54,7 +56,11 @@ export default function Room() {
         })
         .then((data) => {
             const dataIsHost = data.is_host;
+            const session_id = data.session_id;
             console.log("logging data from response: Curr. Players: " , data.current_players, "host: ", dataIsHost);
+            console.log("Session ID: ", session_id);
+            console.log("data: ", data)
+            setSessionId(session_id);
             setIsHost(dataIsHost);
             setCurrentNumberOfPlayers(data.current_players);
             setMaxNumberOfPlayers(data.max_players);
@@ -97,6 +103,38 @@ export default function Room() {
           } else {
             console.log('Error after navigate')
             console.log(data.success)
+            throw new Error(`Error: ${data}`);
+          }
+        } catch (error) {
+          console.log(error);
+          setError("An error occurred while leaving the room.");
+        }
+      };
+
+      const removePlayer =  async () => {
+        const requestOptions = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+          },
+          body: JSON.stringify({ 
+            code: roomCode,
+            session_id: sessionId, 
+          }),
+        };
+        try {
+          const response = await fetch("/api/delete-player", requestOptions);
+          const data = await response.json();
+          console.log(data);
+          console.log(data.status);
+            // todo change it to status!
+          if (data.success === "Player removed successfully") { 
+            console.log("Leaving Room and removing player from the database");
+            // socket.emit("leave-room", { roomCode }); // emit the message to the server to handle players in the room.
+             // todo: Reset the roomCode state to an empty string
+          } else {
+            console.log('Error, player not found')
             throw new Error(`Error: ${data}`);
           }
         } catch (error) {
@@ -214,7 +252,7 @@ export default function Room() {
             <Button
                 variant="contained"
                 size="large"
-                onClick={() => leaveRoom()}
+                onClick={() => {removePlayer(); leaveRoom();}}
                 sx={{
                     backgroundColor: '#e74c3c',
                     color: '#fff',

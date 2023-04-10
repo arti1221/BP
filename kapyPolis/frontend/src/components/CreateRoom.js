@@ -36,6 +36,7 @@ export default function CreateRoom(props) {
     const [labelToShow, setLabelToShow] = useState(props.update ? "Update a Room" : "Create a Room");
     const [showSuccessMsg, setShowSuccessMsg] = useState(CreateRoom.defaultProps.showSuccessMsg);
     const [showErrorMsg, setShowErrorMsg] = useState(CreateRoom.defaultProps.showErrorMsg);
+    const [playerName, setPlayerName] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -50,6 +51,11 @@ export default function CreateRoom(props) {
       console.log(currentNumberOfPlayers);
     };
 
+    const handlePlayerName = (e) => {
+      setPlayerName(e.target.value);
+      console.log(playerName);
+    };
+
     const handlePlayersChange = () => {
         console.log("My csrf token", csrftoken);
         const requestOptions = {
@@ -61,6 +67,7 @@ export default function CreateRoom(props) {
             body: JSON.stringify(
                 {
                     max_players: currentNumberOfPlayers,
+                    player_name: playerName,
                 }
             ),
         }
@@ -112,6 +119,23 @@ export default function CreateRoom(props) {
             setShowErrorMsg(true);
             console.error(error) 
         });
+    };
+
+    const showSetName = () => {
+      return (
+        <div className='flex flex-col gap-4'>
+        <label for="user-name" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+            User Name
+        </label>
+        <input type="text" 
+                id="user-name" 
+                onChange={handlePlayerName}
+                aria-describedby="helper-text-explanation"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Your Name."
+        />
+    </div>
+      );
     };
 
     const createRoom = () => {
@@ -218,6 +242,9 @@ export default function CreateRoom(props) {
               {labelToShow}
             </h1>
         </div>
+
+        {props.update ? null : showSetName()}
+
         {/* Amount of Players TextField */}
         <div className='flex flex-row justify-center'>       
           <div className='flex flex-col gap-4'>
