@@ -31,10 +31,10 @@ export default function Room() {
     const [sessionId, setSessionId] = useState("");
     const navigate = useNavigate();
 
-    useEffect(() => { // applies the method on render
-        getRoomDetails();
-        console.log("Is host after fetch: ", isHost);
-    }, [roomCode, isHost, showUpdate]);
+    // useEffect(() => { // applies the method on render
+    //     getRoomDetails();
+    //     console.log("Is host after fetch: ", isHost);
+    // }, [roomCode, isHost, showUpdate]);
 
     const getRoomDetails = () => { 
         console.log("Retrieving room details for code " + roomCode);
@@ -71,6 +71,19 @@ export default function Room() {
         })
         console.log("the token " + csrftoken);
     }
+
+    useEffect(() => {
+      // Call getRoomDetails on component mount
+      getRoomDetails();
+  
+      // timer to call getRoomDetails every 0.1 second
+      const timerId = setInterval(() => {
+        getRoomDetails();
+      }, 100);
+  
+      // Clean up the timer when the component unmounts
+      return () => clearInterval(timerId);
+    }, [getRoomDetails, roomCode, isHost, showUpdate]);
 
     const leaveRoom = async () => {
         console.log("Fetching data for leaving room");
