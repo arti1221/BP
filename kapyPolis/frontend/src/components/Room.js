@@ -29,12 +29,8 @@ export default function Room() {
     const [error, setError] = useState("");
     const [playerName, setPlayerName] = useState("");
     const [sessionId, setSessionId] = useState("");
+    const [gameStarted, setGameStarted] = useState(false);
     const navigate = useNavigate();
-
-    // useEffect(() => { // applies the method on render
-    //     getRoomDetails();
-    //     console.log("Is host after fetch: ", isHost);
-    // }, [roomCode, isHost, showUpdate]);
 
     const getRoomDetails = () => { 
         console.log("Retrieving room details for code " + roomCode);
@@ -44,10 +40,12 @@ export default function Room() {
         fetch(`/api/get-room?code=${roomCode}`, { credentials: 'include' }) // include headers
         .then((response) => {
             // add if statement to differentiate whether the room exists or not. If not, clear the code and navigate to the HP
-            if (!response.ok) {
-              navigate("/");
+            if (!response.ok) {         
               navigate("/", {state: {errorMsg: `Failed to fetch room with code ${roomCode}`}});
             } else {
+              if (gameStarted == true) {
+                navigate(`/room/${roomCode}/Game`);
+              }
               console.log(response);
               console.log("Current players in response:", response.current_players);
               console.log("Current players in room:", currentNumberOfPlayers);
@@ -57,6 +55,7 @@ export default function Room() {
         .then((data) => {
             const dataIsHost = data.is_host;
             const session_id = data.session_id;
+            console.log("game started: ", gameStarted);
             console.log("logging data from response: Curr. Players: " , data.current_players, "host: ", dataIsHost);
             console.log("Session ID: ", session_id);
             console.log("data: ", data)
@@ -87,8 +86,6 @@ export default function Room() {
 
     const leaveRoom = async () => {
         console.log("Fetching data for leaving room");
-        console.log("My room code", roomCode);
-        console.log("My csrf token", csrftoken);
       
         const requestOptions = {
           method: "POST",
@@ -155,6 +152,33 @@ export default function Room() {
           setError("An error occurred while leaving the room.");
         }
       };
+
+      const startGame = () => {
+          const requestOptions = {
+            method: 'PATCH',
+            headers: { 
+                "Content-Type": "application/json",
+                'X-CSRFToken': csrftoken, // include the CSRF token in the headers
+            },
+            body: JSON.stringify(
+                {
+                    code: roomCode,
+                    game_started: true,
+                }
+            ),
+        }
+        fetch("/api/start-game", requestOptions)
+        .then((response) => { 
+            const data = response.json();
+            if (response.ok) {
+              setGameStarted(true);
+              console.log("Game started with current number of players: ", currentNumberOfPlayers);
+            }
+        })
+        .catch((error) => {
+            console.error(error) 
+        });
+      }
       
       const showUpdateButtonIfHost = () => {
         // Update Max Players Button
@@ -184,7 +208,7 @@ export default function Room() {
             <Button
               variant="contained"
               size="large"
-              // onClick={() => setshowUpdate(true)} // TODO
+              onClick={startGame} // TODO
               sx={{
                 backgroundColor: '#07da63',
                 color: '#fff',

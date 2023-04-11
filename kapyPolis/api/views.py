@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
 from api.models import Room, Template, ShopItem, Player
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer
 from rest_framework.parsers import MultiPartParser
 import base64
 from django.core.files.base import ContentFile
@@ -182,7 +182,37 @@ class UpdateRoomView(APIView):
         
         print('Room got updated. Returning response')
         return Response(RoomSerializer(room).data, status=status.HTTP_200_OK) # room updated
+      
+class StartGameView(APIView):
+    serializer_class = GameStartSerializer
 
+    def patch(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+
+        print("Request data:", self.request.data)
+
+        serializer = self.serializer_class(data=self.request.data)
+        print("S VAL: ", serializer.is_valid())
+        print(serializer)
+        print("Errors: ", serializer.errors)
+        if serializer.is_valid():
+            code = serializer.data.get('code')
+            game_started = serializer.data.get('game_started')
+
+            try:
+                room = Room.objects.get(code=code)
+            except Room.DoesNotExist:
+                raise Http404("Room does not exist.")
+
+            room.game_started = game_started
+            room.save(update_fields=['game_started'])
+
+            return Response(GameStartSerializer(room).data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+     
 ###################################################### TEMPLATES ############################################################
 
 class TemplateView(generics.ListAPIView):
