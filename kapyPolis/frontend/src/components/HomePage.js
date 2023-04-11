@@ -8,6 +8,7 @@ import CreateTemplate from './CreateTemplate';
 import Help from './Help'
 import { Button, Grid, Typography, TextField, FormHelperText, FormControl, FormControlLabel, RadioGroup, Radio, ButtonGroup } from "@mui/material";
 import HomePageMenu from './HomePageMenu'
+import Game from './Game'
 
 export default function HomePage() {
 
@@ -42,7 +43,7 @@ export default function HomePage() {
             <Route path='/template' element={<CreateTemplate/>}/>
             <Route path='/template/:name' element={<Template/>}/>
             <Route path='/help' element={<Help/>}/>
-
+            <Route path='/room/:roomCode/game' element={<Game/>}/>
             {/* <Route path='/room/:roomCode' element={<Room clearRoomCode={clearRoomCode} />} /> */}
             <Route path='*' element={<h1>ERROR 404 PAGE NOT FOUND.</h1>}/> // 404 not found page, every route that is valid has to be above this root.
         </Routes>

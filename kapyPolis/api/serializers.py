@@ -25,6 +25,12 @@ class UpdateRoomSerializer(serializers.ModelSerializer): # serializes the update
         model = Room
         fields = ('max_players', 'code') # ID of the template should be added here.
 
+class GameStartSerializer(serializers.ModelSerializer):
+    code = serializers.CharField(validators=[])
+    class Meta:
+        model = Room
+        fields = ('code', 'game_started')
+
 # TODO add startGame Serializer
 
 class ShopItemSerializer(serializers.ModelSerializer):
