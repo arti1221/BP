@@ -28,31 +28,65 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
     // cards
     const [card1Image, setCard1Image] = useState(null);
     const [card1Rule, setCard1Rule] = useState(1);
+    const [card1Max, setCard1Max] = useState(2);
+
+    const [card2Image, setCard2Image] = useState(null);
+    const [card2Rule, setCard2Rule] = useState(1);
+    const [card2Max, setCard2Max] = useState(2);
 
     const [card3Image, setCard3Image] = useState(null);
     const [card3Rule, setCard3Rule] = useState(false);
 
-    const [card2Image, setCard2Image] = useState(null);
-    const [card2Rule, setCard2Rule] = useState(1);
-
     const [card4Image, setCard4Image] = useState(null);
     const [card4Rule, setCard4Rule] = useState(1);
+
+    const [card5Image, setCard5Image] = useState(null);
+    const [card5Rule, setCard5Rule] = useState(1);
+    const [card5Max, setCard5Max] = useState(2);
+
+    const [win1, setWin1] = useState(true);
+    const [win2, setWin2] = useState(false);
+    const [winAmt, setWinAmt] = useState(3);
+
+    const [numFields, setNumFields] = useState(24);
+
+    const [reward, setReward] = useState(1000);
+
     const navigate = useNavigate();
 
     const handleBalanceChange  = (e) => {
         setBalance(parseInt(e.target.value));
-        console.log("Balance filled to: ", balance);
+    };
+
+    const handleReward  = (e) => {
+        setReward(parseInt(e.target.value));
+    };
+
+    const handleNumberOfFields  = (e) => {
+        setNumFields(parseInt(e.target.value));
     };
 
     const handleTemplateNameChange  = (e) => {
         setTemplateName(e.target.value);
-        console.log("Template name changed to: ", templateName);
     };
 
     // shop
     const handleShopNameChange  = (e) => {
         setShopName(e.target.value);
-        console.log("Template name changed to: ", shopName);
+    };
+
+    const handleSelection = (e) => { 
+        const selectedValue = event.target.value;
+        if (selectedValue == 'first') {
+            setWin1(true);
+            setWin2(false);
+            return;
+        }
+        if (selectedValue == 'second') {
+            console.log(selectedValue);
+            setWin1(false);
+            setWin2(true);
+        }
     };
 
     const handleImageChange = (e, setter) => {
@@ -69,23 +103,40 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
 
     const handleCard1RuleChange  = (e) => {
         setCard1Rule(parseInt(e.target.value));
-        console.log("Card rule 1 changed to: ", card1Rule);
+    };
+
+    const handleCard1RuleMaxChange = (e) => {
+        setCard1Max(parseInt(e.target.value));
     };
 
     const handleCard2RuleChange  = (e) => {
         setCard2Rule(parseInt(e.target.value));
-        console.log("Card rule 2 changed to: ", card2Rule);
+    };
+
+    const handleCard2RuleMaxChange = (e) => {
+        setCard2Max(parseInt(e.target.value));
     };
 
     const handleCard4RuleChange  = (e) => {
         setCard4Rule(parseInt(e.target.value));
-        console.log("Card rule 3 changed to: ", card4Rule);
+    };
+
+    const handleCard5RuleChange  = (e) => {
+        setCard5Rule(parseInt(e.target.value));
+    };
+
+    const handleCard5RuleMaxChange = (e) => {
+        setCard5Max(parseInt(e.target.value));
     };
 
 
     const handleCard3RuleChange = (e) => {
       setCard3Rule(e.target.checked);
     };
+
+    const handleWinAmt = (e) => {
+        setWinAmt(parseInt(e.target.value));
+    }
 
     // TEMPLATE CREATION:
     const handleCreateTemplate = async () => {
@@ -97,14 +148,24 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
         uploadData.append('start_balance', balance);
         uploadData.append('card_type1_image', card1Image);
         uploadData.append('card_type1_mvup', card1Rule);
+        uploadData.append('card_type1_mvup_max', card1Max);
         uploadData.append('card_type2_image', card2Image);
         uploadData.append('card_type2_mvdown', card2Rule);
+        uploadData.append('card_type2_mvdown_max', card2Max);
         uploadData.append('card_type3_image', card3Image);
         uploadData.append('card_type3_reset', card3Rule);
         uploadData.append('card_type4_image', card4Image);
         uploadData.append('card_type4_round_stop', card4Rule);
+        uploadData.append('card_type5_image', card5Image);
+        uploadData.append('card_type5_min', card5Rule);
+        uploadData.append('card_type5_max', card5Max);
         uploadData.append('shop_name', shopName);
         uploadData.append('shop_image', shopImage);
+        uploadData.append('reward_per_round', reward);
+        uploadData.append('number_of_rounds', numFields);
+        uploadData.append('winning_pos1', win1);
+        uploadData.append('winning_pos2', win2);
+        uploadData.append('winning_amt', winAmt);
         // uploadData.append('shop_items', []); // add an empty list for shop_items since they are gonna be added on next page.
         
         fetch("/api/create-template", {
@@ -196,7 +257,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                 <label for="card1-rule" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Card 1 Rule
+                    Card 1 Min
                 </label>
                 <input type="number" 
                         id="card1-rule" 
@@ -208,6 +269,21 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                 />
             </div>
             <div className='flex flex-col gap-4'>
+                <label for="card1-max" 
+                       class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
+                       >
+                    Card 1 Max
+                </label>
+                <input type="number" 
+                        id="card1-max" 
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        min={2}
+                        placeholder="Set num of spaces to move fwd"
+                        onChange={handleCard1RuleMaxChange}
+                />
+            </div>
+            <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
                        for="card1-image">Upload card 1 image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
@@ -215,6 +291,18 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard1Image)}
                        />
+            </div>
+            <div className='flex flex-col gap-4'>
+                    <label for="round-reward" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                        Reward per round
+                    </label>
+                    <input type="text" 
+                            id="round-reward" 
+                            onChange={handleReward}
+                            aria-describedby="helper-text-explanation"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                            placeholder="Min. 1000"
+                    />
             </div>
         </div>
 
@@ -236,6 +324,21 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                 />
             </div>
             <div className='flex flex-col gap-4'>
+                <label for="card2-max" 
+                       class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
+                       >
+                    Card 2 Max
+                </label>
+                <input type="number" 
+                        id="card2-max" 
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        min={2}
+                        placeholder="Set num of spaces to move fwd"
+                        onChange={handleCard2RuleMaxChange}
+                />
+            </div>
+            <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
                        for="card2-image">Upload card 2 image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
@@ -243,6 +346,19 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard2Image)}
                        />
+            </div>
+            <div className='flex flex-col gap-4'>
+                    <label for="round-amt" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                        Number of Fields
+                    </label>
+                    <input type="number"  
+                            id="round-amt" 
+                            onChange={handleNumberOfFields}
+                            aria-describedby="helper-text-explanation"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                            min={24}
+                            placeholder="Min. 24"
+                    />
             </div>
         </div>
         {/* Card 3 */}
@@ -275,6 +391,17 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                        onChange={(e) => handleImageChange(e, setCard3Image)}
                        />
             </div>
+            <div className='flex flex-col gap-4'>     
+            <label for="strategy" 
+                   class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a win strategy</label>
+            <select id="strategy" 
+                    class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
+                    onChange={handleSelection}
+                    >
+                <option selected value="first">Number of diff cards</option>
+                <option value="second">Inventory value </option>
+            </select>
+            </div>
         </div>
           {/* card 4 */}
         <div className='flex flex-row gap-4'>  
@@ -301,8 +428,64 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard4Image)}
                        />
-                </div>
+            </div>
+            <div className='flex flex-col gap-4'>
+                    <label for="win-goal" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                        Winning goal
+                    </label>
+                    <input type="number"  
+                            id="win-goal" 
+                            onChange={handleWinAmt}
+                            aria-describedby="helper-text-explanation"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                            min={24}
+                            placeholder="Min. 24"
+                    />
+            </div>
         </div>      
+
+        {/* card 5 */}
+        <div className='flex flex-row gap-4'>  
+            <div className='flex flex-col gap-4'>
+                <label for="card5-rule" 
+                       class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
+                       >
+                    Card 5 Rule
+                </label>
+                <input type="number" 
+                        id="card5-rule" 
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        min={1}
+                        placeholder="Min. Amount to win or lose"
+                        onChange={handleCard5RuleChange}
+                />
+            </div>
+            <div className='flex flex-col gap-4'>
+                <label for="card5-max" 
+                       class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
+                       >
+                    Card 5 Max
+                </label>
+                <input type="number" 
+                        id="card5-max" 
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        min={2}
+                        placeholder="Max. Amount to win or lose"
+                        onChange={handleCard5RuleMaxChange}
+                />
+            </div>
+            <div className='flex flex-col gap-4'>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                       for="card5-image">Upload card 5 image</label>
+                <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                       id="card5-image" 
+                       type="file"
+                       onChange={(e) => handleImageChange(e, setCard5Image)}
+                       />
+            </div>
+        </div>        
 
                         {/* BUTTONS */}
         <div className='flex flex-row gap-4 justify-center'>            

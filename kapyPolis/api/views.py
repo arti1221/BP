@@ -7,8 +7,8 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
-from api.models import Room, Template, ShopItem, Player
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer
+from api.models import Room, Template, ShopItem, Player, User
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer
 from rest_framework.parsers import MultiPartParser
 import base64
 from django.core.files.base import ContentFile
@@ -266,7 +266,8 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
         request_after_formatting.pop('csrfmiddlewaretoken', None)  # remove csrf token if present
 
         # Decode base64 image data
-        for fieldName in ['shop_image', 'card_type1_image', 'card_type2_image', 'card_type3_image', 'card_type4_image']:
+        for fieldName in ['shop_image', 'card_type1_image', 'card_type2_image', 'card_type3_image', 'card_type4_image',
+                          'card_type5_image']:
             if fieldName in request.data:
                 try:
                     file_data = request.data.get(fieldName)
@@ -287,16 +288,30 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
             shop_name = serializer.data.get('shop_name')
             start_balance = serializer.data.get('start_balance')
             card_type1_mvup = serializer.data.get('card_type1_mvup')
+            card_type1_mvup_max = serializer.data.get('card_type1_mvup_max')
+
             card_type2_mvdown = serializer.data.get('card_type2_mvdown')
+            card_type2_mvdown_max = serializer.data.get('card_type2_mvdown_max')
+
             card_type3_reset = serializer.data.get('card_type3_reset')
             card_type4_round_stop = serializer.data.get('card_type4_round_stop')
             
+            card_type5_min = serializer.data.get('card_type5_min')
+            card_type5_max = serializer.data.get('card_type5_max')
+
+            reward_per_round = serializer.data.get('reward_per_round')
+            number_of_rounds = serializer.data.get('number_of_rounds')
+            winning_pos1 = serializer.data.get('winning_pos1')
+            winning_pos2 = serializer.data.get('winning_pos2')
+            winning_amt = serializer.data.get('winning_amt')
+
             # images
             shop_image = request.FILES.get('shop_image')
             card_type1_image = request.FILES.get('card_type1_image')
             card_type2_image = request.FILES.get('card_type2_image')
             card_type3_image = request.FILES.get('card_type3_image')
             card_type4_image = request.FILES.get('card_type4_image')
+            card_type5_image = request.FILES.get('card_type5_image')
 
             queryset = Template.objects.filter(name=name)
             if queryset.exists(): # updating existing Template.
@@ -310,9 +325,11 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
 
                 template.card_type1_image = card_type1_image
                 template.card_type1_mvup = card_type1_mvup
+                template.card_type1_mvup_max = card_type1_mvup_max
 
                 template.card_type2_image = card_type2_image
                 template.card_type2_mvdown = card_type2_mvdown
+                template.card_type2_mvdown_max = card_type2_mvdown_max
 
                 template.card_type3_image = card_type3_image
                 template.card_type3_reset = card_type3_reset
@@ -320,22 +337,39 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
                 template.card_type4_image = card_type4_image
                 template.card_type4_round_stop = card_type4_round_stop
 
+                template.card_type5_image = card_type5_image
+                template.card_type5_min = card_type5_min
+                template.card_type5_max = card_type5_max
+
+                template.reward_per_round = reward_per_round
+                template.number_of_rounds = number_of_rounds
+                template.winning_pos1 = winning_pos1 
+                template.winning_pos2 = winning_pos2
+                template.winning_amt = winning_amt
+
                 template.save(update_fields=['id', 'name', 'start_balance',
-                  'card_type1_image', 'card_type1_mvup',
-                  'card_type2_image', 'card_type2_mvdown',
+                  'card_type1_image', 'card_type1_mvup', 'card_type1_mvup_max',
+                  'card_type2_image', 'card_type2_mvdown','card_type2_mvdown_max',
                   'card_type3_image', 'card_type3_reset',
                   'card_type4_image', 'card_type4_round_stop',
-                  'shop_name', 'shop_image', 'shop_items'])
+                  'card_type5_image', 'card_type5_min', 'card_type5_max',
+                  'shop_name', 'shop_image', 'shop_items',
+                  'reward_per_round', 'number_of_rounds', 
+                  'winning_pos1', 'winning_pos2', 'winning_amt'
+                  ])
 
                 return Response(CreateTemplateSerializer(template).data, status=status.HTTP_200_OK)
 
             else: # creating new Template.
                 template = Template(name=name, start_balance=start_balance,
                                     shop_name=shop_name, shop_image=shop_image, 
-                                    card_type1_image=card_type1_image, card_type1_mvup=card_type1_mvup,
-                                    card_type2_image=card_type2_image, card_type2_mvdown=card_type2_mvdown,
+                                    card_type1_image=card_type1_image, card_type1_mvup=card_type1_mvup, card_type1_mvup_max=card_type1_mvup_max,
+                                    card_type2_image=card_type2_image, card_type2_mvdown=card_type2_mvdown, card_type2_mvdown_max=card_type2_mvdown_max,
                                     card_type3_image=card_type3_image, card_type3_reset=card_type3_reset,
-                                    card_type4_image=card_type4_image, card_type4_round_stop=card_type4_round_stop
+                                    card_type4_image=card_type4_image, card_type4_round_stop=card_type4_round_stop,
+                                    card_type5_image=card_type5_image, card_type5_min=card_type5_min, card_type5_max=card_type5_max,
+                                    reward_per_round=reward_per_round, number_of_rounds=number_of_rounds, 
+                                    winning_pos1=winning_pos1, winning_pos2=winning_pos2, winning_amt=winning_amt
                                     )
                 template.save()
                 return Response(CreateTemplateSerializer(template).data, status=status.HTTP_200_OK)
@@ -373,7 +407,7 @@ class CreateShopItemsView(APIView):
     def post(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
-                # Set CSRF token in response
+        # Set CSRF token in response
         response = Response()
         response['X-CSRFToken'] = get_token(request)
 
@@ -425,6 +459,7 @@ class CreateShopItemsView(APIView):
             name = serializer.data.get('name')
             image = request.FILES.get('image')
             price = serializer.data.get('price')
+            max_price = serializer.data.get('price_max')
 
             queryset = ShopItem.objects.filter(name=name)
             if queryset.exists(): # updating existing Template.
@@ -433,8 +468,9 @@ class CreateShopItemsView(APIView):
                 shop_item.name = name
                 shop_item.image = image
                 shop_item.price = price
+                shop_item.price_max = max_price
                 # update fields
-                shop_item.save(update_fields=['template', 'name', 'image', 'price'])
+                shop_item.save(update_fields=['template', 'name', 'image', 'price', 'price_max'])
 
                 return Response({'status': 'Shop Item updated successfully'}) # Serializer should be retrieved if future usage is needed.
 
@@ -443,7 +479,8 @@ class CreateShopItemsView(APIView):
                 shop_item = ShopItem(template=template, 
                                      name=name,
                                      image=image,
-                                     price=price
+                                     price=price,
+                                     price_max=max_price
                                     )
                 shop_item.save()
 
@@ -474,3 +511,54 @@ class RemovePlayerView(APIView):
             return Response({'success': 'Player removed successfully'}, status=status.HTTP_200_OK)
         except Player.DoesNotExist:
             raise Http404('Player does not exist.')
+        
+#######################################################################################################
+class UserView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+@method_decorator(csrf_protect, name='dispatch')
+class RegisterUserView(APIView):
+    serializer_class = UserSerializer
+
+    def post(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+        # Set CSRF token in response
+        response = Response()
+        response['X-CSRFToken'] = get_token(request)
+
+        serializer = self.serializer_class(data=request.data)
+        # The copy has to be made since the request QuerySet is immutable hence it could not
+        # be overriden with any image data correction from base 64 for example to png.
+        # after that the original response should be used
+        request_after_formatting = request.POST.copy() # copy it here
+        request_after_formatting.pop('csrfmiddlewaretoken', None)  # remove csrf token if present      
+
+        print("is valid: ", serializer.is_valid())
+        print("serializer data: ", serializer.data)
+        if serializer.is_valid():
+            
+            name = serializer.data.get('name')
+            password = serializer.data.get('password')
+
+            queryset = User.objects.filter(name=name)
+
+            if queryset.exists(): # updating existing Template.
+                user = queryset[0]
+                user.name = name
+                user.password = password
+                # update fields
+                user.save(update_fields=['name', 'password'])
+                return Response({'status': 'User Updated successfully'}) # Serializer should be retrieved if future usage is needed.
+
+            else: # creating new Template.
+                print("creating a new item")
+                user = User(name=name,
+                            password=password,
+                            )
+                user.save()
+                return Response({'status': 'User Registered successfully'})
+        else: 
+           print(serializer.data)
+           return Response({'status': 'Invalid data', 'errors': serializer.errors})

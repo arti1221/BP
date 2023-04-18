@@ -27,6 +27,7 @@ export default function Template() {
     const { name } = useParams(); // The template name, hook
     const [itemName, setItemName] = useState("");
     const [itemPrice, setItemPrice] = useState(1000); // 1k by default
+    const [maxItemPrice, setMaxItemPrice] = useState(2000);
     const [itemImage, setItemImage] = useState(null); // image null by default.
     const navigate = useNavigate();
     const location = useLocation();
@@ -39,6 +40,11 @@ export default function Template() {
     const handleItemPrice = (e) => {
       setItemPrice(parseInt(e.target.value));
       console.log("Item price changed to: ", itemPrice);
+  };
+
+    const handleMaxItemPrice = (e) => {
+      setMaxItemPrice(parseInt(e.target.value));
+      console.log("Max Item price changed to: ", maxItemPrice);
   };
 
     const handleItemImage = (e) => {
@@ -60,7 +66,7 @@ export default function Template() {
       uploadData.append('name', itemName);
       uploadData.append('image', itemImage);
       uploadData.append('price', itemPrice);
-    
+      uploadData.append('price_max', maxItemPrice);
       try {
         const response = await fetch("/api/create-shop-items", {
           method: 'POST',
@@ -151,7 +157,20 @@ export default function Template() {
                     min={1}
                     aria-describedby="helper-text-explanation"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                    placeholder="Enter price, min 1"
+                    placeholder="Enter min price, min 1"
+            />
+          </div>
+          <div className='flex flex-col gap-4'>
+            <label for="max-item-price" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                Max Item price
+            </label>
+            <input type="text" 
+                    id="max-item-price" 
+                    onChange={handleMaxItemPrice}
+                    min={1}
+                    aria-describedby="helper-text-explanation"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                    placeholder="enter max price, max. 1000"
             />
           </div>
           <div className='flex flex-col gap-4'>
