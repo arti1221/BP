@@ -9,4 +9,6 @@ urlpatterns = [
     path('template', index), # template page
     path("template/<str:name>", index),
     path('help', index), # help page
+    path('create-user', index),
+    path('login', index),
 ]

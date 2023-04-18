@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import Room, ShopItem, Template, Player
+from api.models import Room, ShopItem, Template, Player, User
 
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,7 +36,7 @@ class GameStartSerializer(serializers.ModelSerializer):
 class ShopItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopItem
-        fields = ['id', 'template', 'name', 'image', 'price']
+        fields = ['id', 'template', 'name', 'image', 'price', 'price_max']
 
 class TemplateSerializer(serializers.ModelSerializer):
     shop_items = ShopItemSerializer(many=True, read_only=True, source='shopitem_set')
@@ -47,7 +47,12 @@ class TemplateSerializer(serializers.ModelSerializer):
                   'card_type2_image', 'card_type2_mvdown',
                   'card_type3_image', 'card_type3_reset',
                   'card_type4_image', 'card_type4_round_stop',
-                  'shop_items']
+                  'shop_items',
+                  'card_type1_mvup_max', 'card_type2_mvdown_max', 
+                  'card_type5_image', 'card_type5_min', 'card_type5_max',
+                  'reward_per_round', 'number_of_rounds', 
+                  'winning_pos1', 'winning_pos2', 'winning_amt'
+                  ]
         
 # WORKS WITHOUT SHOP ITEMS ON CEATION. Shop items are gonna be handled separately.
 class CreateTemplateSerializer(serializers.ModelSerializer):
@@ -59,7 +64,12 @@ class CreateTemplateSerializer(serializers.ModelSerializer):
                   'card_type2_image', 'card_type2_mvdown',
                   'card_type3_image', 'card_type3_reset',
                   'card_type4_image', 'card_type4_round_stop',
-                  'shop_name', 'shop_image', 'shop_items')
+                  'shop_name', 'shop_image', 'shop_items',
+                  'card_type1_mvup_max', 'card_type2_mvdown_max', 
+                  'card_type5_image', 'card_type5_min', 'card_type5_max',
+                  'reward_per_round', 'number_of_rounds', 
+                  'winning_pos1', 'winning_pos2', 'winning_amt'
+                  )
 
     def create(self, validated_data):
         shop_items_data = validated_data.pop('shop_items')
@@ -108,3 +118,8 @@ class CreateTemplateSerializer(serializers.ModelSerializer):
                 shop_item.delete()
 
         return instance
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'password']
