@@ -123,3 +123,9 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'name', 'password']
+
+class AuthorizeSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(validators=[]) # does not validate, we want to use a code that already exists since it is unique true
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'password']

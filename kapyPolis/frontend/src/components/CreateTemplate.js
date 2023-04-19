@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { Button, Grid} from "@mui/material";
 // import getCookie from "./CreateRoom"
 import { useNavigate} from 'react-router-dom';
+import {useSelector, shallowEqual} from "react-redux"; 
+import InvalidOperation from './InvalidOperation';
+
 
 function getCookie(name) {
     let cookieValue = null;
@@ -20,6 +23,8 @@ function getCookie(name) {
   }
 
 export default function CreateTemplate() { // todo add props as in CreateRoom
+    const [isLoggedIn, entered, name] = useSelector((state) => [state.global.isLoggedIn, state.global.entered, state.global.name], shallowEqual);
+    console.log(isLoggedIn, " ", name);
     const csrftoken = getCookie('csrftoken');
     const [balance, setBalance] = useState(1000);
     const [templateName, setTemplateName] = useState("");
@@ -189,6 +194,8 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
         });
     };
 
+
+    const loadPage = () => {
 
     return (
         <form
@@ -525,8 +532,13 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                         CANCEL
                     </Button>
                 </Grid>
-                </div>
+            </div>
             </div>
         </form>
     );
+};
+
+return (
+    isLoggedIn ? loadPage() : InvalidOperation()
+);
 }

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Button, Grid, Typography, TextField, FormHelperText, Box,
-    FormControl, FormControlLabel, RadioGroup, Radio, Alert, Collapse 
-} from "@mui/material";
-import { create } from '@mui/material/styles/createTransitions';
+import { Button, Grid} from "@mui/material";
 import Success from './Success'
+import InvalidOperation from './InvalidOperation';
+import {useSelector, shallowEqual} from "react-redux"; 
 
 function getCookie(name) {
   let cookieValue = null;
@@ -24,6 +23,7 @@ function getCookie(name) {
 
 export default function Template() {
     const csrftoken = getCookie('csrftoken');
+    const [isLoggedIn, entered, loginName] = useSelector((state) => [state.global.isLoggedIn, state.global.entered, state.global.name], shallowEqual);
     const { name } = useParams(); // The template name, hook
     const [itemName, setItemName] = useState("");
     const [itemPrice, setItemPrice] = useState(1000); // 1k by default
@@ -40,12 +40,12 @@ export default function Template() {
     const handleItemPrice = (e) => {
       setItemPrice(parseInt(e.target.value));
       console.log("Item price changed to: ", itemPrice);
-  };
+    };
 
     const handleMaxItemPrice = (e) => {
       setMaxItemPrice(parseInt(e.target.value));
       console.log("Max Item price changed to: ", maxItemPrice);
-  };
+    };
 
     const handleItemImage = (e) => {
       const selectedFile = e.target.files[0];
@@ -122,6 +122,8 @@ export default function Template() {
           console.log(error)
       })
   }
+
+  const loadPage = () => {
 
     return (
       <form className='flex flex-col flex-wrap gap-4'>
@@ -224,5 +226,11 @@ export default function Template() {
               </div>
           </div>
       </form>
-    );
+    ); 
+  };
+
+return (
+  isLoggedIn ? loadPage() : InvalidOperation()
+);
+
 }
