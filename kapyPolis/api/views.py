@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
 from api.models import Room, Template, ShopItem, Player, User
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer
 from rest_framework.parsers import MultiPartParser
 import base64
 from django.core.files.base import ContentFile
@@ -16,6 +16,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 import io
 from PIL import Image
 import sys
+from django.contrib.auth.hashers import check_password
 
 # TODO: if response 400 or bad, throw exception to go to catch blyat :)
 
@@ -529,12 +530,6 @@ class RegisterUserView(APIView):
         response['X-CSRFToken'] = get_token(request)
 
         serializer = self.serializer_class(data=request.data)
-        # The copy has to be made since the request QuerySet is immutable hence it could not
-        # be overriden with any image data correction from base 64 for example to png.
-        # after that the original response should be used
-        request_after_formatting = request.POST.copy() # copy it here
-        request_after_formatting.pop('csrfmiddlewaretoken', None)  # remove csrf token if present      
-
         print("is valid: ", serializer.is_valid())
         print("serializer data: ", serializer.data)
         if serializer.is_valid():
@@ -543,22 +538,45 @@ class RegisterUserView(APIView):
             password = serializer.data.get('password')
 
             queryset = User.objects.filter(name=name)
-
-            if queryset.exists(): # updating existing Template.
-                user = queryset[0]
-                user.name = name
-                user.password = password
-                # update fields
-                user.save(update_fields=['name', 'password'])
-                return Response({'status': 'User Updated successfully'}) # Serializer should be retrieved if future usage is needed.
-
-            else: # creating new Template.
-                print("creating a new item")
+            
+            print("e", queryset.exists())
+            if not queryset.exists(): # updating existing Template.
                 user = User(name=name,
                             password=password,
                             )
                 user.save()
                 return Response({'status': 'User Registered successfully'})
         else: 
-           print(serializer.data)
-           return Response({'status': 'Invalid data', 'errors': serializer.errors})
+           print("ss", serializer.data)
+           return Response({'status': 'Invalid data', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+@method_decorator(csrf_protect, name='dispatch')
+class AuthorizeUser(APIView):
+    serializer_class = AuthorizeSerializer
+
+    def post(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+        # Set CSRF token in response
+        response = Response()
+        response['X-CSRFToken'] = get_token(request)
+
+        serializer = self.serializer_class(data=request.data)
+
+        print("is valid: ", serializer.is_valid())
+        print("serializer data: ", serializer.data)
+        if serializer.is_valid():
+            name = serializer.data.get('name')
+            password = serializer.data.get('password')
+            queryset = User.objects.filter(name=name)
+
+            if queryset.exists(): # updating existing Template.
+                user = queryset[0]
+                pwd_ok = check_password(password, user.password)
+                if (pwd_ok):
+                    return Response({'status': 'User logged in successfully.'}, status=status.HTTP_200_OK)
+                return Response({'status': 'Invalid password', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)  
+            return Response({'status': 'Invalid username', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)               
+        print("error: ", serializer.data)
+        return Response({'status': 'Invalid data', 'errors': serializer.errors})

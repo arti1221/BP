@@ -4,6 +4,7 @@ export const getDefaultGlobalStructure = () => {
     return {
         entered:false,
         isLoggedIn:false,
+        name:null,
     }
 }
 

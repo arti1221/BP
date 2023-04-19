@@ -14,6 +14,26 @@ export default function HomePageMenu() {
         return MainMenu();
     }
 
+    const loadTemplateButton = () => {
+        return (
+            <Button
+            variant="contained"
+            size="large"
+            sx={{
+                backgroundColor: '#00bcd4',
+                color: '#fff',
+                '&:hover': {
+                backgroundColor: '#008ba3',
+                },
+            }}
+            to="/template"
+            component={Link}
+            >
+            Create a Template
+        </Button>   
+        );
+    }
+
     const loadMenu = () => {
         return (
             <div className='flex flex-col flex-wrap gap-4'>
@@ -64,22 +84,7 @@ export default function HomePageMenu() {
                         </Button>
 
                         {/* Create Template Button */}
-                        <Button
-                            variant="contained"
-                            size="large"
-                            sx={{
-                                backgroundColor: '#00bcd4',
-                                color: '#fff',
-                                '&:hover': {
-                                backgroundColor: '#008ba3',
-                                },
-                            }}
-                            to="/template"
-                            component={Link}
-                            >
-                            Create a Template
-                        </Button>     
-                                        
+                        {isLoggedIn ? loadTemplateButton() : null}
                         {/* Help */}
                         <Button
                             variant="contained"
