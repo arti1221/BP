@@ -314,6 +314,7 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
             card_type4_image = request.FILES.get('card_type4_image')
             card_type5_image = request.FILES.get('card_type5_image')
 
+            author = serializer.data.get('author')
             queryset = Template.objects.filter(name=name)
             if queryset.exists(): # updating existing Template.
                 print('exist')
@@ -347,7 +348,7 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
                 template.winning_pos1 = winning_pos1 
                 template.winning_pos2 = winning_pos2
                 template.winning_amt = winning_amt
-
+                template.author = author
                 template.save(update_fields=['id', 'name', 'start_balance',
                   'card_type1_image', 'card_type1_mvup', 'card_type1_mvup_max',
                   'card_type2_image', 'card_type2_mvdown','card_type2_mvdown_max',
@@ -356,7 +357,8 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
                   'card_type5_image', 'card_type5_min', 'card_type5_max',
                   'shop_name', 'shop_image', 'shop_items',
                   'reward_per_round', 'number_of_rounds', 
-                  'winning_pos1', 'winning_pos2', 'winning_amt'
+                  'winning_pos1', 'winning_pos2', 'winning_amt',
+                  'author'
                   ])
 
                 return Response(CreateTemplateSerializer(template).data, status=status.HTTP_200_OK)
@@ -370,7 +372,8 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
                                     card_type4_image=card_type4_image, card_type4_round_stop=card_type4_round_stop,
                                     card_type5_image=card_type5_image, card_type5_min=card_type5_min, card_type5_max=card_type5_max,
                                     reward_per_round=reward_per_round, number_of_rounds=number_of_rounds, 
-                                    winning_pos1=winning_pos1, winning_pos2=winning_pos2, winning_amt=winning_amt
+                                    winning_pos1=winning_pos1, winning_pos2=winning_pos2, winning_amt=winning_amt,
+                                    author=author
                                     )
                 template.save()
                 return Response(CreateTemplateSerializer(template).data, status=status.HTTP_200_OK)
@@ -395,6 +398,31 @@ class GetTemplateView(APIView):
                 return Response(data, status=status.HTTP_200_OK)
             raise Http404("Template does not exist.")
         return Response({'Bad Request': 'Name param is invalid...'}, status=status.HTTP_400_BAD_REQUEST)
+    
+class GetAllTemplatesView(APIView):
+    serializer_class = TemplateSerializer
+
+    def get(self, req, format=None):
+        templates = Template.objects.all()
+        template_names = [template.name for template in templates]
+        if (template_names):
+            return JsonResponse({'template_names': template_names}, status=status.HTTP_200_OK)
+        return Response({'Bad Request': 'No templates found'}, status=status.HTTP_400_BAD_REQUEST)
+    
+class GetAuthorTemplatesView(APIView):
+    serializer_class = TemplateSerializer
+    lookup_url_kwarg = 'author' # pass a param 
+
+    def get(self, req, format=None):
+        author = req.query_params.get('author') # get request for param code
+
+        if author:
+            templates = Template.objects.filter(author=author)
+            template_names = [template.name for template in templates]
+            if template_names:
+                return JsonResponse({'template_names': template_names}, status=status.HTTP_200_OK)
+        return Response({'Bad Request': 'No templates found'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 ############################################################################################################
 class ShopItemsView(generics.ListAPIView):
@@ -489,7 +517,7 @@ class CreateShopItemsView(APIView):
         # invalid
         else: 
            print(serializer.data)
-           return Response({'status': 'Invalid data', 'errors': serializer.errors})
+           return Response({'status': 'Invalid data', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 ######################################################################################################
 
 class PlayersView(generics.ListAPIView):

@@ -81,7 +81,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
     };
 
     const handleSelection = (e) => { 
-        const selectedValue = event.target.value;
+        const selectedValue = e.target.value;
         if (selectedValue == 'first') {
             setWin1(true);
             setWin2(false);
@@ -171,6 +171,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
         uploadData.append('winning_pos1', win1);
         uploadData.append('winning_pos2', win2);
         uploadData.append('winning_amt', winAmt);
+        uploadData.append('author', name);
         // uploadData.append('shop_items', []); // add an empty list for shop_items since they are gonna be added on next page.
         
         fetch("/api/create-template", {

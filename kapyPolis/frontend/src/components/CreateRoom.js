@@ -38,12 +38,37 @@ export default function CreateRoom(props) {
     const [showErrorMsg, setShowErrorMsg] = useState(CreateRoom.defaultProps.showErrorMsg);
     const [playerName, setPlayerName] = useState("");
     const navigate = useNavigate();
+    const [templateNames, setTemplateNames] = useState([]);
 
     useEffect(() => {
         setLabelToShow(props.update ? "Update a Room" : "Create a Room");
+        getTemplateNames();
         console.log(showSuccessMsg);
         console.log(showErrorMsg);
-      }, [props.update, showSuccessMsg, showErrorMsg]);
+      }, [props.update, showSuccessMsg, showErrorMsg, templateNames]);
+
+
+    const getTemplateNames  = () => {
+      fetch(`/api/get-all-templates`, { credentials: 'include' }) // include headers
+      .then((response) => {
+          // add if statement to differentiate whether the room exists or not. If not, clear the code and navigate to the HP
+          if (!response.ok) {
+            navigate("/", {state: {errorMsg: `Failed to fetch Template with name ${name}`}});
+          } else {
+            console.log("NAMES RETRIEVED:", response);
+            return response.json();
+          }
+      })
+      .then((data) => {
+          console.log("Retrieving data for the template:", data);
+          setTemplateNames(data.template_names); // Extract names from data and store in an array
+          console.log("Template Names:", templateNames);
+      })
+      .catch((error) => {
+          console.log("e");
+          console.log(error)
+      })
+    }  
 
     // handles the amount of players after room creation
     const handleNumberOfPlayersChange = (e) => {
@@ -86,7 +111,10 @@ export default function CreateRoom(props) {
         .catch((error) => console.error(error));
     };
   
-
+    const handleSelection = (e) => { 
+      const selectedValue = e.target.value;
+      console.log(selectedValue);
+  };
     const handleRoomUpdate = () => {
         console.log("My csrf token", csrftoken);
         const requestOptions = {
@@ -140,7 +168,18 @@ export default function CreateRoom(props) {
 
     const createRoom = () => {
         return (
-          <div className='flex flex-col flex-wrap gap-4'>     
+          <div className='flex flex-col flex-wrap gap-4'>   
+            <label for="strategy" 
+                 class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a template</label>
+            <select id="strategy" 
+                    class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
+                    onChange={handleSelection}
+                    >
+            {templateNames.map(name => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+  
             <Grid item xs={12} align="center">
                 <Button
                     variant="contained"
