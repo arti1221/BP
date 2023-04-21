@@ -39,7 +39,7 @@ class Room(models.Model):
     max_players = models.IntegerField(null=False, default=4) # max players in the room
     current_players = models.IntegerField(null=False, default=1) # be default, the host is in the room after creation
     game_started = models.BooleanField(null=False, default=False)
-    # TODO: add author here
+    template_name = models.CharField(max_length=20, default="")
 
 class Player(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)

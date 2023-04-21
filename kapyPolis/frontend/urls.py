@@ -11,4 +11,5 @@ urlpatterns = [
     path('help', index), # help page
     path('create-user', index),
     path('login', index),
+    path('update-template', index),
 ]

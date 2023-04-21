@@ -39,12 +39,12 @@ export default function CreateRoom(props) {
     const [playerName, setPlayerName] = useState("");
     const navigate = useNavigate();
     const [templateNames, setTemplateNames] = useState([]);
+    const [selectedTemplate, setSelectedTemplate] = useState("")
+    const [firstSelection, setFirstSelection] = useState(false);
 
     useEffect(() => {
         setLabelToShow(props.update ? "Update a Room" : "Create a Room");
         getTemplateNames();
-        console.log(showSuccessMsg);
-        console.log(showErrorMsg);
       }, [props.update, showSuccessMsg, showErrorMsg, templateNames]);
 
 
@@ -55,14 +55,16 @@ export default function CreateRoom(props) {
           if (!response.ok) {
             navigate("/");
           } else {
-            console.log("NAMES RETRIEVED:", response);
             return response.json();
           }
       })
       .then((data) => {
-          console.log("Retrieving data for the template:", data);
           setTemplateNames(data.template_names); // Extract names from data and store in an array
-          console.log("Template Names:", templateNames);
+          if (templateNames.length > 0 && !firstSelection) {
+            console.log("first template", templateNames[0]);
+            setSelectedTemplate(templateNames[0]);
+            setFirstSelection(true);
+          }
       })
       .catch((error) => {
           console.log("e");
@@ -73,16 +75,13 @@ export default function CreateRoom(props) {
     // handles the amount of players after room creation
     const handleNumberOfPlayersChange = (e) => {
       setCurrentNumberOfPlayers(parseInt(e.target.value));
-      console.log(currentNumberOfPlayers);
     };
 
     const handlePlayerName = (e) => {
       setPlayerName(e.target.value);
-      console.log(playerName);
     };
 
     const handlePlayersChange = () => {
-        console.log("My csrf token", csrftoken);
         const requestOptions = {
             method: 'POST',
             headers: { 
@@ -93,19 +92,16 @@ export default function CreateRoom(props) {
                 {
                     max_players: currentNumberOfPlayers,
                     player_name: playerName,
+                    template_name: selectedTemplate,
                 }
             ),
         }
         fetch("/api/create-room", requestOptions)
         .then((response) => { 
-            console.log(response);
-            console.log(currentNumberOfPlayers);
-            console.log("update: ", props.update);
             return response.json();
         }
             ) // take response and convert it to json obj
         .then((data) => { 
-            console.log(data);
             navigate(`/room/${data.code}`);
         }) // log data
         .catch((error) => console.error(error));
@@ -113,10 +109,11 @@ export default function CreateRoom(props) {
   
     const handleSelection = (e) => { 
       const selectedValue = e.target.value;
-      console.log(selectedValue);
-  };
+      setSelectedTemplate(selectedValue);
+      console.log("temp selected", selectedValue); 
+    };
+
     const handleRoomUpdate = () => {
-        console.log("My csrf token", csrftoken);
         const requestOptions = {
             method: 'PATCH',
             headers: { 
@@ -127,6 +124,7 @@ export default function CreateRoom(props) {
                 {
                     code: props.roomCode,
                     max_players: currentNumberOfPlayers,
+                    template_name: selectedTemplate,
                 }
             ),
         }
@@ -138,12 +136,9 @@ export default function CreateRoom(props) {
                 setShowErrorMsg(true);
             }
             const data = response.json();
-            console.log("updating the room", currentNumberOfPlayers);
-            console.log(data);
             props.onUpdateCallback();
         })
         .catch((error) => {
-            console.log('eggeagsag');
             setShowErrorMsg(true);
             console.error(error) 
         });
@@ -151,34 +146,26 @@ export default function CreateRoom(props) {
 
     const showSetName = () => {
       return (
-        <div className='flex flex-col gap-4'>
-        <label for="user-name" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
-            User Name
-        </label>
-        <input type="text" 
-                id="user-name" 
-                onChange={handlePlayerName}
-                aria-describedby="helper-text-explanation"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="Your Name."
-        />
-    </div>
+        <div className='flex flex-row justify-center'> 
+          <div className='flex flex-col gap-4'>
+          <label for="user-name" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+              User Name
+          </label>
+          <input type="text" 
+                  id="user-name" 
+                  onChange={handlePlayerName}
+                  aria-describedby="helper-text-explanation"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder="Your Name."
+          />
+          </div>
+       </div>
       );
     };
 
     const createRoom = () => {
         return (
           <div className='flex flex-col flex-wrap gap-4'>   
-            <label for="strategy" 
-                 class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a template</label>
-            <select id="strategy" 
-                    class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-                    onChange={handleSelection}
-                    >
-            {templateNames.map(name => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
   
             <Grid item xs={12} align="center">
                 <Button
@@ -274,7 +261,7 @@ export default function CreateRoom(props) {
     </Alert>
   </Collapse>
 </Grid>
-
+    <div className='flex flex-col flex-wrap gap-4'>
         {/* Header */}
         <div className='flex justify-center'> 
             <h1 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
@@ -299,7 +286,22 @@ export default function CreateRoom(props) {
                       placeholder="2"
               />
               </div>
-         </div> 
+            </div> 
+        <div className='flex flex-row justify-center'>  
+          <div className='flex flex-col gap-4'>
+            <label for="strategy" 
+                 class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a template</label>
+            <select id="strategy" 
+                    class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
+                    onChange={handleSelection}
+                    >
+                {templateNames.map(name => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+          </div> 
+        </div> 
         {props.update ? updateRoom() : createRoom()}
+        </div>
     </div>);
 }

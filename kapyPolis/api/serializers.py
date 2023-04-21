@@ -10,26 +10,27 @@ class RoomSerializer(serializers.ModelSerializer):
     players = PlayerSerializer(many=True, read_only=True, source='player_set')
     class Meta:
         model = Room
-        fields = ('id', 'code', 'host', 'created_at', 'max_players', 'current_players', 'game_started','players')
+        fields = ('id', 'code', 'host', 'created_at', 'max_players', 'current_players', 'game_started','players',
+                   'template_name')
 
 class CreateRoomSerializer(serializers.ModelSerializer): # serializes post request
     players = PlayerSerializer(many=True, read_only=True, source='player_set')
     class Meta:
         model = Room
-        fields = ('max_players', 'players') # fields that are used in the post request and validates
+        fields = ('max_players', 'players', 'template_name') # fields that are used in the post request and validates
 
 class UpdateRoomSerializer(serializers.ModelSerializer): # serializes the update request and sends the data that are to be updated
     code = serializers.CharField(validators=[]) # does not validate, we want to use a code that already exists since it is unique true
     
     class Meta:
         model = Room
-        fields = ('max_players', 'code') # ID of the template should be added here.
+        fields = ('max_players', 'code', 'template_name') # ID of the template should be added here.
 
 class GameStartSerializer(serializers.ModelSerializer):
     code = serializers.CharField(validators=[])
     class Meta:
         model = Room
-        fields = ('code', 'game_started')
+        fields = ('code', 'game_started', 'template_name')
 
 # TODO add startGame Serializer
 
