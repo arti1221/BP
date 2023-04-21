@@ -34,6 +34,27 @@ export default function HomePageMenu() {
         );
     }
 
+    
+    const loadUpdateTemplateButton = () => {
+        return (
+            <Button
+            variant="contained"
+            size="large"
+            sx={{
+                backgroundColor: '#FFDB58',
+                color: '#fff',
+                '&:hover': {
+                backgroundColor: '#FFFF9E',
+                },
+            }}
+            to="/update-template"
+            component={Link}
+            >
+            Update a Template
+        </Button>   
+        );
+    }
+
     const loadMenu = () => {
         return (
             <div className='flex flex-col flex-wrap gap-4'>
@@ -85,6 +106,9 @@ export default function HomePageMenu() {
 
                         {/* Create Template Button */}
                         {isLoggedIn ? loadTemplateButton() : null}
+
+                        {/* Update Template Button */}
+                        {isLoggedIn ? loadUpdateTemplateButton() : null}
                         {/* Help */}
                         <Button
                             variant="contained"

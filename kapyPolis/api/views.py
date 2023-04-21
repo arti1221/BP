@@ -40,16 +40,18 @@ class CreateRoomView(APIView):
         if serializer.is_valid():
             max_players = serializer.data.get('max_players')
             host = self.request.session.session_key
+            template_name = serializer.data.get('template_name')
 
             queryset = Room.objects.filter(host=host)
             if queryset.exists():
                 room = queryset[0]
                 room.max_players = max_players
-                room.save(update_fields=['max_players'])
+                room.template_name = template_name
+                room.save(update_fields=['max_players', 'template_name'])
                 self.request.session['room_code'] = room.code
                 return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
             else:
-                room = Room(host=host, max_players=max_players)
+                room = Room(host=host, max_players=max_players, template_name=template_name)
                 room.save()
                 self.request.session['room_code'] = room.code
 
@@ -165,6 +167,7 @@ class UpdateRoomView(APIView):
       if (serializer.is_valid()):
         code = serializer.data.get('code')
         max_players = serializer.data.get('max_players') 
+        template_name = serializer.data.get('template_name')
         query = Room.objects.filter(code=code) # retrieve the queryset
         if not query.exists():
             raise Http404("Room does not exist.")
@@ -179,7 +182,8 @@ class UpdateRoomView(APIView):
            return Response({'Message': 'You are trying to update the room when there is more player joined.'}, status=status.HTTP_400_BAD_REQUEST)
         
         room.max_players = max_players
-        room.save(update_fields=['max_players']) 
+        room.template_name = template_name
+        room.save(update_fields=['max_players', 'template_name']) 
         
         print('Room got updated. Returning response')
         return Response(RoomSerializer(room).data, status=status.HTTP_200_OK) # room updated
