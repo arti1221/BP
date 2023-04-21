@@ -39,7 +39,7 @@ export default function Register() {
     };
 
     useEffect(() => {
-    }, [name, password]);
+    }, [name, password, successMsg, error]);
 
     const handleRegister = async () => {
         const uploadData = new FormData();
@@ -55,11 +55,18 @@ export default function Register() {
         .then((response) => { 
             if (response.ok) {
                 setSuccessMsg("Registered successful!ly");
+                setTimeout(() => {
+                    setSuccessMsg(null);
+                  }, 3000);
             } else {
                 setError("Username already taken!");
+                setTimeout(() => {
+                    setError(null);
+                  }, 3000);
             }
             setName("");
             setPassword("");
+
             return response.json();
         })
         .then((data) => { // todo add validation msg and error msg

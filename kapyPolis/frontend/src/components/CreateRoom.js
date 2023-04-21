@@ -53,7 +53,7 @@ export default function CreateRoom(props) {
       .then((response) => {
           // add if statement to differentiate whether the room exists or not. If not, clear the code and navigate to the HP
           if (!response.ok) {
-            navigate("/", {state: {errorMsg: `Failed to fetch Template with name ${name}`}});
+            navigate("/");
           } else {
             console.log("NAMES RETRIEVED:", response);
             return response.json();

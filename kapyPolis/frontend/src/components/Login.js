@@ -42,7 +42,7 @@ export default function Login() {
     };
 
     useEffect(() => {
-      }, [name, password, isLoggedIn]);
+      }, [name, password, isLoggedIn, successMsg, error]);
 
       const handleLogin = async () => {
         const uploadData = new FormData();
@@ -62,9 +62,12 @@ export default function Login() {
                 dispatch({type: SET_LOGGED_IN, value: true});
                 dispatch({type: SET_NAME, value: name});
                 setSuccessMsg("Logged in successfully!");
-                setCaption("ENTER MENU")
+                navigate("/");
             } else {
                 setError("Wrong credentials!");
+                setTimeout(() => {
+                    setError(null);
+                  }, 3000);
             }
             setName("");
             setPassword("");

@@ -113,7 +113,7 @@ export default function Template() {
     useEffect(() => { // applies the method on render
       getTemplate();
       console.log("Fetching data for existing Room: ", name)
-  }, [name, itemName, itemImage, itemPrice, maxItemPrice, successMsg]);
+  }, [name, itemName, itemImage, itemPrice, maxItemPrice, successMsg, error]);
 
     const getTemplate = () => { 
       console.log("Retrieving details for template: " + name);

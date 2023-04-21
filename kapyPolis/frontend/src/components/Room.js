@@ -41,7 +41,7 @@ export default function Room() {
         .then((response) => {
             // add if statement to differentiate whether the room exists or not. If not, clear the code and navigate to the HP
             if (!response.ok) {         
-              navigate("/", {state: {errorMsg: `Failed to fetch room with code ${roomCode}`}});
+              navigate("/");
             } else {
               if (gameStarted == true) {
                 navigate(`/room/${roomCode}/Game`);
