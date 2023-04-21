@@ -51,7 +51,8 @@ class TemplateSerializer(serializers.ModelSerializer):
                   'card_type1_mvup_max', 'card_type2_mvdown_max', 
                   'card_type5_image', 'card_type5_min', 'card_type5_max',
                   'reward_per_round', 'number_of_rounds', 
-                  'winning_pos1', 'winning_pos2', 'winning_amt'
+                  'winning_pos1', 'winning_pos2', 'winning_amt',
+                  'author'
                   ]
         
 # WORKS WITHOUT SHOP ITEMS ON CEATION. Shop items are gonna be handled separately.
@@ -68,7 +69,8 @@ class CreateTemplateSerializer(serializers.ModelSerializer):
                   'card_type1_mvup_max', 'card_type2_mvdown_max', 
                   'card_type5_image', 'card_type5_min', 'card_type5_max',
                   'reward_per_round', 'number_of_rounds', 
-                  'winning_pos1', 'winning_pos2', 'winning_amt'
+                  'winning_pos1', 'winning_pos2', 'winning_amt',
+                  'author'
                   )
 
     def create(self, validated_data):

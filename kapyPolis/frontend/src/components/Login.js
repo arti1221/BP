@@ -5,6 +5,7 @@ import Alert from './Alert'
 import {useDispatch} from 'react-redux';
 import {SET_ENTERED, SET_LOGGED_IN, SET_NAME} from '../redux/actions/action'
 import Success from './Success'
+import {useSelector, shallowEqual} from "react-redux"; 
 
 function getCookie(name) {
     let cookieValue = null;
@@ -30,6 +31,7 @@ export default function Login() {
     const [successMsg, setSuccessMsg] = useState(null);
     const navigate = useNavigate();
     const [caption, setCaption] = useState("BACK");
+    const [isLoggedIn] = useSelector((state) => [state.global.isLoggedIn], shallowEqual);
 
     const handleName = (e) => {
         setName(e.target.value);
@@ -40,7 +42,7 @@ export default function Login() {
     };
 
     useEffect(() => {
-      }, [name, password]);
+      }, [name, password, isLoggedIn, successMsg, error]);
 
       const handleLogin = async () => {
         const uploadData = new FormData();
@@ -56,10 +58,16 @@ export default function Login() {
         .then((response) => { 
             if (response.ok) {
                 console.log("Logged in successfully!");
+                dispatch({type: SET_ENTERED, value: true});
+                dispatch({type: SET_LOGGED_IN, value: true});
+                dispatch({type: SET_NAME, value: name});
                 setSuccessMsg("Logged in successfully!");
-                setCaption("ENTER MENU")
+                navigate("/");
             } else {
                 setError("Wrong credentials!");
+                setTimeout(() => {
+                    setError(null);
+                  }, 3000);
             }
             setName("");
             setPassword("");
@@ -67,10 +75,6 @@ export default function Login() {
         })
         .then((data) => { // todo add validation msg and error msg
             console.log("Response data: ", data);
-            dispatch({type: SET_ENTERED, value: true});
-            dispatch({type: SET_LOGGED_IN, value: true});
-            dispatch({type: SET_NAME, value: name});
-    
         })
         .catch((error) => {
             console.log("ERROR");
@@ -78,6 +82,29 @@ export default function Login() {
         });
     }
     
+
+    const getLoginButton = () => {
+        return (
+            <div className='flex flex-col flex-wrap gap-4'>     
+            <Grid item xs={12} align="center">
+                <Button
+                    variant="contained"
+                    size="large"
+                    onClick={() => handleLogin()}
+                    sx={{
+                        backgroundColor: '#3f51b5',
+                        color: '#fff',
+                        '&:hover': {
+                        backgroundColor: '#07da63',
+                        },
+                    }}
+                    >
+                    LOGIN
+                </Button>
+            </Grid>
+        </div>
+        );
+    }
 
     return (
     <div className='flex flex-col flex-wrap gap-4'>
@@ -121,24 +148,7 @@ export default function Login() {
             </div>
         </div>
         
-          <div className='flex flex-col flex-wrap gap-4'>     
-                <Grid item xs={12} align="center">
-                    <Button
-                        variant="contained"
-                        size="large"
-                        onClick={() => handleLogin()}
-                        sx={{
-                            backgroundColor: '#3f51b5',
-                            color: '#fff',
-                            '&:hover': {
-                            backgroundColor: '#07da63',
-                            },
-                        }}
-                        >
-                        LOGIN
-                    </Button>
-                </Grid>
-            </div>
+        {isLoggedIn ? null :  getLoginButton()}
 
         {/* Back button */}
           <div className='flex flex-row gap-4 justify-center'>

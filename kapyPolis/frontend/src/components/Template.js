@@ -5,6 +5,7 @@ import { Button, Grid} from "@mui/material";
 import Success from './Success'
 import InvalidOperation from './InvalidOperation';
 import {useSelector, shallowEqual} from "react-redux"; 
+import Alert from './Alert'
 
 function getCookie(name) {
   let cookieValue = null;
@@ -26,11 +27,14 @@ export default function Template() {
     const [isLoggedIn, entered, loginName] = useSelector((state) => [state.global.isLoggedIn, state.global.entered, state.global.name], shallowEqual);
     const { name } = useParams(); // The template name, hook
     const [itemName, setItemName] = useState("");
-    const [itemPrice, setItemPrice] = useState(1000); // 1k by default
-    const [maxItemPrice, setMaxItemPrice] = useState(2000);
-    const [itemImage, setItemImage] = useState(null); // image null by default.
+    const [itemPrice, setItemPrice] = useState(null); // 1k by default
+    const [maxItemPrice, setMaxItemPrice] = useState(null);
+    const [itemImage, setItemImage] = useState(""); // image null by default.
     const navigate = useNavigate();
     const location = useLocation();
+    const [successMsg, setSuccessMsg] = useState(null);
+    const [error, setError] = useState(null);
+
 
     const handleItemName = (e) => {
         setItemName(e.target.value);
@@ -75,17 +79,29 @@ export default function Template() {
           },
           body: uploadData
         });
-        console.log("creating shop-item with data that have been set.")
+        console.log("creating shop-item with data that have been set.", uploadData)
         if (response.ok) {
+          console.log("g2")
           // reset the state of the input fields
           setItemName("");
-          setItemPrice(1000);
-          setItemImage(null);
+          setItemPrice("");
+          setItemImage("");
+          setMaxItemPrice("");
           // show a success message
-          window.location.reload();
-          navigate(`/template/${name}`, {state: {successMsg:`Item successfuly created!`}});
+          setSuccessMsg("Item successfuly created!");
+          setTimeout(() => {
+            setSuccessMsg(null);
+          }, 3000);
         } else {
-          throw new Error('Failed to create shop item.');
+          setItemName("");
+          setItemPrice("");
+          setItemImage("");
+          setMaxItemPrice("");
+          console.log("g332")
+          setError('Failed to create shop item.');
+          setTimeout(() => {
+            setError(null);
+          }, 3000);
         }
       } catch (error) {
         console.error(error);
@@ -97,7 +113,7 @@ export default function Template() {
     useEffect(() => { // applies the method on render
       getTemplate();
       console.log("Fetching data for existing Room: ", name)
-  }, [name]);
+  }, [name, itemName, itemImage, itemPrice, maxItemPrice, successMsg, error]);
 
     const getTemplate = () => { 
       console.log("Retrieving details for template: " + name);
@@ -127,7 +143,8 @@ export default function Template() {
 
     return (
       <form className='flex flex-col flex-wrap gap-4'>
-        {location?.state?.successMsg ? <Success msg={location.state.successMsg}/> : null}
+        {successMsg != null ? <div className='flex flex-col gap-4'><Success msg={successMsg}/></div> : null}
+        {error != null ? <div className='flex flex-col gap-4'><Alert msg={error}/></div> : null}
                 {/* Header */}
         <div className='flex justify-center'> 
           <h4 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
@@ -143,6 +160,7 @@ export default function Template() {
               <input type="text" 
                       id="item-name" 
                       onChange={handleItemName}
+                      value={itemName}
                       aria-describedby="helper-text-explanation"
                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                       placeholder="Enter item name."
@@ -157,6 +175,7 @@ export default function Template() {
                     id="item-price" 
                     onChange={handleItemPrice}
                     min={1}
+                    value={itemPrice}
                     aria-describedby="helper-text-explanation"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                     placeholder="Enter min price, min 1"
@@ -170,6 +189,7 @@ export default function Template() {
                     id="max-item-price" 
                     onChange={handleMaxItemPrice}
                     min={1}
+                    value={maxItemPrice}
                     aria-describedby="helper-text-explanation"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                     placeholder="enter max price, max. 1000"
