@@ -124,18 +124,24 @@ class CreateTemplateSerializer(serializers.ModelSerializer):
 
 class UpdateTemplateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(validators=[])
+    card_type1_image = serializers.ImageField(required=False, allow_null=True)
+    card_type2_image = serializers.ImageField(required=False, allow_null=True)
+    card_type3_image = serializers.ImageField(required=False, allow_null=True)
+    card_type4_image = serializers.ImageField(required=False, allow_null=True)
+    card_type5_image = serializers.ImageField(required=False, allow_null=True)
+    shop_image = serializers.ImageField(required=False, allow_null=True)
     class Meta:
         model = Template
         fields = ['id', 'name', 'shop_name', 'start_balance',
-                   'card_type1_mvup',
-                  'card_type2_mvdown',
-                  'card_type3_reset',
-                  'card_type4_round_stop',
+                   'card_type1_mvup', 'card_type1_image',
+                  'card_type2_mvdown', 'card_type2_image',
+                  'card_type3_reset', 'card_type3_image',
+                  'card_type4_round_stop', 'card_type4_image',
                   'card_type1_mvup_max', 'card_type2_mvdown_max', 
-                  'card_type5_min', 'card_type5_max',
+                  'card_type5_min', 'card_type5_max', 'card_type5_image',
                   'reward_per_round', 'number_of_rounds', 
                   'winning_pos1', 'winning_pos2', 'winning_amt',
-                  'author'
+                  'author', 'shop_image'
                   ]
 
 class UserSerializer(serializers.ModelSerializer):

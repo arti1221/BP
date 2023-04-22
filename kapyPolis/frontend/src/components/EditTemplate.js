@@ -22,7 +22,7 @@ function getCookie(name) {
   }
 
 export default function EditTemplate() {
-
+// todo check first selection
     const [isLoggedIn, name] = useSelector((state) => [state.global.isLoggedIn, state.global.name], shallowEqual);
     const [templateNames, setTemplateNames] = useState([]);
     const [selectedTemplate, setSelectedTemplate] = useState("")
@@ -35,17 +35,24 @@ export default function EditTemplate() {
     const [balance, setBalance] = useState(1000);
     const [templateName, setTemplateName] = useState("");
     const [shopName, setShopName] = useState("");
+    const [shopImage, setShopImage] = useState(null);
+
     // cards
+    const [card1Image, setCard1Image] = useState(null);
     const [card1Rule, setCard1Rule] = useState(1);
     const [card1Max, setCard1Max] = useState(2);
 
+    const [card2Image, setCard2Image] = useState(null);
     const [card2Rule, setCard2Rule] = useState(1);
     const [card2Max, setCard2Max] = useState(2);
 
+    const [card3Image, setCard3Image] = useState(null);
     const [card3Rule, setCard3Rule] = useState(false);
 
+    const [card4Image, setCard4Image] = useState(null);
     const [card4Rule, setCard4Rule] = useState(1);
 
+    const [card5Image, setCard5Image] = useState(null);
     const [card5Rule, setCard5Rule] = useState(1);
     const [card5Max, setCard5Max] = useState(2);
 
@@ -242,6 +249,15 @@ export default function EditTemplate() {
                         />
                     </div>
                     <div className='flex flex-col gap-4'>
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                           for="shop_image">Upload shop image</label>
+                    <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                           id="shop_image" 
+                           type="file"
+                           onChange={(e) => handleImageChange(e, setShopImage)}
+                    />
+                    </div>
+                    <div className='flex flex-col gap-4'>
                         <label for="start-balance" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
                             Starting balance
                         </label>
@@ -289,6 +305,15 @@ export default function EditTemplate() {
                             placeholder="Set num of spaces to move fwd"
                             onChange={handleCard1RuleMaxChange}
                     />
+                </div>
+                <div className='flex flex-col gap-4'>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                       for="card1-image">Upload card 1 image</label>
+                <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                       id="card1-image" 
+                       type="file"
+                       onChange={(e) => handleImageChange(e, setCard1Image)}
+                       />
                 </div>
                 <div className='flex flex-col gap-4'>
                         <label for="round-reward" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
@@ -340,6 +365,15 @@ export default function EditTemplate() {
                     />
                 </div>
                 <div className='flex flex-col gap-4'>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                       for="card2-image">Upload card 2 image</label>
+                <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                       id="card2-image" 
+                       type="file"
+                       onChange={(e) => handleImageChange(e, setCard2Image)}
+                       />
+                </div>
+                <div className='flex flex-col gap-4'>
                         <label for="round-amt" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
                             Number of Fields
                         </label>
@@ -374,6 +408,15 @@ export default function EditTemplate() {
                         </span>
                     </label>
                 </div>
+                <div className='flex flex-col gap-4'>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                       for="card3-image">Upload card 3 image</label>
+                <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                       id="card3-image" 
+                       type="file"
+                       onChange={(e) => handleImageChange(e, setCard3Image)}
+                       />
+                </div>
                 <div className='flex flex-col gap-4'>     
                 <label for="strategy" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a win strategy</label>
@@ -402,6 +445,15 @@ export default function EditTemplate() {
                             placeholder="Set stop rounds."
                             onChange={handleCard4RuleChange}
                     />
+                </div>
+                <div className='flex flex-col gap-4'>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                       for="card4-image">Upload card 4 image</label>
+                <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                       id="card4-image" 
+                       type="file"
+                       onChange={(e) => handleImageChange(e, setCard4Image)}
+                       />
                 </div>
                 <div className='flex flex-col gap-4'>
                         <label for="win-goal" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
@@ -454,6 +506,15 @@ export default function EditTemplate() {
                             placeholder="Max. Amount to win or lose"
                             onChange={handleCard5RuleMaxChange}
                     />
+                </div>
+                <div className='flex flex-col gap-4'>
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
+                       for="card5-image">Upload card 5 image</label>
+                <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
+                       id="card5-image" 
+                       type="file"
+                       onChange={(e) => handleImageChange(e, setCard5Image)}
+                       />
                 </div>
             </div>        
     
@@ -570,6 +631,26 @@ export default function EditTemplate() {
         uploadData.append('winning_amt', winAmt);
         uploadData.append('author', name);
         uploadData.append('new_name', templateName);
+        if (shopImage != null) {
+            uploadData.append('shop_image', shopImage);
+        }
+
+        if (card1Image != null) {
+            uploadData.append('card_type1_image', card1Image);
+        }
+        if (card2Image != null) {
+            uploadData.append('card_type2_image', card2Image);
+        }
+        if (card3Image != null) {
+            uploadData.append('card_type3_image', card3Image);
+        }
+        if (card4Image != null) {
+            uploadData.append('card_type4_image', card4Image);
+        }
+        if (card5Image != null) {
+            uploadData.append('card_type5_image', card5Image);
+        }
+
         const requestOptions = {
             method: 'POST',
             headers: { 
@@ -592,6 +673,17 @@ export default function EditTemplate() {
         });
     };
 
+    const handleImageChange = (e, setter) => {
+        const selectedFile = e.target.files[0];
+        console.log(selectedFile)
+        if (selectedFile) {
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedFile);
+          reader.onloadend = () => {
+            setter(reader.result);
+          };
+        }
+      };
 
     const showheading = () => {
         return (

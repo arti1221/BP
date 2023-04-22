@@ -287,7 +287,7 @@ class CreateTemplateView(APIView): ## TODO CHECK SHOP ITEMS!
         if not serializer.is_valid():
             # in case the call is made through FE, the serializer contains the BASE64 Image encoded data hence the queryset has to be overriden
             serializer = self.serializer_class(data=request_after_formatting)
-
+        print(serializer.is_valid())
         if serializer.is_valid():
             name = serializer.data.get('name')
             shop_name = serializer.data.get('shop_name')
@@ -440,9 +440,34 @@ class UpdateTemplateView(APIView):
         response['X-CSRFToken'] = get_token(request)
         print(request.data)
         serializer = self.serializer_class(data=request.data)
+        # The copy has to be made since the request QuerySet is immutable hence it could not
+        # be overriden with any image data correction from base 64 for example to png.
+        # after that the original response should be used
+        request_after_formatting = request.POST.copy() # copy it here
+        request_after_formatting.pop('csrfmiddlewaretoken', None)  # remove csrf token if present
+
+        print("req", request.data)
+        # Decode base64 image data
+        for fieldName in ['shop_image', 'card_type1_image', 'card_type2_image', 'card_type3_image', 'card_type4_image',
+                          'card_type5_image']:
+            if fieldName in request.data:
+                try:
+                    print("field", fieldName)
+                    file_data = request.data.get(fieldName)
+                    image_file = to_file(file_data, fieldName)
+                    request_after_formatting[fieldName] = image_file
+                    request.FILES[fieldName] = image_file
+                except Exception as e:
+                    pass
+            else:
+                request_after_formatting[fieldName] = request.data.get(fieldName)        
+
+        if not serializer.is_valid():
+            # in case the call is made through FE, the serializer contains the BASE64 Image encoded data hence the queryset has to be overriden
+            serializer = self.serializer_class(data=request_after_formatting)
         print(serializer.is_valid())
         if serializer.is_valid():
-        
+            
             name = serializer.data.get('name')
             new_name = request.data.get('new_name')
             shop_name = serializer.data.get('shop_name')
@@ -494,24 +519,47 @@ class UpdateTemplateView(APIView):
             template.winning_pos2 = winning_pos2 == "true"
             template.winning_amt = winning_amt
             template.author = author
-            print(template.winning_pos1.__class__)
-            print(template.winning_pos2.__class__)
+            
+            print("spi", request.FILES.get('shop_image'))
+
+            print("ss", serializer.data)
+            if 'shop_image' in serializer.data and request.FILES.get('shop_image') is not None:
+                template.shop_image = request.FILES.get('shop_image')
+                template.save(update_fields=['shop_image'])
+            if 'card_type1_image' in serializer.data and request.FILES.get('card_type1_image') is not None:
+                template.card_type1_image = request.FILES.get('card_type1_image')
+                template.save(update_fields=['card_type1_image'])
+            if 'card_type2_image' in serializer.data and request.FILES.get('card_type2_image') is not None: 
+                template.card_type2_image = request.FILES.get('card_type2_image')
+                template.save(update_fields=['card_type2_image'])
+            if 'card_type3_image' in serializer.data and request.FILES.get('card_type3_image') is not None:
+                template.card_type3_image = request.FILES.get('card_type3_image')
+                template.save(update_fields=['card_type3_image'])
+            if 'card_type4_image' in serializer.data and request.FILES.get('card_type4_image') is not None:
+                template.card_type4_image = request.FILES.get('card_type4_image')
+                template.save(update_fields=['card_type4_image'])
+            if 'card_type5_image' in serializer.data and request.FILES.get('card_type5_image') is not None:
+                template.card_type5_image = request.FILES.get('card_type5_image')
+                template.save(update_fields=['card_type5_image'])
 
             template.save(update_fields=['name', 'start_balance',
                     'card_type1_mvup', 'card_type1_mvup_max',
-                    'card_type2_mvdown','card_type2_mvdown_max',
-                    'card_type3_reset',
-                    'card_type4_round_stop',
-                    'card_type5_min', 'card_type5_max',
+                    'card_type2_mvdown','card_type2_mvdown_max', 
+                    'card_type3_reset', 
+                    'card_type4_round_stop', 
+                    'card_type5_min', 'card_type5_max', 
                     'shop_name',
                     'reward_per_round', 'number_of_rounds', 
                     'winning_pos1', 'winning_pos2', 'winning_amt',
                     'author'])
+            
 
             
             return Response(UpdateTemplateSerializer(template).data, status=status.HTTP_200_OK)
         else:
             print("ERORzz", serializer.errors)
+            return Response({'status': 'Invalid data', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
                 # return Response({'success': True, 'status': 'Template created successfully'}, status=status.HTTP_200_OK)
         # invalid
         #    print(serializer.data)
