@@ -1,5 +1,5 @@
 from django.urls import path
-from views import RoomView, CreateRoomView, GetRoomView, JoinRoomView, UsersRoomView, LeaveRoomView, UpdateRoomView, TemplateView, CreateTemplateView, ShopItemsView, CreateShopItemsView, GetTemplateView, PlayersView, RemovePlayerView, StartGameView, UserView, RegisterUserView, AuthorizeUser, GetAllTemplatesView, GetAuthorTemplatesView
+from views import RoomView, CreateRoomView, GetRoomView, JoinRoomView, UsersRoomView, LeaveRoomView, UpdateRoomView, TemplateView, CreateTemplateView, ShopItemsView, CreateShopItemsView, GetTemplateView, PlayersView, RemovePlayerView, StartGameView, UserView, RegisterUserView, AuthorizeUser, GetAllTemplatesView, GetAuthorTemplatesView, UpdateTemplateView
 
 urlpatterns = [
     # ROOM Req.
@@ -17,6 +17,7 @@ urlpatterns = [
     path('get-template', GetTemplateView.as_view()),
     path('get-all-templates', GetAllTemplatesView.as_view()),
     path('get-author-templates', GetAuthorTemplatesView.as_view()),
+    path('update-template', UpdateTemplateView.as_view()),
     # add a getter
     # Shop Items.
     path('shop-items', ShopItemsView.as_view()),

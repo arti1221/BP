@@ -122,6 +122,22 @@ class CreateTemplateSerializer(serializers.ModelSerializer):
 
         return instance
 
+class UpdateTemplateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(validators=[])
+    class Meta:
+        model = Template
+        fields = ['id', 'name', 'shop_name', 'start_balance',
+                   'card_type1_mvup',
+                  'card_type2_mvdown',
+                  'card_type3_reset',
+                  'card_type4_round_stop',
+                  'card_type1_mvup_max', 'card_type2_mvdown_max', 
+                  'card_type5_min', 'card_type5_max',
+                  'reward_per_round', 'number_of_rounds', 
+                  'winning_pos1', 'winning_pos2', 'winning_amt',
+                  'author'
+                  ]
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

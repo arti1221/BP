@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
 from api.models import Room, Template, ShopItem, Player, User
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer, UpdateTemplateSerializer
 from rest_framework.parsers import MultiPartParser
 import base64
 from django.core.files.base import ContentFile
@@ -427,6 +427,94 @@ class GetAuthorTemplatesView(APIView):
                 return JsonResponse({'template_names': template_names}, status=status.HTTP_200_OK)
         return Response({'Bad Request': 'No templates found'}, status=status.HTTP_400_BAD_REQUEST)
 
+class UpdateTemplateView(APIView):
+    serializer_class = UpdateTemplateSerializer
+    # parser_classes = [MultiPartParser]  # Add this line to use the correct parser for file uploads
+    
+    def post(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+
+        # Set CSRF token in response
+        response = Response()
+        response['X-CSRFToken'] = get_token(request)
+        print(request.data)
+        serializer = self.serializer_class(data=request.data)
+        print(serializer.is_valid())
+        if serializer.is_valid():
+        
+            name = serializer.data.get('name')
+            new_name = request.data.get('new_name')
+            shop_name = serializer.data.get('shop_name')
+            start_balance = serializer.data.get('start_balance')
+            card_type1_mvup = serializer.data.get('card_type1_mvup')
+            card_type1_mvup_max = serializer.data.get('card_type1_mvup_max')
+
+            card_type2_mvdown = serializer.data.get('card_type2_mvdown')
+            card_type2_mvdown_max = serializer.data.get('card_type2_mvdown_max')
+
+            card_type3_reset = serializer.data.get('card_type3_reset')
+            card_type4_round_stop = serializer.data.get('card_type4_round_stop')
+            
+            card_type5_min = serializer.data.get('card_type5_min')
+            card_type5_max = serializer.data.get('card_type5_max')
+
+            reward_per_round = serializer.data.get('reward_per_round')
+            number_of_rounds = serializer.data.get('number_of_rounds')
+            winning_pos1 = serializer.data.get('winning_pos1')
+            winning_pos2 = serializer.data.get('winning_pos2')
+            winning_amt = serializer.data.get('winning_amt')
+
+            author = serializer.data.get('author')
+            queryset = Template.objects.filter(name=name)
+            if not queryset.exists():
+                raise Http404("Template does not exist.")
+            template = queryset[0]
+            template.name = new_name
+            template.start_balance = start_balance
+
+            template.shop_name = shop_name
+
+            template.card_type1_mvup = card_type1_mvup
+            template.card_type1_mvup_max = card_type1_mvup_max
+
+            template.card_type2_mvdown = card_type2_mvdown
+            template.card_type2_mvdown_max = card_type2_mvdown_max
+
+            template.card_type3_reset = card_type3_reset
+
+            template.card_type4_round_stop = card_type4_round_stop
+
+            template.card_type5_min = card_type5_min
+            template.card_type5_max = card_type5_max
+
+            template.reward_per_round = reward_per_round
+            template.number_of_rounds = number_of_rounds
+            template.winning_pos1 = winning_pos1 == "true"
+            template.winning_pos2 = winning_pos2 == "true"
+            template.winning_amt = winning_amt
+            template.author = author
+            print(template.winning_pos1.__class__)
+            print(template.winning_pos2.__class__)
+
+            template.save(update_fields=['name', 'start_balance',
+                    'card_type1_mvup', 'card_type1_mvup_max',
+                    'card_type2_mvdown','card_type2_mvdown_max',
+                    'card_type3_reset',
+                    'card_type4_round_stop',
+                    'card_type5_min', 'card_type5_max',
+                    'shop_name',
+                    'reward_per_round', 'number_of_rounds', 
+                    'winning_pos1', 'winning_pos2', 'winning_amt',
+                    'author'])
+
+            
+            return Response(UpdateTemplateSerializer(template).data, status=status.HTTP_200_OK)
+        else:
+            print("ERORzz", serializer.errors)
+                # return Response({'success': True, 'status': 'Template created successfully'}, status=status.HTTP_200_OK)
+        # invalid
+        #    print(serializer.data)
 
 ############################################################################################################
 class ShopItemsView(generics.ListAPIView):
