@@ -22,10 +22,11 @@ function getCookie(name) {
     return cookieValue;
   }
 
-export default function CreateTemplate() { // todo add props as in CreateRoom
+export default function CreateTemplate(props) { // todo add props as in CreateRoom
     const [isLoggedIn, entered, name] = useSelector((state) => [state.global.isLoggedIn, state.global.entered, state.global.name], shallowEqual);
     console.log(isLoggedIn, " ", name);
     const csrftoken = getCookie('csrftoken');
+
     const [balance, setBalance] = useState(1000);
     const [templateName, setTemplateName] = useState("");
     const [shopName, setShopName] = useState("");
@@ -58,6 +59,9 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
     const [reward, setReward] = useState(1000);
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+      }, [card1Rule, card1Max ,card2Rule, card2Max, card5Rule, card5Max]);
 
     const handleBalanceChange  = (e) => {
         setBalance(parseInt(e.target.value));
@@ -195,7 +199,6 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
         });
     };
 
-
     const loadPage = () => {
 
     return (
@@ -221,7 +224,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                             onChange={handleTemplateNameChange}
                             aria-describedby="helper-text-explanation"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="Enter the template name with max length of 20 characters."
+                            placeholder="Enter the template name."
                     />
                 </div>
                 <div className='flex flex-col gap-4'>
@@ -232,7 +235,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                             id="shop-name" 
                             aria-describedby="helper-text-explanation"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                            placeholder="Enter the shop name with max length of 20 characters."
+                            placeholder="Enter the shop name."
                             onChange={handleShopNameChange}
                     />
                 </div>
@@ -249,7 +252,8 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                     <label for="start-balance" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
                         Starting balance
                     </label>
-                    <input type="text" 
+                    <input type="number" 
+                            min={1000}
                             id="start-balance" 
                             onChange={handleBalanceChange}
                             aria-describedby="helper-text-explanation"
@@ -272,6 +276,8 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                         aria-describedby="helper-text-explanation"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                         min={1}
+                        max={card1Max - 1}
+                        style={{width: '185px'}}
                         placeholder="Set num of spaces to move fwd"
                         onChange={handleCard1RuleChange}
                 />
@@ -286,7 +292,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                         id="card1-max" 
                         aria-describedby="helper-text-explanation"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                        min={2}
+                        min={card1Rule + 1}
                         placeholder="Set num of spaces to move fwd"
                         onChange={handleCard1RuleMaxChange}
                 />
@@ -304,12 +310,13 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                     <label for="round-reward" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
                         Reward per round
                     </label>
-                    <input type="text" 
+                    <input type="number" 
                             id="round-reward" 
                             onChange={handleReward}
                             aria-describedby="helper-text-explanation"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                            placeholder="Min. 1000"
+                            placeholder="Min. 500"
+                            min={500}
                     />
             </div>
         </div>
@@ -327,6 +334,8 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                         aria-describedby="helper-text-explanation"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                         min={1}
+                        max={card2Max - 1}
+                        style={{width: '185px'}}
                         placeholder="Set num of spaces to move bwd"
                         onChange={handleCard2RuleChange}
                 />
@@ -341,7 +350,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                         id="card2-max" 
                         aria-describedby="helper-text-explanation"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                        min={2}
+                        min={card2Rule + 1}
                         placeholder="Set num of spaces to move fwd"
                         onChange={handleCard2RuleMaxChange}
                 />
@@ -447,7 +456,10 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                             aria-describedby="helper-text-explanation"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                             min={24}
-                            placeholder="Min. 24"
+                            max={40}
+                            step={4}
+                            style={{width: '185px'}}
+                            placeholder="Min. 24, max 40"
                     />
             </div>
         </div>      
@@ -465,6 +477,8 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                         aria-describedby="helper-text-explanation"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                         min={1}
+                        max={card5Max - 1}
+                        style={{width: '185px'}}
                         placeholder="Min. Amount to win or lose"
                         onChange={handleCard5RuleChange}
                 />
@@ -479,7 +493,7 @@ export default function CreateTemplate() { // todo add props as in CreateRoom
                         id="card5-max" 
                         aria-describedby="helper-text-explanation"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                        min={2}
+                        min={card5Rule + 1}
                         placeholder="Max. Amount to win or lose"
                         onChange={handleCard5RuleMaxChange}
                 />
