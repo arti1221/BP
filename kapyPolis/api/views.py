@@ -77,6 +77,7 @@ class GetRoomView(APIView):
                 data = RoomSerializer(room[0]).data # serializing and accessing the room, getting the first one and extracting it's data
                 data['is_host'] = self.request.session.session_key == room[0].host # to differenciate whether this is the host(admin) or not
                 data['session_id'] = self.request.session.session_key
+                print(data)
                 return Response(data, status=status.HTTP_200_OK)
             raise Http404("Room does not exist.")
         return Response({'Bad Request': 'Code param is invalid...'}, status=status.HTTP_400_BAD_REQUEST)
@@ -515,8 +516,10 @@ class UpdateTemplateView(APIView):
 
             template.reward_per_round = reward_per_round
             template.number_of_rounds = number_of_rounds
-            template.winning_pos1 = winning_pos1 == "true"
-            template.winning_pos2 = winning_pos2 == "true"
+            print("p 1", winning_pos1)
+            print("p 2", winning_pos2)
+            template.winning_pos1 = winning_pos1
+            template.winning_pos2 = winning_pos2
             template.winning_amt = winning_amt
             template.author = author
             

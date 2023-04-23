@@ -21,6 +21,11 @@ function getCookie(name) {
     return cookieValue;
   }
 
+function hideDefaultOption() {
+    const defaultOption = document.querySelector('#strategy option[value=""]');
+    defaultOption.style.display = 'none';
+}
+
 export default function EditTemplate() {
 // todo check first selection
     const [isLoggedIn, name] = useSelector((state) => [state.global.isLoggedIn, state.global.name], shallowEqual);
@@ -136,14 +141,25 @@ export default function EditTemplate() {
         console.log("temp selected", selectedValue); 
       };
 
+      const handleSelectionGame = (e) => { 
+        const selectedValue = e.target.value;
+        if (selectedValue == 'first') {
+            setWin1(true);
+            setWin2(false);
+            return;
+        }
+        if (selectedValue == 'second') {
+            console.log(selectedValue);
+            setWin1(false);
+            setWin2(true);
+        }
+    };
+
       useEffect(() => {
         getTemplateNames();
       }, []);
 
-      useEffect(() => {
-      }, [selectedTemplate]);
-
-      const getTemplateNames  = () => {
+      const getTemplateNames  = async () => {
         if (name == null) {
             setError(true);
             return;
@@ -160,9 +176,8 @@ export default function EditTemplate() {
         })
         .then((data) => {
             setTemplateNames(data.template_names); // Extract names from data and store in an array
-            if (templateNames.length > 0 && !firstSelection) {
-              console.log("first template", templateNames[0]);
-              setSelectedTemplate(templateNames[0]);
+            if (data.template_names.length > 0 && !firstSelection) {
+              setSelectedTemplate(data.template_names[0]);
               setFirstSelection(true);
             }
         })
@@ -171,6 +186,9 @@ export default function EditTemplate() {
             console.log(error)
         })
       } 
+
+      useEffect(() => {
+    }, [selectedTemplate, firstSelection]);
 
     const getBackButton = () => {
         return (
@@ -383,7 +401,10 @@ export default function EditTemplate() {
                                 aria-describedby="helper-text-explanation"
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                                 min={24}
-                                placeholder="Min. 24"
+                                max={40}
+                                step={4}
+                                style={{width: '185px'}}
+                                placeholder="Min. 24, max. 40"
                         />
                 </div>
             </div>
@@ -422,9 +443,11 @@ export default function EditTemplate() {
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a win strategy</label>
                 <select id="strategy" 
                         class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-                        onChange={handleSelection}
+                        onChange={handleSelectionGame}
+                        onClick={hideDefaultOption}
                         >
-                    <option selected value="first">Number of diff cards</option>
+                    <option value="" disabled selected>Select value</option>      
+                    <option value="first">Number of diff cards</option>
                     <option value="second">Inventory value </option>
                 </select>
                 </div>
@@ -464,11 +487,9 @@ export default function EditTemplate() {
                                 onChange={handleWinAmt}
                                 aria-describedby="helper-text-explanation"
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                                min={24}
-                                max={40}
-                                step={4}
+                                min={1}
                                 style={{width: '185px'}}
-                                placeholder="Min. 24, max 40"
+                                placeholder="Set win amount"
                         />
                 </div>
             </div>      
@@ -562,7 +583,7 @@ export default function EditTemplate() {
         );
     }
 
-    const editTemplate = () => {
+    const editTemplate = async () => {
         // TODO REUSE CREATETEMPLATE
         setSelectedName(selectedTemplate);
         console.log(selectedName);
@@ -570,7 +591,7 @@ export default function EditTemplate() {
     }
 
     const fillTemplateData = () => {
-        console.log("Retrieving temp details for name " + selectedTemplate);
+
         fetch(`/api/get-template?name=${selectedTemplate}`, { credentials: 'include' }) // include headers
         .then((response) => {
             // add if statement to differentiate whether the room exists or not. If not, clear the code and navigate to the HP
@@ -596,7 +617,8 @@ export default function EditTemplate() {
 
         setCard5Rule(data.card_type5_min);
         setCard5Max(data.card_type5_max);
-
+        
+        console.log("win1, win2", data.winning_pos1, data.winning_pos2);
         setWin1(data.winning_pos1);
         setWin2(data.winning_pos2);
         setWinAmt(data.winning_amt);
@@ -691,31 +713,6 @@ export default function EditTemplate() {
             <h1 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
                 Edit a Template
             </h1>
-        </div>
-        );
-    }
-
-    const getEditButton = () => {
-        return (
-            <div className='flex flex-row justify-center'>  
-                <div className='flex flex-col gap-4'>
-                    <Grid item xs={12} align="center">
-                    <Button
-                        variant="contained"
-                        size="large"
-                        onClick={() => handleTemplateUpdate()}
-                        sx={{
-                            backgroundColor: '#3f51b5',
-                            color: '#fff',
-                            '&:hover': {
-                            backgroundColor: '#07da63',
-                            },
-                        }}
-                        >
-                        EDIT TEMPLATE
-                    </Button>
-                </Grid>
-            </div>
         </div>
         );
     }

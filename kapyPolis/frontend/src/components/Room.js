@@ -33,7 +33,6 @@ export default function Room() {
     const navigate = useNavigate();
 
     const getRoomDetails = () => { 
-        console.log("Retrieving room details for code " + roomCode);
         if (!roomCode) {
             return;
         }
@@ -47,8 +46,6 @@ export default function Room() {
                 navigate(`/room/${roomCode}/Game`);
               }
               console.log(response);
-              console.log("Current players in response:", response.current_players);
-              console.log("Current players in room:", currentNumberOfPlayers);
               return response.json();
             }
         })
@@ -56,19 +53,15 @@ export default function Room() {
             const dataIsHost = data.is_host;
             const session_id = data.session_id;
             console.log("game started: ", gameStarted);
-            console.log("logging data from response: Curr. Players: " , data.current_players, "host: ", dataIsHost);
-            console.log("Session ID: ", session_id);
-            console.log("data: ", data)
             setSessionId(session_id);
             setIsHost(dataIsHost);
             setCurrentNumberOfPlayers(data.current_players);
             setMaxNumberOfPlayers(data.max_players);
-            console.log("Is host after fetch in getRoomDetails: ", dataIsHost, "local var", isHost);
+            setGameStarted(data.game_started);
         })
         .catch((e) => {
             console.log("e");
         })
-        console.log("the token " + csrftoken);
     }
 
     useEffect(() => {
@@ -85,7 +78,6 @@ export default function Room() {
     }, [getRoomDetails, roomCode, isHost, showUpdate]);
 
     const leaveRoom = async () => {
-        console.log("Fetching data for leaving room");
       
         const requestOptions = {
           method: "POST",
@@ -96,14 +88,10 @@ export default function Room() {
           body: JSON.stringify({ code: roomCode }),
         };
       
-        console.log(requestOptions);
-        console.log(roomCode);
       
         try {
           const response = await fetch("/api/leave-room", requestOptions);
           const data = await response.json();
-          console.log(data);
-          console.log(data.status);
             // todo change it to status!
           if (data.success === "Left the room and room has been deleted" || data.success === "Left the room") { 
             console.log("Leaving room and redirecting to homepage");
@@ -112,7 +100,6 @@ export default function Room() {
             navigate(`/`);
           } else {
             console.log('Error after navigate')
-            console.log(data.success)
             throw new Error(`Error: ${data}`);
           }
         } catch (error) {
@@ -136,8 +123,6 @@ export default function Room() {
         try {
           const response = await fetch("/api/delete-player", requestOptions);
           const data = await response.json();
-          console.log(data);
-          console.log(data.status);
             // todo change it to status!
           if (data.success === "Player removed successfully") { 
             console.log("Leaving Room and removing player from the database");
@@ -148,7 +133,6 @@ export default function Room() {
             throw new Error(`Error: ${data}`);
           }
         } catch (error) {
-          console.log(error);
           setError("An error occurred while leaving the room.");
         }
       };

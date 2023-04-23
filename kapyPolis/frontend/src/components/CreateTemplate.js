@@ -374,7 +374,10 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                             aria-describedby="helper-text-explanation"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
                             min={24}
-                            placeholder="Min. 24"
+                            max={40}
+                            step={4}
+                            style={{width: '185px'}}
+                            placeholder="Min. 24, max 40"
                     />
             </div>
         </div>
@@ -455,12 +458,9 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                             onChange={handleWinAmt}
                             aria-describedby="helper-text-explanation"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                            min={24}
-                            max={40}
-                            step={4}
-                            style={{width: '185px'}}
-                            placeholder="Min. 24, max 40"
-                    />
+                            min={1}
+                            placeholder="Set win amount"
+                            />
             </div>
         </div>      
 
