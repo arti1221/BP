@@ -34,7 +34,8 @@ export default function EditTemplate() {
     const [firstSelection, setFirstSelection] = useState(false);
     const [error, setError] = useState(false);
     const [selectedName, setSelectedName] = useState(null);
-
+    const [isDirty, setIsDirty] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
     const csrftoken = getCookie('csrftoken');
 
     const [balance, setBalance] = useState(1000);
@@ -74,64 +75,78 @@ export default function EditTemplate() {
 
     
     useEffect(() => {
-    }, [card1Rule, card1Max ,card2Rule, card2Max, card5Rule, card5Max]);
+    }, [card1Rule, card1Max ,card2Rule, card2Max, card5Rule, card5Max, isDirty, showAlert]);
 
   const handleBalanceChange  = (e) => {
+      setIsDirty(true);
       setBalance(parseInt(e.target.value));
   };
 
   const handleReward  = (e) => {
+      setIsDirty(true);
       setReward(parseInt(e.target.value));
   };
 
   const handleNumberOfFields  = (e) => {
+      setIsDirty(true);
       setNumFields(parseInt(e.target.value));
   };
 
   const handleTemplateNameChange  = (e) => {
+      setIsDirty(true);
       setTemplateName(e.target.value);
   };
 
   // shop
   const handleShopNameChange  = (e) => {
-      setShopName(e.target.value);
+    setIsDirty(true);  
+    setShopName(e.target.value);
   };
 
   const handleCard1RuleChange  = (e) => {
-      setCard1Rule(parseInt(e.target.value));
+    setIsDirty(true);
+    setCard1Rule(parseInt(e.target.value));
   };
 
   const handleCard1RuleMaxChange = (e) => {
-      setCard1Max(parseInt(e.target.value));
+    setIsDirty(true);  
+    setCard1Max(parseInt(e.target.value));
   };
 
   const handleCard2RuleChange  = (e) => {
-      setCard2Rule(parseInt(e.target.value));
+    setIsDirty(true);  
+    setCard2Rule(parseInt(e.target.value));
   };
 
   const handleCard2RuleMaxChange = (e) => {
-      setCard2Max(parseInt(e.target.value));
+    setIsDirty(true);  
+    setCard2Max(parseInt(e.target.value));
   };
 
   const handleCard4RuleChange  = (e) => {
-      setCard4Rule(parseInt(e.target.value));
+    setIsDirty(true);  
+    setCard4Rule(parseInt(e.target.value));
   };
 
   const handleCard5RuleChange  = (e) => {
-      setCard5Rule(parseInt(e.target.value));
+    setIsDirty(true);
+    setCard5Rule(parseInt(e.target.value));
   };
 
   const handleCard5RuleMaxChange = (e) => {
-      setCard5Max(parseInt(e.target.value));
+    setIsDirty(true);
+    setCard5Max(parseInt(e.target.value));
   };
 
 
   const handleCard3RuleChange = (e) => {
+    setIsDirty(true);
     setCard3Rule(e.target.checked);
   };
 
   const handleWinAmt = (e) => {
-      setWinAmt(parseInt(e.target.value));
+    setIsDirty(true);
+    setWinAmt(parseInt(e.target.value));
   }
 
 
@@ -141,7 +156,8 @@ export default function EditTemplate() {
         console.log("temp selected", selectedValue); 
       };
 
-      const handleSelectionGame = (e) => { 
+      const handleSelectionGame = (e) => {
+        setIsDirty(true); 
         const selectedValue = e.target.value;
         if (selectedValue == 'first') {
             setWin1(true);
@@ -230,6 +246,51 @@ export default function EditTemplate() {
             </select>
             </div> 
           </div> 
+        );
+    }
+
+    const getConfirmation = () => {
+        return (
+        <div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+            <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                        <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Leave Editing Page</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">Are you sure you want to leave without submiting your changes?</p>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <button type="button" 
+                            class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
+                            onClick={() => setShowAlert(false)}  
+                    >
+                        Cancel
+                        </button>
+                        <Link to="/">
+                            <button type="button" 
+                                    class="mt-3 inline-flex w-full justify-center rounded-md bg-green-500 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-green-200 sm:mt-0 sm:w-auto"
+                                    >
+                                Leave
+                            </button>
+                    </Link>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
         );
     }
 
@@ -569,6 +630,13 @@ export default function EditTemplate() {
                         <Button
                             variant="contained"
                             size="large"
+                            onClick={(e) => {
+                                if (!isDirty) {
+                                    return; // allow the default behavior
+                                  }
+                                e.preventDefault(); // prevent the redirect
+                                setShowAlert(true); // show the confirmation dialog
+                            }}
                             sx={{
                                 backgroundColor: '#e74c3c',
                                 color: '#fff',
@@ -759,6 +827,7 @@ export default function EditTemplate() {
         {(isLoggedIn && selectedName != null) ? getEditTemplate() : null}
 
         {(isLoggedIn && selectedName == null) ? getBackButton() : null}
+        {(isDirty && showAlert) ? getConfirmation() : null}
       </div>
     );
 }
