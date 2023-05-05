@@ -7,6 +7,7 @@ import {useSelector, shallowEqual} from "react-redux";
 
 export default function HomePageMenu() {
     const location = useLocation();
+    const [labelToShow] = useState("KapyPolis");
 
     const [isLoggedIn, entered] = useSelector((state) => [state.global.isLoggedIn, state.global.entered], shallowEqual);
 
@@ -64,7 +65,7 @@ export default function HomePageMenu() {
                 {/* Header */}
                 <div className='flex justify-center'> 
                     <h1 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
-                        Create a Template
+                        {labelToShow}
                     </h1>
                 </div>
                 

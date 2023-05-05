@@ -262,14 +262,71 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                     />
                 </div>
         </div>
+        <div className='flex flex-row gap-4'>
+            <div className='flex flex-col gap-4'>
+                <label for="round-reward" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                    Reward per round
+                </label>
+                <input type="number" 
+                        id="round-reward" 
+                        onChange={handleReward}
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        placeholder="Min. 500"
+                        min={500}
+                />
+            </div>
 
+            <div className='flex flex-col gap-4'>
+                <label for="round-amt" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                    Number of Fields
+                </label>
+                <input type="number"  
+                        id="round-amt" 
+                        onChange={handleNumberOfFields}
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        min={24}
+                        max={40}
+                        step={4}
+                        style={{width: '185px'}}
+                        placeholder="Min. 24, max 40"
+                />
+            </div>
+
+            <div className='flex flex-col gap-4'>     
+                <label for="strategy" 
+                    class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a win strategy</label>
+                <select id="strategy" 
+                        class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
+                        onChange={handleSelection}
+                        >
+                    <option selected value="first">Number of diff cards</option>
+                    <option value="second">Inventory value </option>
+                </select>
+            </div>
+
+            <div className='flex flex-col gap-4'>
+                <label for="win-goal" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                    Winning goal
+                </label>
+                <input type="number"  
+                        id="win-goal" 
+                        onChange={handleWinAmt}
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                        min={1}
+                        placeholder="Set win amount"
+                        />
+            </div>
+        </div>
         {/* card 1: */}
         <div className='flex flex-row gap-4'>  
             <div className='flex flex-col gap-4'>
                 <label for="card1-rule" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Card 1 Min
+                    Move forward card Min
                 </label>
                 <input type="number" 
                         id="card1-rule" 
@@ -286,7 +343,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card1-max" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Card 1 Max
+                    Move forward card Max
                 </label>
                 <input type="number" 
                         id="card1-max" 
@@ -299,25 +356,12 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
             </div>
             <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card1-image">Upload card 1 image</label>
+                       for="card1-image">Move forward card image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card1-image" 
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard1Image)}
                        />
-            </div>
-            <div className='flex flex-col gap-4'>
-                    <label for="round-reward" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
-                        Reward per round
-                    </label>
-                    <input type="number" 
-                            id="round-reward" 
-                            onChange={handleReward}
-                            aria-describedby="helper-text-explanation"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                            placeholder="Min. 500"
-                            min={500}
-                    />
             </div>
         </div>
 
@@ -327,7 +371,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card2-rule" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Card 2 Rule
+                    Move backwards card Min
                 </label>
                 <input type="number" 
                         id="card2-rule" 
@@ -344,7 +388,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card2-max" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Card 2 Max
+                    Move backwards card Max
                 </label>
                 <input type="number" 
                         id="card2-max" 
@@ -357,25 +401,12 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
             </div>
             <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card2-image">Upload card 2 image</label>
+                       for="card2-image">Move backwards card image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card2-image" 
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard2Image)}
                        />
-            </div>
-            <div className='flex flex-col gap-4'>
-                    <label for="round-amt" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
-                        Number of Fields
-                    </label>
-                    <input type="number"  
-                            id="round-amt" 
-                            onChange={handleNumberOfFields}
-                            aria-describedby="helper-text-explanation"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                            min={24}
-                            placeholder="Min. 24"
-                    />
             </div>
         </div>
         {/* Card 3 */}
@@ -384,7 +415,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card3-rule" 
                     class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                     >
-                    Card 3 Rule
+                    Reset to start card
                 </label>
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" 
@@ -401,23 +432,12 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
             </div>
             <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card3-image">Upload card 3 image</label>
+                       for="card3-image">Reset to start card image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card3-image" 
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard3Image)}
                        />
-            </div>
-            <div className='flex flex-col gap-4'>     
-            <label for="strategy" 
-                   class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a win strategy</label>
-            <select id="strategy" 
-                    class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-                    onChange={handleSelection}
-                    >
-                <option selected value="first">Number of diff cards</option>
-                <option value="second">Inventory value </option>
-            </select>
             </div>
         </div>
           {/* card 4 */}
@@ -426,7 +446,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card4-rule" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Card 4 Rule
+                    Rounds stop card
                 </label>
                 <input type="number" 
                         id="card4-rule" 
@@ -439,28 +459,12 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
             </div>
             <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card4-image">Upload card 4 image</label>
+                       for="card4-image">Upload Rounds stop card image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card4-image" 
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard4Image)}
                        />
-            </div>
-            <div className='flex flex-col gap-4'>
-                    <label for="win-goal" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
-                        Winning goal
-                    </label>
-                    <input type="number"  
-                            id="win-goal" 
-                            onChange={handleWinAmt}
-                            aria-describedby="helper-text-explanation"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                            min={24}
-                            max={40}
-                            step={4}
-                            style={{width: '185px'}}
-                            placeholder="Min. 24, max 40"
-                    />
             </div>
         </div>      
 
@@ -470,7 +474,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card5-rule" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Card 5 Rule
+                    Win/Lose money card Min
                 </label>
                 <input type="number" 
                         id="card5-rule" 
@@ -487,7 +491,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card5-max" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Card 5 Max
+                    Win/Lose money card Max
                 </label>
                 <input type="number" 
                         id="card5-max" 
@@ -500,7 +504,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
             </div>
             <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card5-image">Upload card 5 image</label>
+                       for="card5-image">Upload Win/Lose money card image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card5-image" 
                        type="file"

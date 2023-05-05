@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Grid} from "@mui/material";
 import {useSelector, shallowEqual} from "react-redux"; 
 import InvalidOperation from './InvalidOperation'
-
+import Alert from './Alert'
 
 function getCookie(name) {
     let cookieValue = null;
@@ -21,6 +21,11 @@ function getCookie(name) {
     return cookieValue;
   }
 
+function hideDefaultOption() {
+    const defaultOption = document.querySelector('#strategy option[value=""]');
+    defaultOption.style.display = 'none';
+}
+
 export default function EditTemplate() {
 // todo check first selection
     const [isLoggedIn, name] = useSelector((state) => [state.global.isLoggedIn, state.global.name], shallowEqual);
@@ -29,7 +34,8 @@ export default function EditTemplate() {
     const [firstSelection, setFirstSelection] = useState(false);
     const [error, setError] = useState(false);
     const [selectedName, setSelectedName] = useState(null);
-
+    const [isDirty, setIsDirty] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
     const csrftoken = getCookie('csrftoken');
 
     const [balance, setBalance] = useState(1000);
@@ -69,64 +75,78 @@ export default function EditTemplate() {
 
     
     useEffect(() => {
-    }, [card1Rule, card1Max ,card2Rule, card2Max, card5Rule, card5Max]);
+    }, [card1Rule, card1Max ,card2Rule, card2Max, card5Rule, card5Max, isDirty, showAlert]);
 
   const handleBalanceChange  = (e) => {
+      setIsDirty(true);
       setBalance(parseInt(e.target.value));
   };
 
   const handleReward  = (e) => {
+      setIsDirty(true);
       setReward(parseInt(e.target.value));
   };
 
   const handleNumberOfFields  = (e) => {
+      setIsDirty(true);
       setNumFields(parseInt(e.target.value));
   };
 
   const handleTemplateNameChange  = (e) => {
+      setIsDirty(true);
       setTemplateName(e.target.value);
   };
 
   // shop
   const handleShopNameChange  = (e) => {
-      setShopName(e.target.value);
+    setIsDirty(true);  
+    setShopName(e.target.value);
   };
 
   const handleCard1RuleChange  = (e) => {
-      setCard1Rule(parseInt(e.target.value));
+    setIsDirty(true);
+    setCard1Rule(parseInt(e.target.value));
   };
 
   const handleCard1RuleMaxChange = (e) => {
-      setCard1Max(parseInt(e.target.value));
+    setIsDirty(true);  
+    setCard1Max(parseInt(e.target.value));
   };
 
   const handleCard2RuleChange  = (e) => {
-      setCard2Rule(parseInt(e.target.value));
+    setIsDirty(true);  
+    setCard2Rule(parseInt(e.target.value));
   };
 
   const handleCard2RuleMaxChange = (e) => {
-      setCard2Max(parseInt(e.target.value));
+    setIsDirty(true);  
+    setCard2Max(parseInt(e.target.value));
   };
 
   const handleCard4RuleChange  = (e) => {
-      setCard4Rule(parseInt(e.target.value));
+    setIsDirty(true);  
+    setCard4Rule(parseInt(e.target.value));
   };
 
   const handleCard5RuleChange  = (e) => {
-      setCard5Rule(parseInt(e.target.value));
+    setIsDirty(true);
+    setCard5Rule(parseInt(e.target.value));
   };
 
   const handleCard5RuleMaxChange = (e) => {
-      setCard5Max(parseInt(e.target.value));
+    setIsDirty(true);
+    setCard5Max(parseInt(e.target.value));
   };
 
 
   const handleCard3RuleChange = (e) => {
+    setIsDirty(true);
     setCard3Rule(e.target.checked);
   };
 
   const handleWinAmt = (e) => {
-      setWinAmt(parseInt(e.target.value));
+    setIsDirty(true);
+    setWinAmt(parseInt(e.target.value));
   }
 
 
@@ -136,14 +156,26 @@ export default function EditTemplate() {
         console.log("temp selected", selectedValue); 
       };
 
+      const handleSelectionGame = (e) => {
+        setIsDirty(true); 
+        const selectedValue = e.target.value;
+        if (selectedValue == 'first') {
+            setWin1(true);
+            setWin2(false);
+            return;
+        }
+        if (selectedValue == 'second') {
+            console.log(selectedValue);
+            setWin1(false);
+            setWin2(true);
+        }
+    };
+
       useEffect(() => {
         getTemplateNames();
       }, []);
 
-      useEffect(() => {
-      }, [selectedTemplate]);
-
-      const getTemplateNames  = () => {
+      const getTemplateNames  = async () => {
         if (name == null) {
             setError(true);
             return;
@@ -160,9 +192,8 @@ export default function EditTemplate() {
         })
         .then((data) => {
             setTemplateNames(data.template_names); // Extract names from data and store in an array
-            if (templateNames.length > 0 && !firstSelection) {
-              console.log("first template", templateNames[0]);
-              setSelectedTemplate(templateNames[0]);
+            if (data.template_names.length > 0 && !firstSelection) {
+              setSelectedTemplate(data.template_names[0]);
               setFirstSelection(true);
             }
         })
@@ -171,6 +202,9 @@ export default function EditTemplate() {
             console.log(error)
         })
       } 
+
+      useEffect(() => {
+    }, [selectedTemplate, firstSelection]);
 
     const getBackButton = () => {
         return (
@@ -212,6 +246,51 @@ export default function EditTemplate() {
             </select>
             </div> 
           </div> 
+        );
+    }
+
+    const getConfirmation = () => {
+        return (
+        <div class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+            <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                        <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Leave Editing Page</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">Are you sure you want to leave without submiting your changes?</p>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <button type="button" 
+                            class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
+                            onClick={() => setShowAlert(false)}  
+                    >
+                        Cancel
+                        </button>
+                        <Link to="/">
+                            <button type="button" 
+                                    class="mt-3 inline-flex w-full justify-center rounded-md bg-green-500 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-green-200 sm:mt-0 sm:w-auto"
+                                    >
+                                Leave
+                            </button>
+                    </Link>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
         );
     }
 
@@ -271,14 +350,75 @@ export default function EditTemplate() {
                         />
                     </div>
             </div>
-    
+            <div className='flex flex-row gap-4'>
+
+                <div className='flex flex-col gap-4'>
+                    <label for="round-reward" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                        Reward per round
+                    </label>
+                    <input type="number" 
+                            id="round-reward" 
+                            onChange={handleReward}
+                            aria-describedby="helper-text-explanation"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                            placeholder="Min. 500"
+                            min={500}
+                    />
+                </div>
+
+                <div className='flex flex-col gap-4'>
+                    <label for="round-amt" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                        Number of Fields
+                    </label>
+                    <input type="number"  
+                            id="round-amt" 
+                            onChange={handleNumberOfFields}
+                            aria-describedby="helper-text-explanation"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                            min={24}
+                            max={40}
+                            step={4}
+                            style={{width: '185px'}}
+                            placeholder="Min. 24, max. 40"
+                    />
+                </div>
+
+                <div className='flex flex-col gap-4'>     
+                    <label for="strategy" 
+                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a win strategy</label>
+                    <select id="strategy" 
+                            class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
+                            onChange={handleSelectionGame}
+                            onClick={hideDefaultOption}
+                            >
+                        <option value="" disabled selected>Select value</option>      
+                        <option value="first">Number of diff cards</option>
+                        <option value="second">Inventory value </option>
+                    </select>
+                </div>
+
+                <div className='flex flex-col gap-4'>
+                    <label for="win-goal" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
+                        Winning goal
+                    </label>
+                    <input type="number"  
+                            id="win-goal" 
+                            onChange={handleWinAmt}
+                            aria-describedby="helper-text-explanation"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                            min={1}
+                            style={{width: '185px'}}
+                            placeholder="Set win amount"
+                    />
+                </div>
+            </div>
             {/* card 1: */}
             <div className='flex flex-row gap-4'>  
                 <div className='flex flex-col gap-4'>
                     <label for="card1-rule" 
                            class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                            >
-                        Card 1 Min
+                        Move forward card Min
                     </label>
                     <input type="number" 
                             id="card1-rule" 
@@ -295,7 +435,7 @@ export default function EditTemplate() {
                     <label for="card1-max" 
                            class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                            >
-                        Card 1 Max
+                        Move forward card Max
                     </label>
                     <input type="number" 
                             id="card1-max" 
@@ -308,25 +448,12 @@ export default function EditTemplate() {
                 </div>
                 <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card1-image">Upload card 1 image</label>
+                       for="card1-image">Upload Move forward card image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card1-image" 
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard1Image)}
                        />
-                </div>
-                <div className='flex flex-col gap-4'>
-                        <label for="round-reward" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
-                            Reward per round
-                        </label>
-                        <input type="number" 
-                                id="round-reward" 
-                                onChange={handleReward}
-                                aria-describedby="helper-text-explanation"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                                placeholder="Min. 500"
-                                min={500}
-                        />
                 </div>
             </div>
     
@@ -336,7 +463,7 @@ export default function EditTemplate() {
                     <label for="card2-rule" 
                            class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                            >
-                        Card 2 Rule
+                        Move backwards card Min
                     </label>
                     <input type="number" 
                             id="card2-rule" 
@@ -353,7 +480,7 @@ export default function EditTemplate() {
                     <label for="card2-max" 
                            class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                            >
-                        Card 2 Max
+                        Move backwards card Max
                     </label>
                     <input type="number" 
                             id="card2-max" 
@@ -366,25 +493,12 @@ export default function EditTemplate() {
                 </div>
                 <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card2-image">Upload card 2 image</label>
+                       for="card2-image">Move backwards card image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card2-image" 
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard2Image)}
                        />
-                </div>
-                <div className='flex flex-col gap-4'>
-                        <label for="round-amt" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
-                            Number of Fields
-                        </label>
-                        <input type="number"  
-                                id="round-amt" 
-                                onChange={handleNumberOfFields}
-                                aria-describedby="helper-text-explanation"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                                min={24}
-                                placeholder="Min. 24"
-                        />
                 </div>
             </div>
             {/* Card 3 */}
@@ -393,7 +507,7 @@ export default function EditTemplate() {
                     <label for="card3-rule" 
                         class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                         >
-                        Card 3 Rule
+                        Reset to start card
                     </label>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" 
@@ -410,23 +524,12 @@ export default function EditTemplate() {
                 </div>
                 <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card3-image">Upload card 3 image</label>
+                       for="card3-image">Upload Reset to start card image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card3-image" 
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard3Image)}
                        />
-                </div>
-                <div className='flex flex-col gap-4'>     
-                <label for="strategy" 
-                       class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a win strategy</label>
-                <select id="strategy" 
-                        class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-                        onChange={handleSelection}
-                        >
-                    <option selected value="first">Number of diff cards</option>
-                    <option value="second">Inventory value </option>
-                </select>
                 </div>
             </div>
               {/* card 4 */}
@@ -435,7 +538,7 @@ export default function EditTemplate() {
                     <label for="card4-rule" 
                            class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                            >
-                        Card 4 Rule
+                        Rounds stop card
                     </label>
                     <input type="number" 
                             id="card4-rule" 
@@ -448,28 +551,12 @@ export default function EditTemplate() {
                 </div>
                 <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card4-image">Upload card 4 image</label>
+                       for="card4-image">Rounds stop card image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card4-image" 
                        type="file"
                        onChange={(e) => handleImageChange(e, setCard4Image)}
                        />
-                </div>
-                <div className='flex flex-col gap-4'>
-                        <label for="win-goal" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">
-                            Winning goal
-                        </label>
-                        <input type="number"  
-                                id="win-goal" 
-                                onChange={handleWinAmt}
-                                aria-describedby="helper-text-explanation"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
-                                min={24}
-                                max={40}
-                                step={4}
-                                style={{width: '185px'}}
-                                placeholder="Min. 24, max 40"
-                        />
                 </div>
             </div>      
     
@@ -479,7 +566,7 @@ export default function EditTemplate() {
                     <label for="card5-rule" 
                            class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                            >
-                        Card 5 Rule
+                        Win/Lose money card Min
                     </label>
                     <input type="number" 
                             id="card5-rule" 
@@ -496,7 +583,7 @@ export default function EditTemplate() {
                     <label for="card5-max" 
                            class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                            >
-                        Card 5 Max
+                        Win/Lose money card Max
                     </label>
                     <input type="number" 
                             id="card5-max" 
@@ -509,7 +596,7 @@ export default function EditTemplate() {
                 </div>
                 <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card5-image">Upload card 5 image</label>
+                       for="card5-image">Upload Win/Lose money card image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card5-image" 
                        type="file"
@@ -543,6 +630,13 @@ export default function EditTemplate() {
                         <Button
                             variant="contained"
                             size="large"
+                            onClick={(e) => {
+                                if (!isDirty) {
+                                    return; // allow the default behavior
+                                  }
+                                e.preventDefault(); // prevent the redirect
+                                setShowAlert(true); // show the confirmation dialog
+                            }}
                             sx={{
                                 backgroundColor: '#e74c3c',
                                 color: '#fff',
@@ -562,7 +656,7 @@ export default function EditTemplate() {
         );
     }
 
-    const editTemplate = () => {
+    const editTemplate = async () => {
         // TODO REUSE CREATETEMPLATE
         setSelectedName(selectedTemplate);
         console.log(selectedName);
@@ -570,14 +664,14 @@ export default function EditTemplate() {
     }
 
     const fillTemplateData = () => {
-        console.log("Retrieving temp details for name " + selectedTemplate);
+
         fetch(`/api/get-template?name=${selectedTemplate}`, { credentials: 'include' }) // include headers
         .then((response) => {
             // add if statement to differentiate whether the room exists or not. If not, clear the code and navigate to the HP
               return response.json();
         })
         .then((data) => {
-        console.log("data", data)
+        console.log("data", data);
         setBalance(data.start_balance);
         setTemplateName(data.name);
         setFirstName(data.name);
@@ -596,7 +690,8 @@ export default function EditTemplate() {
 
         setCard5Rule(data.card_type5_min);
         setCard5Max(data.card_type5_max);
-
+        
+        console.log("win1, win2", data.winning_pos1, data.winning_pos2);
         setWin1(data.winning_pos1);
         setWin2(data.winning_pos2);
         setWinAmt(data.winning_amt);
@@ -608,7 +703,6 @@ export default function EditTemplate() {
         .catch((e) => {
             console.log("e");
         })
-        console.log("the token " + csrftoken);
     }
 
     const handleTemplateUpdate = () => {
@@ -695,31 +789,6 @@ export default function EditTemplate() {
         );
     }
 
-    const getEditButton = () => {
-        return (
-            <div className='flex flex-row justify-center'>  
-                <div className='flex flex-col gap-4'>
-                    <Grid item xs={12} align="center">
-                    <Button
-                        variant="contained"
-                        size="large"
-                        onClick={() => handleTemplateUpdate()}
-                        sx={{
-                            backgroundColor: '#3f51b5',
-                            color: '#fff',
-                            '&:hover': {
-                            backgroundColor: '#07da63',
-                            },
-                        }}
-                        >
-                        EDIT TEMPLATE
-                    </Button>
-                </Grid>
-            </div>
-        </div>
-        );
-    }
-
     const getSelectTemplateButton = () => {
         return (
             <div className='flex flex-row justify-center'>  
@@ -749,15 +818,19 @@ export default function EditTemplate() {
         <div>
         {!isLoggedIn? InvalidOperation() : null}
         {isLoggedIn ? showheading() : null}
-        {(isLoggedIn && selectedName == null) ? getSelection() : null }
+        {(isLoggedIn && error) ? <div className='flex flex-col gap-4'><Alert msg={"You first need to create a template before updating any."}/></div> : null}
+        {/* {(isLoggedIn && selectedName == null && templateNames.length == 0) ? null : <div className='flex flex-col gap-4'><Alert msg={"You first need to create a template before updating any."}/></div>} */}
+
+        {(isLoggedIn && selectedName == null && templateNames.length > 0) ? getSelection() : null }
 
         {/* edit template button 1 - as a selection */}
-        {(isLoggedIn && selectedName == null) ? getSelectTemplateButton() : null} 
+        {(isLoggedIn && selectedName == null && templateNames.length > 0) ? getSelectTemplateButton() : null} 
 
         {/* edit form - fullfill data */}
         {(isLoggedIn && selectedName != null) ? getEditTemplate() : null}
 
         {(isLoggedIn && selectedName == null) ? getBackButton() : null}
+        {(isDirty && showAlert) ? getConfirmation() : null}
       </div>
     );
 }
