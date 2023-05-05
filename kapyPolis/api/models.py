@@ -85,7 +85,7 @@ class Template(models.Model): # ID of the Template will be automatically added. 
 class ShopItem(models.Model):
     template = models.ForeignKey(Template, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    image = models.ImageField(upload_to=upload_path) # todo template instead of name!
+    image = models.ImageField(upload_to=upload_path) 
     price = models.IntegerField(null=False, default=1)
     price_max = models.IntegerField(null=False, default=100)
     

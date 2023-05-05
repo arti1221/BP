@@ -750,4 +750,4 @@ class AuthorizeUser(APIView):
                 return Response({'status': 'Invalid password', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)  
             return Response({'status': 'Invalid username', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)               
         print("error: ", serializer.data)
-        return Response({'status': 'Invalid data', 'errors': serializer.errors})
+        return Response({'status': 'Invalid data', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

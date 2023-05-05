@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Grid} from "@mui/material";
 import {useSelector, shallowEqual} from "react-redux"; 
 import InvalidOperation from './InvalidOperation'
-
+import Alert from './Alert'
 
 function getCookie(name) {
     let cookieValue = null;
@@ -818,10 +818,13 @@ export default function EditTemplate() {
         <div>
         {!isLoggedIn? InvalidOperation() : null}
         {isLoggedIn ? showheading() : null}
-        {(isLoggedIn && selectedName == null) ? getSelection() : null }
+        {(isLoggedIn && error) ? <div className='flex flex-col gap-4'><Alert msg={"You first need to create a template before updating any."}/></div> : null}
+        {/* {(isLoggedIn && selectedName == null && templateNames.length == 0) ? null : <div className='flex flex-col gap-4'><Alert msg={"You first need to create a template before updating any."}/></div>} */}
+
+        {(isLoggedIn && selectedName == null && templateNames.length > 0) ? getSelection() : null }
 
         {/* edit template button 1 - as a selection */}
-        {(isLoggedIn && selectedName == null) ? getSelectTemplateButton() : null} 
+        {(isLoggedIn && selectedName == null && templateNames.length > 0) ? getSelectTemplateButton() : null} 
 
         {/* edit form - fullfill data */}
         {(isLoggedIn && selectedName != null) ? getEditTemplate() : null}
