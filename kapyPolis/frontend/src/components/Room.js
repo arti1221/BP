@@ -43,6 +43,7 @@ export default function Room() {
               navigate("/");
             } else {
               if (gameStarted == true) {
+                console.log("som tu");
                 navigate(`/room/${roomCode}/Game`);
               }
               console.log(response);
