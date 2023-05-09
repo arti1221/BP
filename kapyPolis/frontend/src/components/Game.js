@@ -5,7 +5,8 @@ import { Link } from "react-router-dom";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { FaSpinner } from "react-icons/fa";
-// TODO
+import classNames from "classnames";
+
 
 export function Square() {
     return (
@@ -68,7 +69,7 @@ export default function Game() {
 
     const [allPlayers, setAllPlayers] = useState([]);
     const [turn, setTurn] = useState(false);
-    const [numberOfSquares, setNumberOfSquares] = useState(7);
+    const [numberOfSquares, setNumberOfSquares] = useState(6);
     const [currentTurn, setCurrentTurn] = useState("");
 
     // dice
@@ -243,103 +244,136 @@ export default function Game() {
       };
       
 
-    const Square = () => {
-      return (
-        <div className={"h-20 w-20 bg-gradient-to-br from-amber-700 via-orange-300 to-rose-800 rounded-xl"}></div>
-      )
-    };
+      const Square = ({ index }) => {
+        return (
+          <div className={"h-20 w-20 bg-gradient-to-br from-amber-700 via-orange-300 to-rose-800 rounded-xl flex items-center justify-center"}>
+            {index}
+          </div>
+        )
+      };
+      
+      const SquareTransparent = () => {
+        return (
+          <div className={"h-20 w-20 bg-transparent rounded-xl"}></div>
+        )
+      };
 
+      
+      const SquareBoard = ({ numberOfSquares }) => {
+        const lastIndex = numberOfSquares - 1;
+        let counter = 0;
+      
+        const squares = [];
+        for (let i = 0; i < numberOfSquares; i++) {
+          squares.push([]);
+          for (let j = 0; j < numberOfSquares; j++) {
+            squares[i].push(null);
+          }
+        }
+      
+        for (let i = 0; i < numberOfSquares; i++) {
+          squares[0][i] = counter++;
+        }
+        for (let i = 1; i < numberOfSquares; i++) {
+          squares[i][numberOfSquares - 1] = counter++;
+        }
+        for (let i = numberOfSquares - 2; i >= 0; i--) {
+          squares[numberOfSquares - 1][i] = counter++;
+        }
+        for (let i = numberOfSquares - 2; i >= 1; i--) {
+          squares[i][0] = counter++;
+        }
+      
+        return (
+          <div className={"flex flex-col gap-4"}>
+            {squares.map((row, indexRow) => (
+              <div className={"flex flex-row gap-4"} key={`row-${indexRow}`}>
+                {row.map((value, indexCol) => {
+                  if (value !== null) {
+                    return <Square index={value} key={`square-${indexRow}-${indexCol}`} />;
+                  } else {
+                    return <SquareTransparent key={`transparent-${indexRow}-${indexCol}`} />;
+                  }
+                })}
+              </div>
+            ))}
+          </div>
+        );
+      };
+      
 
-    const SquareTransparent = () => {
-      return (
-        <div className={"h-20 w-20 bg-transparent rounded-xl"}></div>
-      )
-    };
     
     // dice
-const [rolling, setRolling] = useState(false);
-const [value, setValue] = useState(null);
-
-const rollDice = () => {
-  if (rolling) return;
-  setRolling(true);
-  setTimeout(() => {
-    setValue(getRandomInt(1, 6));
-    setRolling(false);
-  }, 2000);
+const Dot = ({ scale }) => {
+  return (
+      <div className={"w-6 h-6 bg-gray-700 rounded-full transition duration-100" + (scale ? " animate-ping" : "")}></div>
+  );
 };
 
-  const DiceRoller = () => { 
- 
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <div className="relative w-56 h-56">
-          <AnimatePresence>
-            {rolling && (
-              <motion.div
-                key="dice"
-                initial={{ opacity: 0, scale: 0, rotate: 0 }}
-                animate={{ opacity: 1, scale: 1, rotate: 360 }}
-                exit={{ opacity: 0, scale: 0, rotate: 0 }}
-                transition={{ duration: 2, ease: "easeInOut" }}
-                className="absolute inset-0 flex items-center justify-center rounded-full"
-              >
-                <motion.div
-                  animate={{ scale: 1.1 }}
-                  transition={{
-                    yoyo: Infinity,
-                    duration: 0.5,
-                    ease: "easeInOut",
-                  }}
-                  className="w-48 h-48 rounded-full bg-gradient-to-tr from-green-400 to-green-500 blur shadow-lg"
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <div
-            className="absolute inset-0 flex items-center justify-center rounded-full cursor-pointer"
-            onClick={rollDice}
-          >
-            {rolling ? (
-              <FlickeringNumber number={value || "?"} duration={50} />
-            ) : (
-              <span className="text-6xl font-bold text-gray-600">
-                {value || "?"}
-              </span>
-            )}
-          </div>
-        </div>
-        <button
-          className="px-4 py-2 mt-4 font-bold text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:opacity-50"
-          onClick={rollDice}
-          disabled={rolling}
-        >
-          {rolling ? "Rolling..." : "Roll Dice"}
-        </button>
-      </div>
-    );
-  };
+const Dice = () => {
+  const [numberOfDots, setNumberOfDots] = useState(1);
+  const [rolling, setRolling] = useState(false);
 
-  
+  const rollDice = () => {
+      if (rolling) return;
+      setRolling(true);
+      setTimeout(() => {
+          setRolling(false);
+          const newValue = Math.floor(Math.random() * 6) + 1;
+          setNumberOfDots(newValue);
+      }, 2000);
+  };
+  return (
+    <div className="flex flex-col items-center justify-center h-screen">
+        <p className={"text-black"}>{numberOfDots}</p>
+        <div className="min-h-screen flex items-center justify-center">
+            <div onClick={() => {
+                if (!rolling) {
+                    rollDice()
+                }
+            }}
+                 className={"h-36 w-36 bg-white rounded-xl shadow-xl transform flex flex-col justify-around p-4 transition duration-1000 cursor-pointer" + (rolling ? " rotate-180" : "")}>
+                <div className="space-x-4 pt-1 flex flex-row justify-center items-center">
+                    <Dot scale={rolling}/>
+                    {numberOfDots > 1 ?
+                        <Dot scale={rolling}/> : null
+                    }
+                    {
+                        numberOfDots > 2 && (numberOfDots < 4 || numberOfDots === 6) ?
+                            <Dot scale={rolling}/> : null
+                    }
+                </div>
+                {numberOfDots === 5 ?
+                    <div className="space-x-4 pt-1 flex flex-row justify-center items-center"><Dot scale={rolling}/>
+                    </div> : null
+                }
+                {
+                    numberOfDots > 3 ?
+                        <div className="space-x-4 pt-1 flex flex-row justify-center items-center">
+                            <Dot scale={rolling}/>
+                            {
+                                numberOfDots >= 4 ?
+                                    <Dot scale={rolling}/> : null
+                            }
+                            {numberOfDots > 5 ?
+                                <Dot scale={rolling}/> : null
+                            }
+                        </div> : null
+                }
+            </div>
+        </div>
+    </div>
+);
+};
+
     return (
       <div className={"flex flex-row min-h-screen w-screen bg-gradient-to-br from-sky-900 via-violet-600 to-amber-200"}>
         <ShowTopDetails/>
         <ShowBottomDetails/>
     
-        <div className="flex-1 m-4">
+        <div className="flex-1 m-4 mt-16">
           {/* Your game board code here */}
-          <div className={"flex flex-col gap-4"}>
-            {Array(numberOfSquares).fill(null).map((curr, indexRow) => (
-              <div className={"flex flex-row gap-4"}>
-                {Array(numberOfSquares).fill(null).map((current, index) => {
-                  if (indexRow === 0 || indexRow === numberOfSquares - 1 || index === 0 || index === numberOfSquares - 1) {
-                    return <Square />
-                  }
-                  return <SquareTransparent />
-                })}
-              </div>
-            ))}
-          </div>
+          <SquareBoard numberOfSquares={numberOfSquares}/>
         </div>
     
         
@@ -357,7 +391,7 @@ const rollDice = () => {
               </div>
             ))}
 
-            <DiceRoller />
+            <Dice />
 
           </div>
         </div>

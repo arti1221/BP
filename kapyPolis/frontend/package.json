@@ -27,6 +27,7 @@
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
     "@mui/material": "^5.11.11",
+    "classnames": "^2.3.2",
     "css-loader": "^6.7.3",
     "framer-motion": "^10.12.9",
     "react": "^18.2.0",
