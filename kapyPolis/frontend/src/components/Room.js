@@ -30,6 +30,8 @@ export default function Room() {
     const [playerName, setPlayerName] = useState("");
     const [sessionId, setSessionId] = useState("");
     const [gameStarted, setGameStarted] = useState(false);
+    const [roomId, setRoomId] = useState(null);
+    const [selectedTemplate, setSelectedTemplate] = useState("")
     const navigate = useNavigate();
 
     const getRoomDetails = () => { 
@@ -43,25 +45,24 @@ export default function Room() {
               navigate("/");
             } else {
               if (gameStarted == true) {
-                console.log("som tu");
                 navigate(`/room/${roomCode}/Game`);
               }
-              console.log(response);
               return response.json();
             }
         })
         .then((data) => {
             const dataIsHost = data.is_host;
             const session_id = data.session_id;
-            console.log("game started: ", gameStarted);
             setSessionId(session_id);
             setIsHost(dataIsHost);
             setCurrentNumberOfPlayers(data.current_players);
             setMaxNumberOfPlayers(data.max_players);
             setGameStarted(data.game_started);
+            setRoomId(data.id)
+            setSelectedTemplate(data.template_name);
         })
         .catch((e) => {
-            console.log("e");
+            console.log("error", e);
         })
     }
 
@@ -165,6 +166,94 @@ export default function Room() {
         });
       }
       
+      const getBalance = async () => {
+        try {
+          const response = await fetch(`/api/get-template?name=${selectedTemplate}`, { credentials: 'include' }); // include headers
+          const data = await response.json();
+          return data.start_balance; // return the number directly
+        } catch (e) {
+          console.log("error balance", e);
+          return null; // or return a default value
+        }
+      }
+  
+      const getRoomSessions = async () => {
+        const requestOptions = {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+          },
+          body: JSON.stringify({
+            room: roomId,
+          }),
+        };
+      
+        try {
+          const response = await fetch('/api/get-room-sessions', requestOptions);
+          const data = await response.json();
+          console.log('got room sessions:', data);
+          return data.session_ids;
+        } catch (error) {
+          console.error(error);
+          throw error;
+        }
+      };
+
+      const handleRandomSession = async () => {
+        const roomSessions = await getRoomSessions();
+        console.log("r s", roomSessions);
+        const randomSession = roomSessions[Math.floor(Math.random() * roomSessions.length)];
+        console.log("rand ses", randomSession);
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                "Content-Type": "application/json",
+                'X-CSRFToken': csrftoken, // include the CSRF token in the headers
+            },
+            body: JSON.stringify(
+                {
+                    code: roomCode,
+                    current_turn: randomSession,
+                }
+            ),
+        }
+        fetch("/api/update-turn", requestOptions)
+        .then((response) => { 
+            return response.json();
+        }
+            ) // take response and convert it to json obj
+        .then((data) => { 
+            console.log("sesssion updated successfully.");
+        }) // log data
+        .catch((error) => console.error(error));
+    };
+
+      const setPlayersBalance = async () => {
+        const balance = await getBalance();
+        const requestOptions = {
+            method: 'POST',
+            headers: { 
+                "Content-Type": "application/json",
+                'X-CSRFToken': csrftoken, // include the CSRF token in the headers
+            },
+            body: JSON.stringify(
+                {
+                    room: roomId,
+                    balance: balance,
+                }
+            ),
+        }
+        fetch("/api/set-players-balance", requestOptions)
+        .then((response) => { 
+            return response.json();
+        })
+        .then((data) => { 
+            console.log("balance ok: ", data);
+        })
+        .catch((error) => console.error(error));
+      }
+
       const showUpdateButtonIfHost = () => {
         // Update Max Players Button
         return (
@@ -193,7 +282,7 @@ export default function Room() {
             <Button
               variant="contained"
               size="large"
-              onClick={startGame} // TODO
+              onClick={() => {startGame(); setPlayersBalance(); handleRandomSession();}} // TODO
               sx={{
                 backgroundColor: '#07da63',
                 color: '#fff',

@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
 from api.models import Room, Template, ShopItem, Player, User
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer, UpdateTemplateSerializer
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer, UpdateTemplateSerializer, SetBalanceSerializer, SessionSerializer, UpdateTurnSerializer
 from rest_framework.parsers import MultiPartParser
 import base64
 from django.core.files.base import ContentFile
@@ -37,21 +37,49 @@ class CreateRoomView(APIView):
         response['X-CSRFToken'] = get_token(request)
 
         serializer = self.serializer_class(data=request.data)
+        print("S", serializer.is_valid())
+        print(serializer.data)
         if serializer.is_valid():
             max_players = serializer.data.get('max_players')
             host = self.request.session.session_key
             template_name = serializer.data.get('template_name')
+            card_type1_pos = serializer.data.get('card_type1_pos')
+            card_type2_pos = serializer.data.get('card_type2_pos')
+            card_type3_pos = serializer.data.get('card_type3_pos')
+            card_type4_pos = serializer.data.get('card_type4_pos')
+            card_type5_pos = serializer.data.get('card_type5_pos')
+            shop_pos = serializer.data.get('shop_pos')
 
             queryset = Room.objects.filter(host=host)
             if queryset.exists():
                 room = queryset[0]
                 room.max_players = max_players
                 room.template_name = template_name
-                room.save(update_fields=['max_players', 'template_name'])
+                room.card_type1_pos = card_type1_pos
+                room.card_type2_pos = card_type2_pos
+                room.card_type3_pos = card_type3_pos
+                room.card_type4_pos = card_type4_pos
+                room.card_type5_pos = card_type5_pos
+                room.shop_pos = shop_pos
+                room.save(update_fields=['max_players', 'template_name',
+                                        'card_type1_pos',
+                                        'card_type2_pos',
+                                        'card_type3_pos',
+                                        'card_type4_pos',
+                                        'card_type5_pos',
+                                        'shop_pos',
+                                         ])
                 self.request.session['room_code'] = room.code
                 return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
             else:
-                room = Room(host=host, max_players=max_players, template_name=template_name)
+                room = Room(host=host, max_players=max_players, template_name=template_name,
+                            card_type1_pos=card_type1_pos,
+                            card_type2_pos=card_type2_pos,
+                            card_type3_pos=card_type3_pos,
+                            card_type4_pos=card_type4_pos,
+                            card_type5_pos=card_type5_pos,
+                            shop_pos=shop_pos,
+                            )
                 room.save()
                 self.request.session['room_code'] = room.code
 
@@ -61,7 +89,8 @@ class CreateRoomView(APIView):
                 player.save()
 
                 return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
-
+            
+        print(serializer.errors)
         return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST, headers=response)
 
 
@@ -77,7 +106,6 @@ class GetRoomView(APIView):
                 data = RoomSerializer(room[0]).data # serializing and accessing the room, getting the first one and extracting it's data
                 data['is_host'] = self.request.session.session_key == room[0].host # to differenciate whether this is the host(admin) or not
                 data['session_id'] = self.request.session.session_key
-                print(data)
                 return Response(data, status=status.HTTP_200_OK)
             raise Http404("Room does not exist.")
         return Response({'Bad Request': 'Code param is invalid...'}, status=status.HTTP_400_BAD_REQUEST)
@@ -129,7 +157,6 @@ class UsersRoomView(APIView): # to differentiate whether the player is in the ro
 
 class LeaveRoomView(APIView):
   def post(self, request, format=None):
-    print("SOM TU")
     print(request.data)
     if "code" in request.data:
       room_code = request.data["code"]
@@ -188,7 +215,7 @@ class UpdateRoomView(APIView):
         
         print('Room got updated. Returning response')
         return Response(RoomSerializer(room).data, status=status.HTTP_200_OK) # room updated
-      
+        
 class StartGameView(APIView):
     serializer_class = GameStartSerializer
 
@@ -622,9 +649,6 @@ class CreateShopItemsView(APIView):
             serializer = self.serializer_class(data=request_after_formatting)
 
 
-        print("som tu")
-        print(serializer.is_valid())
-        print(serializer.data)
         if serializer.is_valid():
             
             template = template_instance
@@ -666,6 +690,55 @@ class CreateShopItemsView(APIView):
 class PlayersView(generics.ListAPIView):
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
+
+@method_decorator(csrf_protect, name='dispatch')
+class SetPlayersBalanceView(APIView):
+    serializer_class = SetBalanceSerializer
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if (serializer.is_valid()):
+            id = serializer.data.get('room')
+            balance = serializer.data.get('balance')
+            if id:
+                players = Player.objects.filter(room=id)
+                players.update(balance=balance) # Update balance for all players in the queryset
+                return Response({'status': 'Balance updated for all players.'}, status=status.HTTP_200_OK)
+            
+        print(serializer.errors)
+        return Response({'Bad Request': 'No templates found'}, status=status.HTTP_400_BAD_REQUEST)
+
+@method_decorator(csrf_protect, name='dispatch')
+class GetRoomSessions(APIView):
+    serializer_class = SessionSerializer
+    
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            room_id = serializer.validated_data.get('room')
+            if room_id:
+                players = Player.objects.filter(room=room_id)
+                session_ids = list(players.values_list('session_id', flat=True).distinct())
+                return Response({'session_ids': session_ids, 'status': 'Sessions retrieved successfully.'}, status=status.HTTP_200_OK)
+            
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@method_decorator(csrf_protect, name='dispatch')
+class UpdateGameTurnView(APIView):
+    serializer_class = UpdateTurnSerializer
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            room_code = serializer.data.get('code')
+            current_turn = serializer.data.get('current_turn')
+            queryset = Room.objects.filter(code=room_code)
+            room = queryset[0]
+            if (room):
+                room.current_turn = current_turn
+                room.save(update_fields=['current_turn'])
+                return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
+            
+        print(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class RemovePlayerView(APIView):
     def post(self, request, format=None):

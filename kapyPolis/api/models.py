@@ -41,10 +41,26 @@ class Room(models.Model):
     game_started = models.BooleanField(null=False, default=False)
     template_name = models.CharField(max_length=20, default="")
 
+    card_type1_pos = models.IntegerField(null=False, default=1)
+    card_type2_pos = models.IntegerField(null=False, default=1)
+    card_type3_pos = models.IntegerField(null=False, default=1)
+    card_type4_pos = models.IntegerField(null=False, default=1)
+    card_type5_pos = models.IntegerField(null=False, default=1)
+    shop_pos = models.IntegerField(null=False, default=1)
+
+    current_turn = models.CharField(max_length=50, default="")
+
 class Player(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     session_id = models.CharField(max_length=50)
     player_name = models.CharField(max_length=20)
+    
+    # game data for player
+    diff_items_amt = models.IntegerField(null=False, default=0)
+    inventory_value = models.IntegerField(null=False, default=0)
+    balance =  models.IntegerField(null=False, default=0)
+    position = models.IntegerField(null=False, default=0)
+    rounds_frozen = models.IntegerField(null=False, default=0)
 
 class Template(models.Model): # ID of the Template will be automatically added. Matching the template to the room settings will be processed through the ID/Code
     name = models.CharField(max_length=20, unique=True) # Template name
@@ -60,10 +76,10 @@ class Template(models.Model): # ID of the Template will be automatically added. 
 
     card_type3_image = models.ImageField(upload_to=upload_path, blank=True, null=True)
     card_type3_reset = models.BooleanField(default=False) # tells whether to reset the player on the start or he's lucky and got empty card
-    
+
     card_type4_image = models.ImageField(upload_to=upload_path, blank=True, null=True)
     card_type4_round_stop = models.IntegerField(null=False, default=1) # how many rounds the player could not move.
-    
+
     card_type5_image = models.ImageField(upload_to=upload_path, blank=True, null=True)
     card_type5_min = models.IntegerField(null=False, default=100) # the reward or cost range card type
     card_type5_max = models.IntegerField(null=False, default=1000)

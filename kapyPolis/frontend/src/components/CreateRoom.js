@@ -81,7 +81,42 @@ export default function CreateRoom(props) {
       setPlayerName(e.target.value);
     };
 
-    const handlePlayersChange = () => {
+    const getRandomNumbers = async () => {
+      const min = 1; 
+      const max = await getAmountOfRounds(); // todo set max based on selected template
+      console.log("amt rounds", max);
+      const numNumbers = 6;
+
+      const randomNumbers = [];
+
+      while (randomNumbers.length < numNumbers) {
+        console.log("ggg");
+        const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+        console.log(randomNumber);
+        if (!randomNumbers.includes(randomNumber)) {
+          randomNumbers.push(randomNumber);
+        }
+      }
+      return randomNumbers;
+    }
+
+    // retrieves amount of rounds from the selected template via get-template call
+    const getAmountOfRounds = async () => {
+      try {
+        const response = await fetch(`/api/get-template?name=${selectedTemplate}`, { credentials: 'include' }); // include headers
+        const data = await response.json();
+        console.log("data", data);
+        return data.number_of_rounds; // return the number directly
+      } catch (e) {
+        console.log(e);
+        return null; // or return a default value
+      }
+    }
+    
+    const handlePlayersChange = async () => {
+        const randomNumbers = await getRandomNumbers();
+        console.log("rand", randomNumbers);
+        console.log("ee", randomNumbers[0])
         const requestOptions = {
             method: 'POST',
             headers: { 
@@ -93,6 +128,12 @@ export default function CreateRoom(props) {
                     max_players: currentNumberOfPlayers,
                     player_name: playerName,
                     template_name: selectedTemplate,
+                    card_type1_pos: randomNumbers[0],
+                    card_type2_pos: randomNumbers[1],
+                    card_type3_pos: randomNumbers[2],
+                    card_type4_pos: randomNumbers[3],
+                    card_type5_pos: randomNumbers[4],
+                    shop_pos: randomNumbers[5],
                 }
             ),
         }
@@ -106,7 +147,7 @@ export default function CreateRoom(props) {
         }) // log data
         .catch((error) => console.error(error));
     };
-  
+
     const handleSelection = (e) => { 
       const selectedValue = e.target.value;
       setSelectedTemplate(selectedValue);

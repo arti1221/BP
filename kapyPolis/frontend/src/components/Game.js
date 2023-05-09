@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button, Grid, Typography, TextField, FormHelperText, FormControl, FormControlLabel, RadioGroup, Radio } from "@mui/material";
 import { Link } from "react-router-dom";
 
+import { AnimatePresence, motion } from "framer-motion";
+import { FaSpinner } from "react-icons/fa";
 // TODO
 
 export function Square() {
@@ -25,6 +27,35 @@ function getCookie(name) {
     }
     return cookieValue;
   }
+ 
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function FlickeringNumber({ number, duration }) {
+  const [currentNumber, setCurrentNumber] = useState(number);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentNumber(getRandomInt(1, 6));
+    }, duration);
+    return () => clearInterval(interval);
+  }, [duration]);
+
+  return <span>{currentNumber}</span>;
+}
+
+class Player {
+    constructor(sessionId, playerName, items, invVal, balance, position, roundsFrozen) {
+      this.sessionId = sessionId;
+      this.playerName = playerName;
+      this.items = items;
+      this.invVal = invVal;
+      this.balance = balance;
+      this.position = position;
+      this.roundsFrozen = roundsFrozen;
+    }
+}
 
 export default function Game() {
     const { roomCode } = useParams();
@@ -32,7 +63,18 @@ export default function Game() {
     const csrftoken = getCookie('csrftoken');
     const navigate = useNavigate();
 
-    // TODO, set room details, balance, etc.
+    const [name, setName] = useState("");
+    const [balance, setBalance] = useState(0);
+
+    const [allPlayers, setAllPlayers] = useState([]);
+    const [turn, setTurn] = useState(false);
+    const [numberOfSquares, setNumberOfSquares] = useState(7);
+    const [currentTurn, setCurrentTurn] = useState("");
+
+    // dice
+    // const [diceNumber, setDiceNumber] = useState(1);
+    // const [isRolling, setIsRolling] = useState(false);
+
     const getRoomDetails = () => { 
         if (!roomCode) {
             return;
@@ -43,18 +85,47 @@ export default function Game() {
             if (!response.ok) {         
               navigate("/");
             } else {
-              console.log(response);
+              console.log("res", response);
               return response.json();
             }
         })
         .then((data) => {
+            console.log("DATA", data);
+            console.log("pl", data.players);
+
+            // set the data for current player that are displayed on the top right corner
+            const currentPlayer = data.players.find(player => player.session_id === data.session_id);
+            if (currentPlayer) {
+              setName(currentPlayer.player_name);
+              setBalance(currentPlayer.balance);
+              console.log("curr name: ", currentPlayer.player_name);
+            }
+
+            const players = data.players.map((playerData) => {
+              return new Player(
+                playerData.session_id,
+                playerData.player_name,
+                playerData.diff_items_amt,
+                playerData.inventory_value,
+                playerData.balance,
+                playerData.position,
+                playerData.rounds_frozen
+              );
+            });
+
+            console.log("players likei", players);
+            setAllPlayers(players);
             setSessionId(data.session_id);
+            setCurrentTurn(data.current_turn);
+            console.log("current turn", data.current_turn);
+            console.log("ses", data.session_id);
         })
         .catch((e) => {
             console.log("error", e);
         })
     }
 
+    // game functionality
     const leaveGame = async () => {
         const requestOptions = {
             method: "POST",
@@ -79,6 +150,20 @@ export default function Game() {
             console.log("error", error);
           }
     }
+
+    
+    // useEffect(() => {
+    //   // Call getRoomDetails on component mount
+    //   getRoomDetails();
+  
+    //   // timer to call getRoomDetails every 0.1 second
+    //   const timerId = setInterval(() => {
+    //     getRoomDetails();
+    //   }, 100);
+  
+    //   // Clean up the timer when the component unmounts
+    //   return () => clearInterval(timerId);
+    // }, [getRoomDetails]);
 
     const removePlayer =  async () => {
         const requestOptions = {
@@ -112,28 +197,28 @@ export default function Game() {
 
 
     const showLog = () => {
-        
+
     }  
 
     const showPlayerInventory = () => {
-
+        
     }  
 
     const ShowTopDetails = () => {
         return (
             <div className={"fixed top-[1%] right-[5%] flex flex-row gap-4"}>
-                <div class="flex items-center px-4 py-2 bg-gray-800 text-white rounded-full">
-                    <span class="text-sm font-bold mr-4">John Doe</span>
+                <div class="flex items-center px-4 py-2 bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white rounded-full">
+                    <span class="text-sm font-bold mr-4">{name}</span>
                     
                     <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full mr-4">
                         <svg class="h-6 w-6 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2h4a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h4zm0 2h4v8H8V8zm-2-2V4h8v2H6z" clip-rule="evenodd" />
                         </svg>
-                    Inventory
+                      Inventory
                     </button>
 
                     <span class="bg-gray-100 text-gray-700 font-bold py-1 px-2 rounded-lg mr-4">
-                        Balance: $10000
+                        Balance: {balance}
                     </span>
                 </div>
             </div>
@@ -143,7 +228,7 @@ export default function Game() {
     const ShowBottomDetails = () => {
         return (
           <div className={"fixed bottom-[1%] right-[5%] flex flex-row gap-4"}>
-            <div class="flex items-center px-4 py-2 bg-gray-800 text-white rounded-full">
+            <div class="flex items-center px-4 py-2 bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white rounded-full">
               <button class="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                       onClick={() => {removePlayer(); leaveGame();}}
               >
@@ -157,13 +242,128 @@ export default function Game() {
         );
       };
       
+
+    const Square = () => {
+      return (
+        <div className={"h-20 w-20 bg-gradient-to-br from-amber-700 via-orange-300 to-rose-800 rounded-xl"}></div>
+      )
+    };
+
+
+    const SquareTransparent = () => {
+      return (
+        <div className={"h-20 w-20 bg-transparent rounded-xl"}></div>
+      )
+    };
+    
+    // dice
+const [rolling, setRolling] = useState(false);
+const [value, setValue] = useState(null);
+
+const rollDice = () => {
+  if (rolling) return;
+  setRolling(true);
+  setTimeout(() => {
+    setValue(getRandomInt(1, 6));
+    setRolling(false);
+  }, 2000);
+};
+
+  const DiceRoller = () => { 
+ 
     return (
-        <div className={"bg-pink-200"}>
-        
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="relative w-56 h-56">
+          <AnimatePresence>
+            {rolling && (
+              <motion.div
+                key="dice"
+                initial={{ opacity: 0, scale: 0, rotate: 0 }}
+                animate={{ opacity: 1, scale: 1, rotate: 360 }}
+                exit={{ opacity: 0, scale: 0, rotate: 0 }}
+                transition={{ duration: 2, ease: "easeInOut" }}
+                className="absolute inset-0 flex items-center justify-center rounded-full"
+              >
+                <motion.div
+                  animate={{ scale: 1.1 }}
+                  transition={{
+                    yoyo: Infinity,
+                    duration: 0.5,
+                    ease: "easeInOut",
+                  }}
+                  className="w-48 h-48 rounded-full bg-gradient-to-tr from-green-400 to-green-500 blur shadow-lg"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <div
+            className="absolute inset-0 flex items-center justify-center rounded-full cursor-pointer"
+            onClick={rollDice}
+          >
+            {rolling ? (
+              <FlickeringNumber number={value || "?"} duration={50} />
+            ) : (
+              <span className="text-6xl font-bold text-gray-600">
+                {value || "?"}
+              </span>
+            )}
+          </div>
+        </div>
+        <button
+          className="px-4 py-2 mt-4 font-bold text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+          onClick={rollDice}
+          disabled={rolling}
+        >
+          {rolling ? "Rolling..." : "Roll Dice"}
+        </button>
+      </div>
+    );
+  };
+
+  
+    return (
+      <div className={"flex flex-row min-h-screen w-screen bg-gradient-to-br from-sky-900 via-violet-600 to-amber-200"}>
         <ShowTopDetails/>
         <ShowBottomDetails/>
+    
+        <div className="flex-1 m-4">
+          {/* Your game board code here */}
+          <div className={"flex flex-col gap-4"}>
+            {Array(numberOfSquares).fill(null).map((curr, indexRow) => (
+              <div className={"flex flex-row gap-4"}>
+                {Array(numberOfSquares).fill(null).map((current, index) => {
+                  if (indexRow === 0 || indexRow === numberOfSquares - 1 || index === 0 || index === numberOfSquares - 1) {
+                    return <Square />
+                  }
+                  return <SquareTransparent />
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+    
+        
+        <div className="w-2/5 p-4 mt-16">
+          <div className="flex flex-wrap -mx-4">
+            {allPlayers.map((player) => (
+              <div className="w-1/2 px-4 mb-4">
+                <div className={`bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg ${currentTurn === player.sessionId ? 'border-2 border-gradient-to-r from-red-400 to-yellow-500' : 'border-2 border-gray-800'}`}>
+                  <h2 className="text-xl font-bold mb-2">{player.playerName}</h2>
+                  <p className="text-gray-300">Balance: {player.balance}</p>
+                  <p className="text-gray-300">Inventory Value: {player.invVal}</p>
+                  <p className="text-gray-300">Different items: {player.items}</p>
+              </div>
+
+              </div>
+            ))}
+
+            <DiceRoller />
+
+          </div>
+        </div>
 
 
-        </div> 
-    )
+      </div>
+    );
+    
 }

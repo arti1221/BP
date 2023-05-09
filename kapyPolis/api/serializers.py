@@ -4,20 +4,58 @@ from api.models import Room, ShopItem, Template, Player, User
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Player
-        fields = ['id', 'room', 'session_id', 'player_name']
+        fields = ['id', 'room', 'session_id', 'player_name', 
+                'diff_items_amt',
+                'inventory_value',
+                'balance',
+                'position',
+                'rounds_frozen'
+                  ]
+class SetBalanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Player
+        fields = (
+            'room',
+            'balance'
+        )
+
+# Used for session retrievals for given room.
+class SessionSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Player
+            fields = (
+                'room',
+            )
+
 
 class RoomSerializer(serializers.ModelSerializer):
     players = PlayerSerializer(many=True, read_only=True, source='player_set')
     class Meta:
         model = Room
         fields = ('id', 'code', 'host', 'created_at', 'max_players', 'current_players', 'game_started','players',
-                   'template_name')
+                   'template_name',
+                    'card_type1_pos',
+                    'card_type2_pos',
+                    'card_type3_pos',
+                    'card_type4_pos',
+                    'card_type5_pos',
+                    'shop_pos',
+                    'current_turn'
+                   )
 
 class CreateRoomSerializer(serializers.ModelSerializer): # serializes post request
     players = PlayerSerializer(many=True, read_only=True, source='player_set')
     class Meta:
         model = Room
-        fields = ('max_players', 'players', 'template_name') # fields that are used in the post request and validates
+        fields = ('max_players', 'players', 'template_name',
+                    'card_type1_pos',
+                    'card_type2_pos',
+                    'card_type3_pos',
+                    'card_type4_pos',
+                    'card_type5_pos',
+                    'shop_pos',
+                    'current_turn'
+                  ) # fields that are used in the post request and validates
 
 class UpdateRoomSerializer(serializers.ModelSerializer): # serializes the update request and sends the data that are to be updated
     code = serializers.CharField(validators=[]) # does not validate, we want to use a code that already exists since it is unique true
@@ -31,6 +69,12 @@ class GameStartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
         fields = ('code', 'game_started', 'template_name')
+
+class UpdateTurnSerializer(serializers.ModelSerializer):
+    code = serializers.CharField(validators=[])
+    class Meta:
+        model = Room
+        fields = ('code', 'current_turn')
 
 # TODO add startGame Serializer
 
