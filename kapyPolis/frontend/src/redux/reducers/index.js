@@ -5,6 +5,8 @@ export const getDefaultGlobalStructure = () => {
         entered:false,
         isLoggedIn:false,
         name:null,
+        numberRolled:1,
+        hasRolled:false,
     }
 }
 

@@ -7,6 +7,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FaSpinner } from "react-icons/fa";
 import classNames from "classnames";
 
+import {SET_NUMBER_ROLLED, SET_HAS_ROLLED} from '../redux/actions/action'
+import {useSelector, shallowEqual} from "react-redux"; 
+import {useDispatch} from 'react-redux';
+
 
 export function Square() {
     return (
@@ -30,7 +34,7 @@ function getCookie(name) {
   }
 
 class Player {
-    constructor(sessionId, playerName, items, invVal, balance, position, roundsFrozen) {
+    constructor(sessionId, playerName, items, invVal, balance, position, roundsFrozen, color) {
       this.sessionId = sessionId;
       this.playerName = playerName;
       this.items = items;
@@ -38,6 +42,7 @@ class Player {
       this.balance = balance;
       this.position = position;
       this.roundsFrozen = roundsFrozen;
+      this.color = color;
     }
 }
 
@@ -101,8 +106,16 @@ export default function Game() {
     const [shopName, setShopName] = useState("");
     const [shopImg, setShopImg] = useState("");
     const [shopPos, setShopPos] = useState(0);
-
     const [shopItems, setShopItems] = useState([]);
+
+    //
+    const dispatch = useDispatch();
+    const [numberRolled] = useSelector((state) => [state.global.numberRolled], shallowEqual);
+    const [hasRolled] = useSelector((state) => [state.global.hasRolled], shallowEqual);
+    // todo dories sestku nech je vof liste.
+    
+    const [oldPos, setOldPos] = useState(null);
+    const [newPos, setNewPos] = useState(null);
 
     // inventory
     const [showModal, setShowModal] = useState(false);
@@ -116,9 +129,8 @@ export default function Game() {
     };
 
 
-    // dice
-    // const [diceNumber, setDiceNumber] = useState(1);
-    // const [isRolling, setIsRolling] = useState(false);
+// state variables
+const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
 
     const getRoomDetails = async () => { 
       if (!roomCode) {
@@ -131,13 +143,11 @@ export default function Game() {
         } else {
           const data = await response.json();
           console.log("DATA", data);
-          console.log("pl", data.players);
     
           const currentPlayer = data.players.find(player => player.session_id === data.session_id);
           if (currentPlayer) {
             setName(currentPlayer.player_name);
             setBalance(currentPlayer.balance);
-            console.log("curr name: ", currentPlayer.player_name);
           }
     
           const players = data.players.map((playerData) => {
@@ -148,7 +158,8 @@ export default function Game() {
               playerData.inventory_value,
               playerData.balance,
               playerData.position,
-              playerData.rounds_frozen
+              playerData.rounds_frozen,
+              ""
             );
           });
     
@@ -168,12 +179,24 @@ export default function Game() {
           setCard5Pos(data.card_type5_pos);
           setShopPos(data.shop_pos);
           console.log("selected template: ", data.template_name);
+          setRoomDetailsLoaded(true);
         }
       } catch (e) {
         console.log("error", e);
       }
     };
     
+    const setPlayerColors = async () => {
+      const colors = ["red", "blue", "green", "yellow"];
+      const updatedPlayers = allPlayers.map((player, index) => {
+        const colorIndex = index % colors.length;
+        const color = colors[colorIndex];
+        return {...player, color};
+      });
+      setAllPlayers(updatedPlayers);
+      console.log("UPDATED PLAYER COLORS", updatedPlayers);
+    };
+
 
     const getTemplateDetails = async () => {
       console.log("selected template:", selectedTemplate);
@@ -315,6 +338,17 @@ export default function Game() {
       useEffect(() => {
       }, [showModal]);
 
+      useEffect(() => {
+        if (roomDetailsLoaded) {
+          setPlayerColors();
+        }
+      }, [roomDetailsLoaded]);
+
+
+      // TODO
+    useEffect(() => {
+      console.log("hasRolled");
+    }, [hasRolled]);
 
     const showLog = () => {
 
@@ -403,44 +437,11 @@ export default function Game() {
         );
       };
       
-
-      // TODO if index matches player, create figurines. add colors to player figurines.
-      const Square = ({ index }) => {
-        return (
-          <div className={"h-20 w-20 bg-gradient-to-br from-amber-700 via-orange-300 to-rose-800 rounded-xl flex items-center justify-center"}>
-            {index}
-          </div>
-        )
-      };
-
-      const SquareWithImage = ({ index, imageUrl }) => {
-        return (
-          <div
-            className={"h-20 w-20 bg-gradient-to-br from-amber-700 via-orange-300 to-rose-800 rounded-xl flex items-center justify-center"}
-            style={{ backgroundImage: `url(${imageUrl})`, backgroundSize: "cover" }}
-          >
-            {index}
-          </div>
-        );
-      };
-      
       const SquareTransparent = () => {
         return (
           <div className={"h-20 w-20 bg-transparent rounded-xl"}></div>
         )
       };
-
-      const PlayerFigure = ({ playerName, color }) => {
-        return (
-          <div
-            className={"w-6 h-6 rounded-full flex items-center justify-center border-2 border-gray-800"}
-            style={{ backgroundColor: color }}
-          >
-            <span className={"text-white text-sm"}>{playerName.substring(0, 2)}</span>
-          </div>
-        );
-      };
-      
       
       const SquareBoard = ({ numberOfSquares, card1Img, card1pos, card2Img, card2pos, card3Img, card3pos, card4Img, card4pos, card5Img, card5pos, shopImg, shopPos }) => {
         const lastIndex = numberOfSquares - 1;
@@ -477,20 +478,20 @@ export default function Game() {
                   if (value !== null) {
                     // Check if current value matches any of the cardXpos values
                     if (value === card1pos) {
-                      return <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={card1Img} />;
+                      return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card1Img} />;
                     } else if (value === card2pos) {
-                      return <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={card2Img} />;
+                      return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card2Img} />;
                     } else if (value === card3pos) {
-                      return <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={card3Img} />;
+                      return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card3Img} />;
                     } else if (value === card4pos) {
-                      return <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={card4Img} />;
+                      return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card4Img} />;
                     } else if (value === card5pos) {
-                      return <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={card5Img} />;
+                      return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card5Img} />;
                     } else if (value === shopPos) {
-                      return <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={shopImg} />;
+                      return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={shopImg} />;
                     } else {
                       // If current value doesn't match any of the cardXpos values, render a normal Square
-                      return <Square index={value} key={`square-${indexRow}-${indexCol}`} />;
+                      return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={false} imageUrl={null} />;
                     }
                   } else {
                     return <SquareTransparent key={`transparent-${indexRow}-${indexCol}`} />;
@@ -502,122 +503,6 @@ export default function Game() {
         );
       };
       
-      // const SquareBoard = ({ numberOfSquares, card1Img, card1pos, card2Img, card2pos, card3Img, card3pos, card4Img, card4pos, card5Img, card5pos, shopImg, shopPos }) => {
-      //   const lastIndex = numberOfSquares - 1;
-      //   let counter = 0;
-      //   const playerColors = ["red"]; // change this later to have different colors for each player
-      //   const getPlayerColor = (sessionId) => {
-      //     const index = allPlayers.findIndex(player => player.sessionId === sessionId);
-      //     return playerColors[index];
-      //   };
-      //   const squares = [];
-      //   for (let i = 0; i < numberOfSquares; i++) {
-      //     squares.push([]);
-      //     for (let j = 0; j < numberOfSquares; j++) {
-      //       squares[i].push(null);
-      //     }
-      //   }
-      
-      //   for (let i = 0; i < numberOfSquares; i++) {
-      //     squares[0][i] = counter++;
-      //   }
-      //   for (let i = 1; i < numberOfSquares; i++) {
-      //     squares[i][numberOfSquares - 1] = counter++;
-      //   }
-      //   for (let i = numberOfSquares - 2; i >= 0; i--) {
-      //     squares[numberOfSquares - 1][i] = counter++;
-      //   }
-      //   for (let i = numberOfSquares - 2; i >= 1; i--) {
-      //     squares[i][0] = counter++;
-      //   }
-      
-      //   console.log("card positions: ", card1pos, card2pos, card3pos, card4pos, card5pos, shopPos);
-
-      //   return (
-      //     <div className={"flex flex-col gap-4"}>
-      //       {squares.map((row, indexRow) => (
-      //         <div className={"flex flex-row gap-4"} key={`row-${indexRow}`}>
-      //           {row.map((value, indexCol) => {
-      //             if (value !== null) {
-      //               // Check if current value matches any of the cardXpos values
-      //               if (value === card1pos) {
-      //                 return (
-      //                   <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={card1Img}>
-      //                     {allPlayers.map((player) => {
-      //                       if (player.position === card1pos) {
-      //                         return <PlayerFigure key={`player-${player.sessionId}`} playerName={player.playerName} color={"red"} />
-      //                       }
-      //                     })}
-      //                   </SquareWithImage>
-      //                 );
-      //               } else if (value === card2pos) {
-      //                 return (
-      //                   <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={card2Img}>
-      //                     {allPlayers.map((player) => {
-      //                       if (player.position === card2pos) {
-      //                         return <PlayerFigure key={`player-${player.sessionId}`} playerName={player.playerName} color={"red"} />
-      //                       }
-      //                     })}
-      //                   </SquareWithImage>
-      //                 );
-      //               } else if (value === card3pos) {
-      //                 return (
-      //                   <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={card3Img}>
-      //                     {allPlayers.map((player) => {
-      //                       if (player.position === card3pos) {
-      //                         return <PlayerFigure key={`player-${player.sessionId}`} playerName={player.playerName} color={"red"} />
-
-      //                       }
-      //                     })}
-      //                   </SquareWithImage>
-      //                 );
-      //               } else if (value === card4pos) {
-      //                 return (
-      //                   <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={card4Img}>
-      //                     {allPlayers.map((player) => {
-      //                       if (player.position === card4pos) {
-      //                         return <PlayerFigure key={`player-${player.sessionId}`} playerName={player.playerName} color={"red"} />
-
-      //                       }
-      //                     })}
-      //                   </SquareWithImage>
-      //                 );
-      //               } else if (value === card5pos) {
-      //                 return (
-      //                   <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={card5Img}>
-      //                     {allPlayers.map((player) => {
-      //                       if (player.position === card5pos) {
-      //                         return <PlayerFigure key={`player-${player.sessionId}`} playerName={player.playerName} color={"red"} />
-
-      //                       }
-      //                     })}
-      //                   </SquareWithImage>
-      //                 );
-      //               } else if (value === shopPos) {
-      //                 return (
-      //                   <SquareWithImage index={value} key={`square-${indexRow}-${indexCol}`} imageUrl={shopImg}>
-      //                     {allPlayers.map((player) => {
-      //                       if (player.position === shopPos) {
-      //                         return <PlayerFigure key={`player-${player.sessionId}`} playerName={player.playerName} color={"red"} />
-      //                       }
-      //                     })}
-      //                   </SquareWithImage>
-      //                 );
-      //               } else {
-      //                 // If current value doesn't match any of the cardXpos values, render a normal Square
-      //                 return <Square index={value} key={`square-${indexRow}-${indexCol}`} />;
-      //               }
-      //             } else {
-      //               return <SquareTransparent key={`transparent-${indexRow}-${indexCol}`} />;
-      //             }
-      //           })}
-      //         </div>
-      //       ))}
-      //     </div>
-      //   );
-        
-      // };
-
     // dice
 const Dot = ({ scale }) => {
   return (
@@ -626,8 +511,10 @@ const Dot = ({ scale }) => {
 };
 
 const Dice = () => {
-  const [numberOfDots, setNumberOfDots] = useState(1);
+  // const [numberOfDots, setNumberOfDots] = useState(1);
   const [rolling, setRolling] = useState(false);
+  const dispatch = useDispatch();
+  const [numberOfDots] = useSelector((state) => [state.global.numberRolled], shallowEqual);
 
   const rollDice = () => {
       if (rolling) return;
@@ -635,13 +522,14 @@ const Dice = () => {
       setTimeout(() => {
           setRolling(false);
           const newValue = Math.floor(Math.random() * 6) + 1;
-          setNumberOfDots(newValue);
+          dispatch({type: SET_NUMBER_ROLLED, value: newValue});
+          dispatch({type: SET_HAS_ROLLED, value: true});
       }, 2000);
   };
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-        <p className={"text-black"}>{numberOfDots}</p>
-        <div className="min-h-screen flex items-center justify-center">
+    <div className="flex flex-col items-center justify-center h-100">
+        <p className="text-black mb-4">{numberOfDots}</p>
+        <div className="min-h-100 flex items-center justify-center">
             <div onClick={() => {
                 if (!rolling) {
                     rollDice()
@@ -715,6 +603,104 @@ const PlayerItemList = () => {
   );
 };
 
+// player figurines
+
+const Figurine = ({ color }) => (
+  <div
+    className="rounded-full h-9 w-9 flex items-center justify-center"
+    style={{ backgroundColor: color }}
+  >
+    <svg className="text-white h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M6 10H14V11H6V10ZM4 4V16H16V4H4Z" />
+    </svg>
+  </div>
+);
+
+
+
+const Square = ({ index, children }) => {
+  return (
+    <div className="h-20 w-20 bg-gradient-to-br from-amber-700 via-orange-300 to-rose-800 rounded-xl flex items-center justify-center">
+      {index}
+      {children}
+    </div>
+  );
+};
+
+const SquareWithImage = ({ index, imageUrl, children }) => {
+  return (
+    <div
+      className={"h-20 w-20 bg-gradient-to-br from-amber-700 via-orange-300 to-rose-800 rounded-xl flex items-center justify-center"}
+      style={{ backgroundImage: `url(${imageUrl})`, backgroundSize: "cover" }}
+    >
+      {index}
+      {children}
+    </div>
+  );
+};
+
+const SquareF = ({ index, useImage, imageUrl }) => {
+  const colors = ["red", "blue", "green", "yellow"];
+  const playersOnSquare = allPlayers.filter((player) => player.position === index);
+  const numFigurines = playersOnSquare.length;
+
+  let figurines = [];
+  for (let i = 0; i < numFigurines; i++) {
+    figurines.push(<Figurine color={playersOnSquare[i].color} key={i} />);
+  }
+
+  let content = null;
+  if (numFigurines === 1) {
+    content = (
+      <div className="w-full h-full flex items-center justify-center">
+        {figurines}
+      </div>
+    );
+  } else if (numFigurines === 2) {
+    content = (
+      <div className="w-full h-full flex flex-row items-center justify-center">
+        {figurines}
+      </div>
+    );
+  } else if (numFigurines === 3) {
+    content = (
+      <div className="w-full h-full flex flex-row items-center justify-center">
+        <div className="w-1/2 flex flex-col items-center justify-center">
+          {figurines[0]}
+          {figurines[1]}
+        </div>
+        <div className="w-1/2 flex items-center justify-center">
+          {figurines[2]}
+        </div>
+      </div>
+    );
+  } else if (numFigurines === 4) {
+    content = (
+      <div className="w-full h-full flex flex-row items-center justify-center">
+        <div className="w-1/2 flex flex-col items-center justify-center">
+          {figurines[0]}
+          {figurines[1]}
+        </div>
+        <div className="w-1/2 flex flex-col items-center justify-center">
+          {figurines[2]}
+          {figurines[3]}
+        </div>
+      </div>
+    );
+  }
+
+  if (useImage) {
+    return <SquareWithImage index={index} imageUrl={imageUrl} >{content}</SquareWithImage>;
+  } else {
+    return (
+      <div className="w-50 h-50">
+        <Square index={index}>{content}</Square>
+      </div>
+    );
+  }
+};
+
+
     return (
       <div className={"flex flex-row min-h-screen w-screen bg-gradient-to-br from-sky-900 via-violet-600 to-amber-200"}>
         <ShowTopDetails/>
@@ -739,15 +725,21 @@ const PlayerItemList = () => {
                     shopImg={shopImg}
                     shopPos={shopPos}
                   />
+
+            <SquareF index={0} useImage={true} imageUrl={card1Img}/>
         </div>
     
         
+
         <div className="w-2/5 p-4 mt-16">
           <div className="flex flex-wrap -mx-4">
             {allPlayers.map((player) => (
               <div className="w-1/2 px-4 mb-4">
                 <div className={`bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg ${currentTurn === player.sessionId ? 'border-2 border-gradient-to-r from-red-400 to-yellow-500' : 'border-2 border-gray-800'}`}>
-                  <h2 className="text-xl font-bold mb-2">{player.playerName}</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-bold">{player.playerName}</h2>
+                  <div className="inline-block ml-2"><Figurine color={player.color} /></div>
+                </div>
                   <p className="text-gray-300">Balance: {player.balance}</p>
                   <p className="text-gray-300">Inventory Value: {player.invVal}</p>
                   <p className="text-gray-300">Different items: {player.items}</p>
