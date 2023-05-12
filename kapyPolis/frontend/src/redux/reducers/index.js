@@ -7,6 +7,10 @@ export const getDefaultGlobalStructure = () => {
         name:null,
         numberRolled:1,
         hasRolled:false,
+        hasRolls:true,
+        firstRoll:true,
+        secondRoll:true,
+        lastRolled:null,
     }
 }
 

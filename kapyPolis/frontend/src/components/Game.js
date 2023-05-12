@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button, Grid, Typography, TextField, FormHelperText, FormControl, FormControlLabel, RadioGroup, Radio } from "@mui/material";
 import { Link } from "react-router-dom";
@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FaSpinner } from "react-icons/fa";
 import classNames from "classnames";
 
-import {SET_NUMBER_ROLLED, SET_HAS_ROLLED} from '../redux/actions/action'
+import {SET_NUMBER_ROLLED, SET_HAS_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_LAST_ROLLED} from '../redux/actions/action'
 import {useSelector, shallowEqual} from "react-redux"; 
 import {useDispatch} from 'react-redux';
 
@@ -73,7 +73,7 @@ export default function Game() {
     const [balance, setBalance] = useState(0);
 
     const [allPlayers, setAllPlayers] = useState([]);
-    const [turn, setTurn] = useState(false);
+
     const [numberOfSquares, setNumberOfSquares] = useState(7);
     const [currentTurn, setCurrentTurn] = useState("");
 
@@ -108,15 +108,19 @@ export default function Game() {
     const [shopPos, setShopPos] = useState(0);
     const [shopItems, setShopItems] = useState([]);
 
+    const [numFields, setNumFields] = useState(0);
+    const [reward, setReward] = useState(0);
+
     //
     const dispatch = useDispatch();
     const [numberRolled] = useSelector((state) => [state.global.numberRolled], shallowEqual);
     const [hasRolled] = useSelector((state) => [state.global.hasRolled], shallowEqual);
-    // todo dories sestku nech je vof liste.
+    const [hasRolls] = useSelector((state) => [state.global.hasRolls], shallowEqual);
+    const [lastRolled] = useSelector((state) => [state.global.lastRolled], shallowEqual);
+    const [rolledSix, setRolledSix] = useState(false);
+    const [firstRoll] = useSelector((state) => [state.global.firstRoll], shallowEqual);
+    const [secondRoll] = useSelector((state) => [state.global.secondRoll], shallowEqual);
     
-    const [oldPos, setOldPos] = useState(null);
-    const [newPos, setNewPos] = useState(null);
-
     // inventory
     const [showModal, setShowModal] = useState(false);
 
@@ -142,7 +146,6 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
           navigate("/");
         } else {
           const data = await response.json();
-          console.log("DATA", data);
     
           const currentPlayer = data.players.find(player => player.session_id === data.session_id);
           if (currentPlayer) {
@@ -163,12 +166,9 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
             );
           });
     
-          console.log("players likei", players);
           setAllPlayers(players);
           setSessionId(data.session_id);
           setCurrentTurn(data.current_turn);
-          console.log("current turn", data.current_turn);
-          console.log("ses", data.session_id);
     
           setSelectedTemplate(data.template_name);
     
@@ -178,7 +178,7 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
           setCard4Pos(data.card_type4_pos);
           setCard5Pos(data.card_type5_pos);
           setShopPos(data.shop_pos);
-          console.log("selected template: ", data.template_name);
+
           setRoomDetailsLoaded(true);
         }
       } catch (e) {
@@ -194,19 +194,16 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
         return {...player, color};
       });
       setAllPlayers(updatedPlayers);
-      console.log("UPDATED PLAYER COLORS", updatedPlayers);
     };
 
 
     const getTemplateDetails = async () => {
-      console.log("selected template:", selectedTemplate);
       fetch(`/api/get-template?name=${selectedTemplate}`, { credentials: 'include' }) // include headers
       .then((response) => {
           // add if statement to differentiate whether the room exists or not. If not, clear the code and navigate to the HP
             return response.json();
       })
       .then((data) => {
-        console.log("data", data);
         // setBalance(data.start_balance);
         // setTemplateName(data.name);
         // setFirstName(data.name);
@@ -239,8 +236,9 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
         // setWin2(data.winning_pos2);
         // setWinAmt(data.winning_amt);
 
-        // setNumFields(data.number_of_rounds);
-        // setReward(data.reward_per_round);
+        setNumFields(data.number_of_rounds);
+        setReward(data.reward_per_round);
+
         const items = data.shop_items.map((item) => {
           return new ShopItem(
             item.name,
@@ -250,7 +248,6 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
           );
         });
 
-        console.log("shop Items: ", items);
         setShopItems(items);
         
         })
@@ -272,7 +269,6 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
           try {
             const response = await fetch("/api/leave-room", requestOptions);
             const data = await response.json();
-            console.log("dd", data.success);
             if (data.success === "Left the room and room has been deleted" || data.success === "Left the room") { 
               console.log("Leaving room and redirecting to homepage");
               navigate(`/`);
@@ -285,6 +281,8 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
           }
     }
 
+
+    // TODO: ADD GET-PLAYERS METHOD THAT IS BEING FETCHED EVERY SECOND OR SO
     
     // useEffect(() => {
     //   // Call getRoomDetails on component mount
@@ -345,10 +343,6 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
       }, [roomDetailsLoaded]);
 
 
-      // TODO
-    useEffect(() => {
-      console.log("hasRolled");
-    }, [hasRolled]);
 
     const showLog = () => {
 
@@ -468,7 +462,7 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
           squares[i][0] = counter++;
         }
       
-        console.log("card positions: ", card1pos, card2pos, card3pos, card4pos, card5pos, shopPos);
+        // console.log("card positions: ", card1pos, card2pos, card3pos, card4pos, card5pos, shopPos);
 
         return (
           <div className={"flex flex-col gap-4"}>
@@ -514,18 +508,48 @@ const Dice = () => {
   // const [numberOfDots, setNumberOfDots] = useState(1);
   const [rolling, setRolling] = useState(false);
   const dispatch = useDispatch();
-  const [numberOfDots] = useSelector((state) => [state.global.numberRolled], shallowEqual);
+  // const numberOfDots = useSelector((state) => state.global.numberRolled, shallowEqual);
+  // const firstRoll = useSelector((state) => state.global.firstRoll);
+  // const secondRoll = useSelector((state) => state.global.secondRoll);
 
+  // const [hasRolled] = useSelector((state) => [state.global.hasRolled], shallowEqual);
+  // const [hasRolls] = useSelector((state) => [state.global.hasRolls], shallowEqual);
+  // const [lastRolled] = useSelector((state) => [state.global.lastRolled], shallowEqual);
+  const numberOfDots = useSelector((state) => state.global.numberRolled, shallowEqual);
+  const firstRoll = useSelector((state) => state.global.firstRoll, shallowEqual);
+  const secondRoll = useSelector((state) => state.global.secondRoll, shallowEqual);
+  const hasRolled = useSelector((state) => state.global.hasRolled, shallowEqual);
+  const hasRolls = useSelector((state) => state.global.hasRolls, shallowEqual);
+  const lastRolled = useSelector((state) => state.global.lastRolled, shallowEqual);
+  
   const rollDice = () => {
       if (rolling) return;
       setRolling(true);
       setTimeout(() => {
           setRolling(false);
           const newValue = Math.floor(Math.random() * 6) + 1;
+          console.log(newValue);
           dispatch({type: SET_NUMBER_ROLLED, value: newValue});
           dispatch({type: SET_HAS_ROLLED, value: true});
+          if (firstRoll && secondRoll) {
+            dispatch({type: SET_FIRST_ROLL, value: false});
+            if (newValue != 6) {
+              dispatch({type: SET_HAS_ROLLS, value: false});
+            }
+          } else if (!firstRoll) {
+            dispatch({type: SET_SECOND_ROLL, value: false});
+            dispatch({type: SET_HAS_ROLLS, value: false});
+          }
       }, 2000);
   };
+
+  useEffect(() => {
+  }, [firstRoll, secondRoll]);
+
+  useEffect( () => {
+    // console.log("Rolled a new number", numberOfDots);
+  }, [numberOfDots, hasRolls])
+
   return (
     <div className="flex flex-col items-center justify-center h-100">
         <p className="text-black mb-4">{numberOfDots}</p>
@@ -699,6 +723,186 @@ const SquareF = ({ index, useImage, imageUrl }) => {
     );
   }
 };
+
+
+const switchTurn = async () => {
+    // Find the index of the current player
+    const currentIndex = allPlayers.findIndex(player => player.sessionId === currentTurn);
+
+    // Calculate the index of the next player
+    const nextIndex = (currentIndex + 1) % allPlayers.length;
+
+    // Set the CurrentTurn to the sessionId of the next player
+    const nextPlayer = allPlayers[nextIndex];
+    const nextTurn = nextPlayer.sessionId;
+
+    console.log("switching turn from: to :", currentTurn, nextTurn);
+
+    setCurrentTurn(nextTurn);
+
+    const requestOptions = {
+      method: 'POST',
+      headers: { 
+          "Content-Type": "application/json",
+          'X-CSRFToken': csrftoken, // include the CSRF token in the headers
+      },
+      body: JSON.stringify(
+          {
+              code: roomCode,
+              current_turn: nextTurn,
+          }
+      ),
+  }
+  fetch("/api/update-turn", requestOptions)
+  .then((response) => { 
+      return response.json();
+  }
+      ) // take response and convert it to json obj
+  .then((data) => { 
+      console.log("sesssion updated successfully.");
+  }) // log data
+  .catch((error) => console.error(error));
+}
+
+const resetStatesToDefault = () => {
+  console.log("reseting data to default.");
+  setRolledSix(false);
+  // dispatch({type: SET_NUMBER_ROLLED, value: 1}); // causes to rerender the dice and sets the number to 1.
+  dispatch({type: SET_HAS_ROLLED, value: false});
+  dispatch({type: SET_HAS_ROLLS, value: true});
+  dispatch({type: SET_FIRST_ROLL, value: true});
+  dispatch({type: SET_SECOND_ROLL, value: true});
+  dispatch({type: SET_LAST_ROLLED, value: null});
+
+  setRolledSix(false);
+}
+
+
+const handleNoRolls = () => {
+  console.log("logging states after finishing rolling: ", numberRolled, hasRolled, hasRolls, firstRoll, secondRoll, lastRolled);
+  if (!hasRolls) {
+    console.log("no rolls left, last rolled", numberRolled);
+    if (secondRoll) {
+      console.log("also rolled six");
+    }
+
+    const amtToMove = !secondRoll ? 6 + numberRolled : numberRolled;
+    console.log("amt to move", numberRolled);
+    handleNewPosition(amtToMove);
+  }
+  console.log("som tu", hasRolls);
+}
+
+const handleNewPosition = (amtToMove) => {
+  console.log("hanglind pos", amtToMove);
+  const playerIndex = allPlayers.findIndex(player => player.sessionId === sessionId);
+  const oldPos = allPlayers[playerIndex].position;
+  const newPos = oldPos + amtToMove; // this number overflows the amt of fields, handeled separately in next methods
+  console.log("new pos", newPos);
+  handlePlayerMove(newPos);
+}
+
+const handlePlayerMove = (newPos) => {
+  console.log("handling players move");
+  if (newPos >= numFields) {
+    incrementPlayersBalance(reward);
+  }
+  movePlayer(newPos);
+}
+
+// reusable for cards as well as the round end
+const incrementPlayersBalance = (amt) => {
+  const playerIndex = allPlayers.findIndex(player => player.sessionId === sessionId);
+  allPlayers[playerIndex].balance += amt;
+  console.log("Balance incremented with amount: ", amt);
+}
+
+const decrementPlayersBalance = (amt) => {
+  const playerIndex = allPlayers.findIndex(player => player.sessionId === sessionId);
+  const newBal = allPlayers[playerIndex].balance - amt;
+  if (newBal < 0) {
+    allPlayers[index].balance = 0;
+  } else {
+    allPlayers[index].balance = newBal;
+  }
+  console.log("bal decremented");
+}
+
+const movePlayer = (position) => {
+  if (position >= numFields) {
+    console.log("Player passed the round."); // todo log it into a log.
+  }
+
+  const playerIndex = allPlayers.findIndex(player => player.sessionId === sessionId);
+  const newPlayerPosition = (position + allPlayers[playerIndex].position) % numFields; // TODO check if pos not more
+
+  handleCards(newPlayerPosition)
+
+  // allPlayers[playerIndex].position = position % numFields;
+
+}
+
+const handleCards = (position) => {
+  const playerIndex = allPlayers.findIndex(player => player.sessionId === sessionId);
+
+  if (card1pos == position) {
+    const amtToMove = generateCard1Rule();
+    const newPos = (position + amtToMove) % numFields;
+    allPlayers[playerIndex].position = newPos;
+  } else if (card2pos == position) {
+    const amtToMove = generateCard2Rule();
+    const newPos = (position + amtToMove) % numFields;
+    allPlayers[playerIndex].position = newPos;
+  } else if (card3pos != null && card3pos == position) { // reset to start, TODO check whether it is set or not.
+    allPlayers[playerIndex].position = 0;
+  } else if (card4pos == position) {
+    allPlayers[playerIndex].roundsFrozen = card4RoundsStop;
+    allPlayers[playerIndex].position = position % numFields;
+    console.log(allPlayers[playerIndex]);
+  } else if (card5pos == position) {
+    const ballChange = generateCard5Balance(card5Min, card5Max);
+    if (ballChange > 0) {
+      incrementPlayersBalance(ballChange);
+    } else {
+      decrementPlayersBalance(ballChange);
+    }
+    allPlayers[playerIndex].position = newPos;
+  } else { // normal field without any "card"
+
+    allPlayers[playerIndex].position = position % numFields;
+    console.log("normal pos");
+  }
+
+  resetStatesToDefault();
+  switchTurn();
+  // switch turn
+  console.log("new player position to be set and turn switched", position);
+}
+
+const generateCard1Rule = () => {
+  const range = card1Max - card1Min;
+  const randomNumber = (Math.random() * range) + card1Min;
+  return randomNumber;
+}
+
+const generateCard2Rule = () => {
+  const range = card2Max - card2Min;
+  const randomNumber = (Math.random() * range) + card2Min;
+  return randomNumber;
+}
+
+const generateCard5Balance = (number1, number2) => {
+  const randomNumber = Math.round(Math.random() * (number2 - number1) + number1);
+  const randomSign = Math.random() < 0.5 ? -1 : 1;
+  const finalNumber = randomNumber * randomSign;
+  return finalNumber;
+}
+
+useEffect(() => {
+  // console.log("hasRolled useeff", hasRolled, hasRolls, lastRolled);
+  console.log("has no rolls left");
+  handleNoRolls();
+}, [hasRolls]);
 
 
     return (
