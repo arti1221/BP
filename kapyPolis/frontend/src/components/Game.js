@@ -123,6 +123,7 @@ export default function Game() {
     
     // inventory
     const [showModal, setShowModal] = useState(false);
+    const [showShopModal, setShowShopModal] = useState(true);
 
     const showPlayerInventory = () => {
       setShowModal(true);
@@ -132,6 +133,15 @@ export default function Game() {
       setShowModal(false);
     };
 
+
+    const showShopInventory = () => {
+      setShowShopModal(true);
+    }
+
+    const hideShopInventory = () => {
+      setShowShopModal(false);
+    }
+    
     const getRoomDetails = async () => { 
       console.log("fetching room details");
       if (!roomCode) {
@@ -245,8 +255,10 @@ export default function Game() {
             item.price_max
           );
         });
-
+        
+        console.log("items retrieved", items);
         setShopItems(items);
+        console.log("dostal som sa tu");
         
         })
         .catch((e) => {
@@ -355,6 +367,9 @@ export default function Game() {
       );
     };
     
+    const showShopItems = () => {
+
+    }
 
     const ShowTopDetails = () => {
       return (
@@ -776,8 +791,6 @@ const updatePlayersData = () => {
   fetch('/api/get-room-players', requestOptions)
     .then(response => response.json())
     .then(data => {
-      const currPlayers = data.players;
-      const currTurn = data.currentTurn;
       setAllPlayers(updatePlayerDetails(data.players));
     })
     .catch(error => {
@@ -813,6 +826,7 @@ useEffect(() => {
   }, 1000);
   return () => clearInterval(interval);
 }, []);
+
 
 const resetStatesToDefault = () => {
   console.log("reseting data to default.");
@@ -924,8 +938,12 @@ const handleCards = async (player, position) => {
     }
     player.position = position % numFields;
     console.log("nes pos", position % numFields);
+  } else if (shopPos == position) {
+    showShopInventory();
+    console.log("SHOWING SHOP");
+    player.position = position % numFields;
+    // todo await close
   } else { // normal field without any "card"
-
     player.position = position % numFields;
     console.log("normal pos");
   }
@@ -956,6 +974,116 @@ const generateCard5Balance = (number1, number2) => {
   return finalNumber;
 }
 
+// todo fix items
+const getRandomItemsFromList = () => {
+  if (shopItems.length > 0) {
+    const playerItems = shopItems.map((shopItem) => {
+      const randomPrice = Math.floor(Math.random() * (shopItem.price - shopItem.price_min + 1)) + shopItem.price_min;
+      return new PlayerItem(shopItem.name, shopItem.image, randomPrice);
+    });
+    return playerItems;
+  }
+  return [];
+}
+
+const GenerateShopItemsList = () => {
+  console.log("maybe aj tu");
+  const itemsList = getRandomItemsFromList();
+  console.log("random itms", itemsList);
+  if (itemsList.length > 0) {
+    return (
+      <div className="grid grid-cols-3 gap-4 py-4">
+        {itemsList.map((shopItem) => {
+          const randomPrice = Math.floor(Math.random() * (shopItem.priceMax - shopItem.priceMin + 1)) + shopItem.priceMin;
+          return (
+            <div key={shopItem.name}>
+              <PlayerItem name={shopItem.name} price={randomPrice} imageUrl={shopItem.image} />
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+};
+
+// TODO pass player here as param
+const generateShopItemsModal = () => {
+  const [selectedItem, setSelectedItem] = useState(null);
+  const itemsList = getRandomItemsFromList();
+
+  const handleSelectItem = (event) => {
+    const selectedIndex = event.target.selectedIndex;
+    setSelectedItem(itemsList[selectedIndex]);
+  };
+
+  const handleBuy = () => {
+    if (selectedItem) {
+      const selectedItem = itemsList[selectedItemIndex];
+      console.log(`Buying item '${selectedItem.name}' for ${selectedItem.price} coins`);
+      // TODO: Implement the logic for actually buying the item
+    }
+  };
+
+  return (
+    <div className={`fixed z-50 inset-0 overflow-y-auto`}>
+      {/* <div className={`fixed z-50 inset-0 overflow-y-auto ${showShopModal ? "" : "hidden"}`}> */}
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="fixed inset-0 transition-opacity">
+          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+        <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:max-w-lg" style={{ marginTop: "15vh" }}>
+          <div className="bg-gradient-to-r from-gray-500 to-white p-4">
+            <div className="pb-4 sm:pb-6">
+              <h2 className="text-xl font-bold text-gray-900">Shop Inventory</h2>
+            </div>
+            <div className="pt-4 sm:pt-6">
+              {itemsList.length > 0 ? (
+                <div className="grid grid-cols-3 gap-4 py-4">
+                  {itemsList.map((shopItem, index) => {
+                    const randomPrice = Math.floor(Math.random() * (shopItem.priceMax - shopItem.priceMin + 1)) + shopItem.priceMin;
+                    console.log("rand prc", randomPrice, shopItem.priceMin, shopItem.priceMax);
+                    return (
+                      <div key={shopItem.name}>
+                        <Item name={shopItem.name} price={randomPrice} imageUrl={shopItem.image}>
+                          <div className="mt-2 flex justify-between items-center">
+                            <select className="block w-full py-2 px-3 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                              {[...Array(itemsList.length)].map((_, i) => (
+                                <option key={i}>{i + 1}</option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                            >
+                              Buy
+                            </button>
+                          </div>
+                        </Item>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-gray-700">There are no items available at the moment.</p>
+              )}
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-gray-500 to-white px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              onClick={hideShopInventory}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+ 
+}
+
 useEffect(() => {
   console.log("has no rolls left");
   if (currentTurn == sessionId) {
@@ -970,6 +1098,8 @@ useEffect(() => {
         <ShowBottomDetails/>
 
         {showModal ? showInventory() : null}
+
+        {showShopModal ? generateShopItemsModal() : null}
 
         <div className="flex-1 m-4 mt-16">
           {/* Your game board code here */}
@@ -988,7 +1118,6 @@ useEffect(() => {
                     shopImg={shopImg}
                     shopPos={shopPos}
                   />
-
         </div>
     
         
