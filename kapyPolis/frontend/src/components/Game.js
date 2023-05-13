@@ -235,6 +235,7 @@ export default function Game() {
 
         setNumFields(data.number_of_rounds);
         setReward(data.reward_per_round);
+        
 
         const items = data.shop_items.map((item) => {
           return new ShopItem(
@@ -754,6 +755,8 @@ const updatePlayer = async (player) => {
     .then((data) => { 
         console.log("Player updated successfully.");
         console.log(data);
+        setBalance(player.balance);
+        console.log("new balance set to", player.balance);
     }) // log data
     .catch((error) => console.error(error));
 }
@@ -841,6 +844,16 @@ const handleNewPosition = async (amtToMove) => {
 
   const newPlayer = {...allPlayers[playerIndex]};
 
+  if (newPlayer.rounds_frozen > 0) {
+    newPlayer.rounds_frozen -= 1;
+    switchTurn();
+    await updatePlayer(newPlayer);
+    resetStatesToDefault();
+    console.log("player was frozen, dec. rounds fr");
+    return;
+  }
+  console.log("player is not frz");
+
   const newPos = newPlayer.position + amtToMove; // this number overflows the amt of fields, handeled separately in next methods
 
 
@@ -848,7 +861,8 @@ const handleNewPosition = async (amtToMove) => {
 
 
   if (newPos >= numFields) {
-    incrementPlayersBalance(reward);
+    console.log("passed round");
+    incrementPlayersBalance(newPlayer, reward);
   }
 
   if (newPos >= numFields) {
@@ -862,25 +876,33 @@ const handleNewPosition = async (amtToMove) => {
 
 // reusable for cards as well as the round end
 const incrementPlayersBalance = (player, amt) => {
+  console.log(player.balance, amt, "player bal and amt");
   player.balance += parseInt(amt);
   console.log("Balance incremented with amount: ", amt);
 }
 
 const decrementPlayersBalance = (player, amt) => {
-  if (amt < 0) {
+  console.log(player.balance, amt, "player bal and amt dec");
+  const newBal = player.balance - amt;
+  if (newBal < 0) {
     player.balance = 0;
   } else {
-    player.balance = parseInt(amt);
+    player.balance = parseInt(newBal);
   }
   console.log("bal decremented");
 }
 
 const handleCards = async (player, position) => {
-
-  if (card1pos == position) {
+  console.log("position: ", position);
+  console.log("cards: ", card1pos, card2pos, card3pos, card4pos, card5pos);
+  if (card1pos == position) { // ok working
     const amtToMove = generateCard1Rule();
-    const newPos = (position + amtToMove) % numFields;
+    const posToMove = (position + amtToMove);
+    const newPos = posToMove % numFields;
     console.log("nes pos", newPos);
+    if (posToMove >= numFields) {
+      incrementPlayersBalance(player, reward);
+    }
     player.position = newPos;
   } else if (card2pos == position) {
     const amtToMove = generateCard2Rule();
@@ -890,7 +912,8 @@ const handleCards = async (player, position) => {
   } else if (card3pos != null && card3pos == position) { // reset to start, TODO check whether it is set or not.
     player.position = 0;
   } else if (card4pos == position) {
-    player.roundsFrozen = card4RoundsStop; // todo doriesit
+    player.rounds_frozen = card4RoundsStop; // todo doriesit
+    console.log("frozen");
     player.position = position % numFields;
   } else if (card5pos == position) {
     const ballChange = generateCard5Balance(card5Min, card5Max);
@@ -917,13 +940,13 @@ const handleCards = async (player, position) => {
 const generateCard1Rule = () => {
   const range = card1Max - card1Min;
   const randomNumber = (Math.random() * range) + card1Min;
-  return randomNumber;
+  return Math.round(randomNumber);
 }
 
 const generateCard2Rule = () => {
   const range = card2Max - card2Min;
   const randomNumber = (Math.random() * range) + card2Min;
-  return randomNumber;
+  return Math.round(randomNumber);
 }
 
 const generateCard5Balance = (number1, number2) => {
