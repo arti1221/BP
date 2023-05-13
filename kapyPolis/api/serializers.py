@@ -19,6 +19,17 @@ class SetBalanceSerializer(serializers.ModelSerializer):
             'balance'
         )
 
+class UpdatePlayerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Player
+        fields = ['session_id',
+                'diff_items_amt',
+                'inventory_value',
+                'balance',
+                'position',
+                'rounds_frozen'
+                  ]
+
 # Used for session retrievals for given room.
 class SessionSerializer(serializers.ModelSerializer):
         class Meta:
@@ -27,6 +38,15 @@ class SessionSerializer(serializers.ModelSerializer):
                 'room',
             )
 
+class RoomPlayersSerializer(serializers.ModelSerializer):
+        players = PlayerSerializer(many=True, read_only=True, source='player_set')
+        code = serializers.CharField(validators=[])
+        class Meta:
+            model = Room
+            fields = (
+                'code',
+                'players',
+            )
 
 class RoomSerializer(serializers.ModelSerializer):
     players = PlayerSerializer(many=True, read_only=True, source='player_set')

@@ -8,3 +8,4 @@ export const SET_HAS_ROLLS = "SET_HAS_ROLLS";
 export const SET_FIRST_ROLL = "SET_FIRST_ROLL"; 
 export const SET_SECOND_ROLL = "SET_SECOND_ROLL";
 export const SET_LAST_ROLLED = "SET_LAST_ROLLED";
+export const SET_IS_ROLLING = "SET_IS_ROLLING";

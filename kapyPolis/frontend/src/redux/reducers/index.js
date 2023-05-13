@@ -11,6 +11,7 @@ export const getDefaultGlobalStructure = () => {
         firstRoll:true,
         secondRoll:true,
         lastRolled:null,
+        isRolling:false,
     }
 }
 

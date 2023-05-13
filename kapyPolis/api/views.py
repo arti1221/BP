@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
 from api.models import Room, Template, ShopItem, Player, User
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer, UpdateTemplateSerializer, SetBalanceSerializer, SessionSerializer, UpdateTurnSerializer
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer, UpdateTemplateSerializer, SetBalanceSerializer, SessionSerializer, UpdateTurnSerializer, UpdatePlayerSerializer, RoomPlayersSerializer
 from rest_framework.parsers import MultiPartParser
 import base64
 from django.core.files.base import ContentFile
@@ -706,6 +706,34 @@ class SetPlayersBalanceView(APIView):
             
         print(serializer.errors)
         return Response({'Bad Request': 'No templates found'}, status=status.HTTP_400_BAD_REQUEST)
+    
+@method_decorator(csrf_protect, name='dispatch')
+class UpdatePlayerView(APIView):
+    serializer_class = UpdatePlayerSerializer
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if (serializer.is_valid()):
+            session_id = serializer.data.get('session_id')
+            balance = serializer.data.get('balance')
+            items = serializer.data.get('diff_items_amt')
+            inv = serializer.data.get('inventory_value')
+            pos = serializer.data.get('position')
+            rounds_fr = serializer.data.get('rounds_frozen')
+            player = Player.objects.filter(session_id=session_id).first()
+            print("got player", player)
+            if player:
+                player.balance = balance
+                player.inventory_value = inv
+                player.position = pos
+                player.rounds_frozen = rounds_fr
+                player.diff_items_amt = items
+                player.save(update_fields=['balance', 'inventory_value', 'position', 'rounds_frozen', 
+                                           'diff_items_amt'
+                                           ])
+                return Response({'status': 'Player updated.'}, status=status.HTTP_200_OK)
+            
+        print(serializer.errors)
+        return Response({'Bad Request': 'No Player found'}, status=status.HTTP_400_BAD_REQUEST)
 
 @method_decorator(csrf_protect, name='dispatch')
 class GetRoomSessions(APIView):
@@ -721,6 +749,24 @@ class GetRoomSessions(APIView):
                 return Response({'session_ids': session_ids, 'status': 'Sessions retrieved successfully.'}, status=status.HTTP_200_OK)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@method_decorator(csrf_protect, name='dispatch')
+class GetRoomPlayersView(APIView):
+    serializer_class = RoomPlayersSerializer
+    
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            code = serializer.validated_data.get('code')
+            room = Room.objects.filter(code=code)
+            print("mrt", room)
+            if (len(room)):
+                data = RoomSerializer(room[0]).data
+                print("d", data)
+                return Response(data, status=status.HTTP_200_OK)
+            
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @method_decorator(csrf_protect, name='dispatch')
 class UpdateGameTurnView(APIView):

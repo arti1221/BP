@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FaSpinner } from "react-icons/fa";
 import classNames from "classnames";
 
-import {SET_NUMBER_ROLLED, SET_HAS_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_LAST_ROLLED} from '../redux/actions/action'
+import {SET_NUMBER_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_IS_ROLLING} from '../redux/actions/action'
 import {useSelector, shallowEqual} from "react-redux"; 
 import {useDispatch} from 'react-redux';
 
@@ -34,14 +34,14 @@ function getCookie(name) {
   }
 
 class Player {
-    constructor(sessionId, playerName, items, invVal, balance, position, roundsFrozen, color) {
-      this.sessionId = sessionId;
-      this.playerName = playerName;
-      this.items = items;
-      this.invVal = invVal;
+    constructor(session_id, player_name, diff_items_amt, inventory_value, balance, position, rounds_frozen, color) {
+      this.session_id = session_id;
+      this.player_name = player_name;
+      this.diff_items_amt = diff_items_amt;
+      this.inventory_value = inventory_value;
       this.balance = balance;
       this.position = position;
-      this.roundsFrozen = roundsFrozen;
+      this.rounds_frozen = rounds_frozen;
       this.color = color;
     }
 }
@@ -111,15 +111,15 @@ export default function Game() {
     const [numFields, setNumFields] = useState(0);
     const [reward, setReward] = useState(0);
 
+    const [roomId, setRoomId] = useState(null);
+
     //
     const dispatch = useDispatch();
     const [numberRolled] = useSelector((state) => [state.global.numberRolled], shallowEqual);
-    const [hasRolled] = useSelector((state) => [state.global.hasRolled], shallowEqual);
     const [hasRolls] = useSelector((state) => [state.global.hasRolls], shallowEqual);
-    const [lastRolled] = useSelector((state) => [state.global.lastRolled], shallowEqual);
-    const [rolledSix, setRolledSix] = useState(false);
     const [firstRoll] = useSelector((state) => [state.global.firstRoll], shallowEqual);
     const [secondRoll] = useSelector((state) => [state.global.secondRoll], shallowEqual);
+    const rolling = useSelector((state) => state.global.isRolling, shallowEqual);
     
     // inventory
     const [showModal, setShowModal] = useState(false);
@@ -132,11 +132,8 @@ export default function Game() {
       setShowModal(false);
     };
 
-
-// state variables
-const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
-
     const getRoomDetails = async () => { 
+      console.log("fetching room details");
       if (!roomCode) {
         return;
       }
@@ -166,7 +163,7 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
             );
           });
     
-          setAllPlayers(players);
+          setAllPlayers(updatePlayerDetails(players));
           setSessionId(data.session_id);
           setCurrentTurn(data.current_turn);
     
@@ -179,21 +176,21 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
           setCard5Pos(data.card_type5_pos);
           setShopPos(data.shop_pos);
 
-          setRoomDetailsLoaded(true);
+          setRoomId(data.id);
         }
       } catch (e) {
         console.log("error", e);
       }
     };
     
-    const setPlayerColors = async () => {
+    const updatePlayerDetails = (players) => {
       const colors = ["red", "blue", "green", "yellow"];
-      const updatedPlayers = allPlayers.map((player, index) => {
+      const updatedPlayers = players.map((player, index) => {
         const colorIndex = index % colors.length;
         const color = colors[colorIndex];
         return {...player, color};
       });
-      setAllPlayers(updatedPlayers);
+      return updatedPlayers;
     };
 
 
@@ -229,7 +226,7 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
         setCard5Max(data.card_type5_max);
         setCard5Img(data.card_type5_image);
 
-        setShopImg(data.shop_image); // TODO ADD SHOP ITEMS! CREATE A CLASS FOR IT
+        setShopImg(data.shop_image);
         
         // console.log("win1, win2", data.winning_pos1, data.winning_pos2);
         // setWin1(data.winning_pos1);
@@ -281,22 +278,6 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
           }
     }
 
-
-    // TODO: ADD GET-PLAYERS METHOD THAT IS BEING FETCHED EVERY SECOND OR SO
-    
-    // useEffect(() => {
-    //   // Call getRoomDetails on component mount
-    //   getRoomDetails();
-  
-    //   // timer to call getRoomDetails every 0.1 second
-    //   const timerId = setInterval(() => {
-    //     getRoomDetails();
-    //   }, 100);
-  
-    //   // Clean up the timer when the component unmounts
-    //   return () => clearInterval(timerId);
-    // }, [getRoomDetails]);
-
     const removePlayer =  async () => {
         const requestOptions = {
           method: "POST",
@@ -335,13 +316,6 @@ const [roomDetailsLoaded, setRoomDetailsLoaded] = useState(false);
       
       useEffect(() => {
       }, [showModal]);
-
-      useEffect(() => {
-        if (roomDetailsLoaded) {
-          setPlayerColors();
-        }
-      }, [roomDetailsLoaded]);
-
 
 
     const showLog = () => {
@@ -506,31 +480,22 @@ const Dot = ({ scale }) => {
 
 const Dice = () => {
   // const [numberOfDots, setNumberOfDots] = useState(1);
-  const [rolling, setRolling] = useState(false);
+  const rolling = useSelector((state) => state.global.isRolling, shallowEqual);
   const dispatch = useDispatch();
-  // const numberOfDots = useSelector((state) => state.global.numberRolled, shallowEqual);
-  // const firstRoll = useSelector((state) => state.global.firstRoll);
-  // const secondRoll = useSelector((state) => state.global.secondRoll);
 
-  // const [hasRolled] = useSelector((state) => [state.global.hasRolled], shallowEqual);
-  // const [hasRolls] = useSelector((state) => [state.global.hasRolls], shallowEqual);
-  // const [lastRolled] = useSelector((state) => [state.global.lastRolled], shallowEqual);
   const numberOfDots = useSelector((state) => state.global.numberRolled, shallowEqual);
   const firstRoll = useSelector((state) => state.global.firstRoll, shallowEqual);
   const secondRoll = useSelector((state) => state.global.secondRoll, shallowEqual);
-  const hasRolled = useSelector((state) => state.global.hasRolled, shallowEqual);
   const hasRolls = useSelector((state) => state.global.hasRolls, shallowEqual);
-  const lastRolled = useSelector((state) => state.global.lastRolled, shallowEqual);
   
   const rollDice = () => {
       if (rolling) return;
-      setRolling(true);
+      dispatch({type: SET_IS_ROLLING, value: true});
       setTimeout(() => {
-          setRolling(false);
+          dispatch({type: SET_IS_ROLLING, value: false});
           const newValue = Math.floor(Math.random() * 6) + 1;
           console.log(newValue);
           dispatch({type: SET_NUMBER_ROLLED, value: newValue});
-          dispatch({type: SET_HAS_ROLLED, value: true});
           if (firstRoll && secondRoll) {
             dispatch({type: SET_FIRST_ROLL, value: false});
             if (newValue != 6) {
@@ -547,7 +512,6 @@ const Dice = () => {
   }, [firstRoll, secondRoll]);
 
   useEffect( () => {
-    // console.log("Rolled a new number", numberOfDots);
   }, [numberOfDots, hasRolls])
 
   return (
@@ -727,18 +691,16 @@ const SquareF = ({ index, useImage, imageUrl }) => {
 
 const switchTurn = async () => {
     // Find the index of the current player
-    const currentIndex = allPlayers.findIndex(player => player.sessionId === currentTurn);
+    const currentIndex = allPlayers.findIndex(player => player.session_id === currentTurn);
 
     // Calculate the index of the next player
     const nextIndex = (currentIndex + 1) % allPlayers.length;
 
     // Set the CurrentTurn to the sessionId of the next player
     const nextPlayer = allPlayers[nextIndex];
-    const nextTurn = nextPlayer.sessionId;
+    const nextTurn = nextPlayer.session_id;
 
-    console.log("switching turn from: to :", currentTurn, nextTurn);
-
-    setCurrentTurn(nextTurn);
+    console.log("next turn", nextTurn);
 
     const requestOptions = {
       method: 'POST',
@@ -759,27 +721,106 @@ const switchTurn = async () => {
   }
       ) // take response and convert it to json obj
   .then((data) => { 
-      console.log("sesssion updated successfully.");
+      console.log("Turn updated successfully.");
   }) // log data
   .catch((error) => console.error(error));
 }
 
+const updatePlayer = async (player) => {
+  
+  console.log("updating player", player);
+      const requestOptions = {
+        method: 'POST',
+        headers: { 
+            "Content-Type": "application/json",
+            'X-CSRFToken': csrftoken, // include the CSRF token in the headers
+        },
+        body: JSON.stringify(
+            {
+              session_id: player.session_id,
+              diff_items_amt: player.diff_items_amt              ,
+              inventory_value: player.inventory_value,
+              balance: player.balance,
+              position: player.position,
+              rounds_frozen: player.rounds_frozen,
+            }
+        ),
+    }
+    fetch("/api/update-player", requestOptions)
+    .then((response) => { 
+        return response.json();
+    }
+        ) // take response and convert it to json obj
+    .then((data) => { 
+        console.log("Player updated successfully.");
+        console.log(data);
+    }) // log data
+    .catch((error) => console.error(error));
+}
+
+const updatePlayersData = () => {
+  const requestOptions = {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrftoken,
+    },
+    body: JSON.stringify({
+      code: roomCode,
+    }),
+  };
+
+  fetch('/api/get-room-players', requestOptions)
+    .then(response => response.json())
+    .then(data => {
+      const currPlayers = data.players;
+      const currTurn = data.currentTurn;
+      setAllPlayers(updatePlayerDetails(data.players));
+    })
+    .catch(error => {
+      console.error(error);
+      throw error;
+    });
+};
+
+const updateTurn = async () => { 
+  if (!roomCode) {
+    return;
+  }
+  try {
+    const response = await fetch(`/api/get-room?code=${roomCode}`, { credentials: 'include' });
+    if (!response.ok) {
+      navigate("/");
+    } else {
+      const data = await response.json();
+      setCurrentTurn(data.current_turn);
+    }
+  } catch (e) {
+    console.log("error", e);
+  }
+};
+
+useEffect(() => {
+  console.log("has? ", hasRolls);
+  const interval = setInterval(() => {
+    if (!rolling) { // todo shop
+      updatePlayersData();
+      updateTurn();
+    }
+  }, 1000);
+  return () => clearInterval(interval);
+}, []);
+
 const resetStatesToDefault = () => {
   console.log("reseting data to default.");
-  setRolledSix(false);
   // dispatch({type: SET_NUMBER_ROLLED, value: 1}); // causes to rerender the dice and sets the number to 1.
-  dispatch({type: SET_HAS_ROLLED, value: false});
   dispatch({type: SET_HAS_ROLLS, value: true});
   dispatch({type: SET_FIRST_ROLL, value: true});
   dispatch({type: SET_SECOND_ROLL, value: true});
-  dispatch({type: SET_LAST_ROLLED, value: null});
-
-  setRolledSix(false);
 }
 
 
 const handleNoRolls = () => {
-  console.log("logging states after finishing rolling: ", numberRolled, hasRolled, hasRolls, firstRoll, secondRoll, lastRolled);
   if (!hasRolls) {
     console.log("no rolls left, last rolled", numberRolled);
     if (secondRoll) {
@@ -793,89 +834,83 @@ const handleNoRolls = () => {
   console.log("som tu", hasRolls);
 }
 
-const handleNewPosition = (amtToMove) => {
+const handleNewPosition = async (amtToMove) => {
   console.log("hanglind pos", amtToMove);
-  const playerIndex = allPlayers.findIndex(player => player.sessionId === sessionId);
-  const oldPos = allPlayers[playerIndex].position;
-  const newPos = oldPos + amtToMove; // this number overflows the amt of fields, handeled separately in next methods
-  console.log("new pos", newPos);
-  handlePlayerMove(newPos);
-}
+  console.log("alp", allPlayers);
+  const playerIndex = allPlayers.findIndex(player => player.session_id == sessionId);
 
-const handlePlayerMove = (newPos) => {
+  const newPlayer = {...allPlayers[playerIndex]};
+
+  const newPos = newPlayer.position + amtToMove; // this number overflows the amt of fields, handeled separately in next methods
+
+
   console.log("handling players move");
+
+
   if (newPos >= numFields) {
     incrementPlayersBalance(reward);
   }
-  movePlayer(newPos);
+
+  if (newPos >= numFields) {
+    console.log("Player passed the round."); // todo log it into a log.
+  }
+
+  handleCards(newPlayer, newPos);
+
 }
 
+
 // reusable for cards as well as the round end
-const incrementPlayersBalance = (amt) => {
-  const playerIndex = allPlayers.findIndex(player => player.sessionId === sessionId);
-  allPlayers[playerIndex].balance += amt;
+const incrementPlayersBalance = (player, amt) => {
+  player.balance += parseInt(amt);
   console.log("Balance incremented with amount: ", amt);
 }
 
-const decrementPlayersBalance = (amt) => {
-  const playerIndex = allPlayers.findIndex(player => player.sessionId === sessionId);
-  const newBal = allPlayers[playerIndex].balance - amt;
-  if (newBal < 0) {
-    allPlayers[index].balance = 0;
+const decrementPlayersBalance = (player, amt) => {
+  if (amt < 0) {
+    player.balance = 0;
   } else {
-    allPlayers[index].balance = newBal;
+    player.balance = parseInt(amt);
   }
   console.log("bal decremented");
 }
 
-const movePlayer = (position) => {
-  if (position >= numFields) {
-    console.log("Player passed the round."); // todo log it into a log.
-  }
-
-  const playerIndex = allPlayers.findIndex(player => player.sessionId === sessionId);
-  const newPlayerPosition = (position + allPlayers[playerIndex].position) % numFields; // TODO check if pos not more
-
-  handleCards(newPlayerPosition)
-
-  // allPlayers[playerIndex].position = position % numFields;
-
-}
-
-const handleCards = (position) => {
-  const playerIndex = allPlayers.findIndex(player => player.sessionId === sessionId);
+const handleCards = async (player, position) => {
 
   if (card1pos == position) {
     const amtToMove = generateCard1Rule();
     const newPos = (position + amtToMove) % numFields;
-    allPlayers[playerIndex].position = newPos;
+    console.log("nes pos", newPos);
+    player.position = newPos;
   } else if (card2pos == position) {
     const amtToMove = generateCard2Rule();
     const newPos = (position + amtToMove) % numFields;
-    allPlayers[playerIndex].position = newPos;
+    console.log("nes pos", newPos);
+    player.position = newPos;
   } else if (card3pos != null && card3pos == position) { // reset to start, TODO check whether it is set or not.
-    allPlayers[playerIndex].position = 0;
+    player.position = 0;
   } else if (card4pos == position) {
-    allPlayers[playerIndex].roundsFrozen = card4RoundsStop;
-    allPlayers[playerIndex].position = position % numFields;
-    console.log(allPlayers[playerIndex]);
+    player.roundsFrozen = card4RoundsStop; // todo doriesit
+    player.position = position % numFields;
   } else if (card5pos == position) {
     const ballChange = generateCard5Balance(card5Min, card5Max);
     if (ballChange > 0) {
-      incrementPlayersBalance(ballChange);
+      incrementPlayersBalance(player, ballChange);
     } else {
-      decrementPlayersBalance(ballChange);
+      decrementPlayersBalance(player, ballChange);
     }
-    allPlayers[playerIndex].position = newPos;
+    player.position = position % numFields;
+    console.log("nes pos", position % numFields);
   } else { // normal field without any "card"
 
-    allPlayers[playerIndex].position = position % numFields;
+    player.position = position % numFields;
     console.log("normal pos");
   }
 
-  resetStatesToDefault();
+
   switchTurn();
-  // switch turn
+  await updatePlayer(player);
+  resetStatesToDefault();
   console.log("new player position to be set and turn switched", position);
 }
 
@@ -899,9 +934,10 @@ const generateCard5Balance = (number1, number2) => {
 }
 
 useEffect(() => {
-  // console.log("hasRolled useeff", hasRolled, hasRolls, lastRolled);
   console.log("has no rolls left");
-  handleNoRolls();
+  if (currentTurn == sessionId) {
+    handleNoRolls();
+  }
 }, [hasRolls]);
 
 
@@ -930,7 +966,6 @@ useEffect(() => {
                     shopPos={shopPos}
                   />
 
-            <SquareF index={0} useImage={true} imageUrl={card1Img}/>
         </div>
     
         
@@ -939,14 +974,14 @@ useEffect(() => {
           <div className="flex flex-wrap -mx-4">
             {allPlayers.map((player) => (
               <div className="w-1/2 px-4 mb-4">
-                <div className={`bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg ${currentTurn === player.sessionId ? 'border-2 border-gradient-to-r from-red-400 to-yellow-500' : 'border-2 border-gray-800'}`}>
+                <div className={`bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg ${currentTurn === player.session_id ? 'border-2 border-gradient-to-r from-red-400 to-yellow-500' : 'border-2 border-gray-800'}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-xl font-bold">{player.playerName}</h2>
+                  <h2 className="text-xl font-bold">{player.player_name}</h2>
                   <div className="inline-block ml-2"><Figurine color={player.color} /></div>
                 </div>
                   <p className="text-gray-300">Balance: {player.balance}</p>
-                  <p className="text-gray-300">Inventory Value: {player.invVal}</p>
-                  <p className="text-gray-300">Different items: {player.items}</p>
+                  <p className="text-gray-300">Inventory Value: {player.inventory_value}</p>
+                  <p className="text-gray-300">Different items: {player.diff_items_amt}</p>
               </div>
 
               </div>
