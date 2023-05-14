@@ -343,28 +343,38 @@ export default function Game() {
       }, [showModal]);
 
 
-
     const ShowLog = () => {
-      console.log("showink lok");
+      console.log("showing log");
       return (
-        <div className="h-64 overflow-y-scroll bg-gradient-to-r from-gray-800 via-gray-900 to-black">
+        <div className="h-64 overflow-y-scroll bg-gradient-to-r from-gray-800 via-gray-900 to-black" style={{ width: '400px' }}>
+          <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg border-2 border-gray-800 mb-2">
+            <p className="text-gray-300">Log:</p>
+          </div>
           <GetLog />
-      </div>
-      );
-    }
-
-    const GetLog = () => {
-      return (
-        <div>
-          {log.reverse().map((entry, index) => (
-            <div key={index} className={`bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg border-2 border-gray-800 mb-2`}>
-              <p className="text-gray-300">Time: {entry.logged_at}</p>
-              <p className="text-gray-300">{entry.text}</p>
-            </div>
-          ))}
         </div>
       );
-    }  
+    }
+    
+    const GetLog = () => {
+      return (
+        <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-black">
+          {log.length > 0 ? (
+            log.slice().reverse().map((entry, index) => (
+              <div key={index} className="text-white px-4 py-2 rounded-lg border-2 border-gray-800 mb-2">
+                <p className="text-gray-300">Time: {entry.logged_at}</p>
+                <p className="text-gray-300">{entry.text}</p>
+              </div>
+            ))
+          ) : (
+            <div className="text-white px-4 py-2 rounded-lg border-2 border-gray-800 mb-2">
+              <p className="text-gray-300">No logs yet</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+      
+     
 
     const showInventory = () => {
       console.log("showing inventory");
@@ -560,6 +570,13 @@ const Dice = () => {
 
   useEffect( () => {
   }, [numberOfDots, hasRolls])
+
+
+  useEffect( () => {
+    console.log(currentTurn);
+    console.log("ze", currentTurn, sessionId);
+    getLogData();
+  }, [currentTurn])
 
   return (
     <div className="flex flex-col items-center justify-center h-100">
@@ -934,7 +951,11 @@ const getLogData = async () => {
         );
       });
       console.log("logs", items);
-      setLog(items);
+      if (items.length > log.length) {
+        console.log("il", items.length, log.length);
+        console.log("som tu zos logmi");
+        setLog(items);
+      }
   }) // log data
   .catch((error) => console.error(error));
 }
@@ -962,11 +983,11 @@ useEffect(() => {
     if (!rolling) { // todo shop
       updatePlayersData();
       updateTurn();
-      getLogData();
     }
   }, 1000);
   return () => clearInterval(interval);
 }, []);
+
 
 
 const resetStatesToDefault = () => {
@@ -993,9 +1014,6 @@ const handleNewPosition = async (amtToMove) => {
   const currentDate = new Date();
   const dateString = `${currentDate.getMonth()+1}/${currentDate.getDate()}/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
   const playerPrefix = "player with color " + newPlayer.color;
-
-  const playersRolls = playerPrefix + " has rolled " + amtToMove;
-  updateLog(dateString, playersRolls);
 
   if (newPlayer.rounds_frozen > 0) {
     newPlayer.rounds_frozen -= 1;
@@ -1240,26 +1258,32 @@ useEffect(() => {
         
 
         <div className="w-2/5 p-4 mt-16">
-          <div className="flex flex-wrap -mx-4">
+          <div className="h-1/2 flex flex-wrap -mx-4">
             {allPlayers.map((player) => (
               <div className="w-1/2 px-4 mb-4">
                 <div className={`bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg ${currentTurn === player.session_id ? 'border-2 border-gradient-to-r from-red-400 to-yellow-500' : 'border-2 border-gray-800'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-xl font-bold">{player.player_name}</h2>
-                  <div className="inline-block ml-2"><Figurine color={player.color} /></div>
-                </div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-xl font-bold">{player.player_name}</h2>
+                    <div className="inline-block ml-2"><Figurine color={player.color} /></div>
+                  </div>
                   <p className="text-gray-300">Balance: {player.balance}</p>
                   <p className="text-gray-300">Inventory Value: {player.inventory_value}</p>
                   <p className="text-gray-300">Different items: {player.diff_items_amt}</p>
-              </div>
-
+                </div>
               </div>
             ))}
-            <Dice />
-            <ShowLog />
-
           </div>
+          <div className="h-1/2 flex flex-wrap justify-between items-start">
+  <div className="w-1/2 flex justify-center items-center">
+   {currentTurn === sessionId && <Dice />}
+  </div>
+  <div className="w-1/2 flex justify-center items-center">
+    <ShowLog />
+  </div>
+</div>
+
         </div>
+
 
 
       </div>
