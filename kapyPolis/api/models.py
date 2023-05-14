@@ -4,6 +4,7 @@ import os
 import uuid
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
+from datetime import datetime
 
 def generate_random_code():
     code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
@@ -116,3 +117,8 @@ class User(models.Model):
         # Encode password before saving
         self.password = make_password(self.password)
         super().save(*args, **kwargs)
+
+class Log(models.Model):
+    room_code = models.CharField(max_length=8, default="")
+    logged_at = models.CharField(max_length=50, default="")
+    text = models.CharField(max_length=500, default="")

@@ -7,8 +7,8 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
-from api.models import Room, Template, ShopItem, Player, User
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer, UpdateTemplateSerializer, SetBalanceSerializer, SessionSerializer, UpdateTurnSerializer
+from api.models import Room, Template, ShopItem, Player, User, Log
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer, UpdateTemplateSerializer, SetBalanceSerializer, SessionSerializer, UpdateTurnSerializer, UpdatePlayerSerializer, RoomPlayersSerializer, LogSerializer, UpdateLogSerializer, GetLogSerializer
 from rest_framework.parsers import MultiPartParser
 import base64
 from django.core.files.base import ContentFile
@@ -706,6 +706,34 @@ class SetPlayersBalanceView(APIView):
             
         print(serializer.errors)
         return Response({'Bad Request': 'No templates found'}, status=status.HTTP_400_BAD_REQUEST)
+    
+@method_decorator(csrf_protect, name='dispatch')
+class UpdatePlayerView(APIView):
+    serializer_class = UpdatePlayerSerializer
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if (serializer.is_valid()):
+            session_id = serializer.data.get('session_id')
+            balance = serializer.data.get('balance')
+            items = serializer.data.get('diff_items_amt')
+            inv = serializer.data.get('inventory_value')
+            pos = serializer.data.get('position')
+            rounds_fr = serializer.data.get('rounds_frozen')
+            player = Player.objects.filter(session_id=session_id).first()
+            print("got player", player)
+            if player:
+                player.balance = balance
+                player.inventory_value = inv
+                player.position = pos
+                player.rounds_frozen = rounds_fr
+                player.diff_items_amt = items
+                player.save(update_fields=['balance', 'inventory_value', 'position', 'rounds_frozen', 
+                                           'diff_items_amt'
+                                           ])
+                return Response({'status': 'Player updated.'}, status=status.HTTP_200_OK)
+            
+        print(serializer.errors)
+        return Response({'Bad Request': 'No Player found'}, status=status.HTTP_400_BAD_REQUEST)
 
 @method_decorator(csrf_protect, name='dispatch')
 class GetRoomSessions(APIView):
@@ -721,6 +749,24 @@ class GetRoomSessions(APIView):
                 return Response({'session_ids': session_ids, 'status': 'Sessions retrieved successfully.'}, status=status.HTTP_200_OK)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@method_decorator(csrf_protect, name='dispatch')
+class GetRoomPlayersView(APIView):
+    serializer_class = RoomPlayersSerializer
+    
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            code = serializer.validated_data.get('code')
+            room = Room.objects.filter(code=code)
+            print("mrt", room)
+            if (len(room)):
+                data = RoomSerializer(room[0]).data
+                print("d", data)
+                return Response(data, status=status.HTTP_200_OK)
+            
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @method_decorator(csrf_protect, name='dispatch')
 class UpdateGameTurnView(APIView):
@@ -824,3 +870,51 @@ class AuthorizeUser(APIView):
             return Response({'status': 'Invalid username', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)               
         print("error: ", serializer.data)
         return Response({'status': 'Invalid data', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+#######################################################################################################
+class LogView(generics.ListAPIView):
+    queryset = Log.objects.all()
+    serializer_class = LogSerializer
+
+@method_decorator(csrf_protect, name='dispatch')
+class UpdateLogView(APIView): # adds a new text field with time
+    serializer_class = UpdateLogSerializer
+    def post(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+
+        response = Response()
+        response['X-CSRFToken'] = get_token(request)
+
+        serializer = self.serializer_class(data=request.data)
+        print("S", serializer.is_valid())
+        print(serializer.data)
+        if serializer.is_valid():
+            room_code = serializer.data.get('room_code')
+            logged_at = serializer.data.get('logged_at')
+            text = serializer.data.get('text')
+
+            log = Log(room_code=room_code, 
+                        logged_at=logged_at, 
+                        text=text,
+                    )
+            log.save()
+            return Response(LogSerializer(log).data, status=status.HTTP_200_OK)
+            
+        print(serializer.errors)
+        return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST, headers=response)
+    
+
+@method_decorator(csrf_protect, name='dispatch')
+class GetLogView(APIView):
+    serializer_class = UpdateLogSerializer
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            room_code = serializer.validated_data.get('room_code')
+            logs = Log.objects.filter(room_code=room_code)
+            serialized_logs = GetLogSerializer(logs, many=True)
+            return Response(serialized_logs.data, status=status.HTTP_200_OK)
+            
+        print(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

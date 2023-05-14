@@ -19,7 +19,7 @@ export default function MainMenu() {
         {/* Header */}
         <div className='flex justify-center'> 
             <h1 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
-                Main Menu
+                Kapypolis
             </h1>
         </div>
         
@@ -74,7 +74,7 @@ export default function MainMenu() {
                     to="/"
                     component={Link}
                     >
-                    Enter Menu
+                    Game Menu
                 </Button>     
                             
             </ButtonGroup>

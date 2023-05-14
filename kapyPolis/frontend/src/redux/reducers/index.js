@@ -5,6 +5,14 @@ export const getDefaultGlobalStructure = () => {
         entered:false,
         isLoggedIn:false,
         name:null,
+        numberRolled:1,
+        hasRolled:false,
+        hasRolls:true,
+        firstRoll:true,
+        secondRoll:true,
+        lastRolled:null,
+        isRolling:false,
+        showShopModal:false,
     }
 }
 

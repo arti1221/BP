@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import Room, ShopItem, Template, Player, User
+from api.models import Room, ShopItem, Template, Player, User, Log
 
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,6 +19,17 @@ class SetBalanceSerializer(serializers.ModelSerializer):
             'balance'
         )
 
+class UpdatePlayerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Player
+        fields = ['session_id',
+                'diff_items_amt',
+                'inventory_value',
+                'balance',
+                'position',
+                'rounds_frozen'
+                  ]
+
 # Used for session retrievals for given room.
 class SessionSerializer(serializers.ModelSerializer):
         class Meta:
@@ -27,6 +38,15 @@ class SessionSerializer(serializers.ModelSerializer):
                 'room',
             )
 
+class RoomPlayersSerializer(serializers.ModelSerializer):
+        players = PlayerSerializer(many=True, read_only=True, source='player_set')
+        code = serializers.CharField(validators=[])
+        class Meta:
+            model = Room
+            fields = (
+                'code',
+                'players',
+            )
 
 class RoomSerializer(serializers.ModelSerializer):
     players = PlayerSerializer(many=True, read_only=True, source='player_set')
@@ -198,3 +218,23 @@ class AuthorizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'name', 'password']
+
+class LogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Log
+        fields = ['id', 'room_code', 'logged_at', 'text']
+
+class CreateLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Log
+        fields = ['id', 'room_code', 'logged_at', 'text']
+
+class UpdateLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Log
+        fields = ['room_code', 'logged_at', 'text']
+
+class GetLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Log
+        fields = ['logged_at', 'text']
