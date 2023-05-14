@@ -12,6 +12,7 @@ export const getDefaultGlobalStructure = () => {
         secondRoll:true,
         lastRolled:null,
         isRolling:false,
+        showShopModal:false,
     }
 }
 

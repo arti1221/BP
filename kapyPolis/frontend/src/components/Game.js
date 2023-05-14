@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FaSpinner } from "react-icons/fa";
 import classNames from "classnames";
 
-import {SET_NUMBER_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_IS_ROLLING} from '../redux/actions/action'
+import {SET_NUMBER_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_IS_ROLLING, SET_SHOW_SHOP} from '../redux/actions/action'
 import {useSelector, shallowEqual} from "react-redux"; 
 import {useDispatch} from 'react-redux';
 
@@ -47,11 +47,11 @@ class Player {
 }
 
 class ShopItem {
-  constructor(name, image, priceMin, priceMax) {
+  constructor(name, image, price, price_max) {
     this.name = name;
     this.image = image;
-    this.priceMin = priceMin;
-    this.priceMax = priceMax;
+    this.price = price;
+    this.price_max = price_max;
   }
 }
 
@@ -60,6 +60,13 @@ class PlayerItem {
     this.name = name;
     this.image = image;
     this.price = price;
+  }
+}
+
+class LogItem {
+  constructor(logged_at, text) {
+    this.logged_at = logged_at;
+    this.text = text;
   }
 }
 
@@ -115,15 +122,21 @@ export default function Game() {
 
     //
     const dispatch = useDispatch();
-    const [numberRolled] = useSelector((state) => [state.global.numberRolled], shallowEqual);
-    const [hasRolls] = useSelector((state) => [state.global.hasRolls], shallowEqual);
-    const [firstRoll] = useSelector((state) => [state.global.firstRoll], shallowEqual);
-    const [secondRoll] = useSelector((state) => [state.global.secondRoll], shallowEqual);
-    const rolling = useSelector((state) => state.global.isRolling, shallowEqual);
+    const [numberRolled, hasRolls, firstRoll, secondRoll, rolling, showShopModal] = useSelector((state) => [state.global.numberRolled,
+      state.global.hasRolls,
+      state.global.firstRoll,
+      state.global.secondRoll,
+      state.global.isRolling,
+      state.global.showShopModal,
+    ], shallowEqual);
     
     // inventory
     const [showModal, setShowModal] = useState(false);
-    const [showShopModal, setShowShopModal] = useState(true);
+    const [inventory, setInventory] = useState([]);
+
+    const [shopItemList, setShopItemList] = useState([]);
+
+    const [log, setLog] = useState([]);
 
     const showPlayerInventory = () => {
       setShowModal(true);
@@ -133,13 +146,12 @@ export default function Game() {
       setShowModal(false);
     };
 
-
-    const showShopInventory = () => {
-      setShowShopModal(true);
+    const showShopInventory = async () => {
+      dispatch({type: SET_SHOW_SHOP, value: true});
     }
 
     const hideShopInventory = () => {
-      setShowShopModal(false);
+      dispatch({type: SET_SHOW_SHOP, value: false});
     }
     
     const getRoomDetails = async () => { 
@@ -256,9 +268,8 @@ export default function Game() {
           );
         });
         
-        console.log("items retrieved", items);
         setShopItems(items);
-        console.log("dostal som sa tu");
+        setShopItemList(getRandomItemsFromList(items));
         
         })
         .catch((e) => {
@@ -281,6 +292,7 @@ export default function Game() {
             const data = await response.json();
             if (data.success === "Left the room and room has been deleted" || data.success === "Left the room") { 
               console.log("Leaving room and redirecting to homepage");
+              await switchTurn();
               navigate(`/`);
             } else {
               console.log('Error after navigate')
@@ -331,8 +343,27 @@ export default function Game() {
       }, [showModal]);
 
 
-    const showLog = () => {
 
+    const ShowLog = () => {
+      console.log("showink lok");
+      return (
+        <div className="h-64 overflow-y-scroll bg-gradient-to-r from-gray-800 via-gray-900 to-black">
+          <GetLog />
+      </div>
+      );
+    }
+
+    const GetLog = () => {
+      return (
+        <div>
+          {log.reverse().map((entry, index) => (
+            <div key={index} className={`bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg border-2 border-gray-800 mb-2`}>
+              <p className="text-gray-300">Time: {entry.logged_at}</p>
+              <p className="text-gray-300">{entry.text}</p>
+            </div>
+          ))}
+        </div>
+      );
     }  
 
     const showInventory = () => {
@@ -596,11 +627,56 @@ const playerItemList = [
 ];
 
 const PlayerItemList = () => {
+  if (inventory.length == 0) {
+    return <p className="text-gray-700">You have no items to display currently</p>;
+  }
   return (
     <div className="grid grid-cols-3 gap-4 py-4">
-      {playerItemList.map((playerItem, index) => (
+      {inventory.map((playerItem, index) => (
         <div key={playerItem.name}>
           <Item name={playerItem.name} price={playerItem.price} imageUrl={playerItem.image} />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const ShopItemList = () => {
+  const buyItem = async (item) => {
+    // Deduct the price of the item from the player's balance
+    setBalance(balance - item.price);
+    // Add the item to the player's inventory
+    setInventory((inventory) => [...inventory, item]);
+
+    const playerIndex = allPlayers.findIndex(player => player.session_id == sessionId);
+
+    const newPlayer = {...allPlayers[playerIndex]};
+    newPlayer.diff_items_amt += 1;
+    newPlayer.balance = balance - item.price;
+    
+    const currentDate = new Date();
+    const dateString = `${currentDate.getMonth()+1}/${currentDate.getDate()}/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
+    const text = "Player has bought an item for price: " + item.price + ". ";
+    await updateLog(dateString, text);
+
+    await updatePlayer(newPlayer);
+    resetStatesToDefault();
+  };
+
+  return (
+    <div className="grid grid-cols-3 gap-4 py-4">
+      {shopItemList.map((shopItem, index) => (
+        <div key={shopItem.name} className="flex flex-col items-center">
+          <Item name={shopItem.name} price={shopItem.price} imageUrl={shopItem.image} />
+          {shopItem.price <= balance ? (
+            <button
+              className="mt-2 px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              onClick={() => buyItem(shopItem)}>
+              Buy
+            </button>
+          ) : (
+            <p className="mt-2 text-sm font-medium text-red-500">Not enough money</p>
+          )}
         </div>
       ))}
     </div>
@@ -718,6 +794,11 @@ const switchTurn = async () => {
 
     console.log("next turn", nextTurn);
 
+    const currentDate = new Date();
+    const dateString = `${currentDate.getMonth()+1}/${currentDate.getDate()}/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
+    const text = "Switching turn to next player.";
+    await updateLog(dateString, text);
+
     const requestOptions = {
       method: 'POST',
       headers: { 
@@ -799,6 +880,65 @@ const updatePlayersData = () => {
     });
 };
 
+const updateLog = async (time, text) => {
+      const requestOptions = {
+        method: 'POST',
+        headers: { 
+            "Content-Type": "application/json",
+            'X-CSRFToken': csrftoken, // include the CSRF token in the headers
+        },
+        body: JSON.stringify(
+            {
+              room_code: roomCode,
+              logged_at: time,
+              text: text,
+            }
+        ),
+    }
+    fetch("/api/update-log", requestOptions)
+    .then((response) => { 
+        return response.json();
+    }
+        ) // take response and convert it to json obj
+    .then((data) => { 
+        console.log("Log updated successfully.");
+        console.log(data);
+    }) // log data
+    .catch((error) => console.error(error));
+}
+
+const getLogData = async () => {
+    const requestOptions = {
+      method: 'POST',
+      headers: { 
+          "Content-Type": "application/json",
+          'X-CSRFToken': csrftoken, // include the CSRF token in the headers
+      },
+      body: JSON.stringify(
+          {
+            room_code: roomCode,
+          }
+      ),
+  }
+  fetch("/api/get-log", requestOptions)
+  .then((response) => { 
+      return response.json();
+  }
+      ) // take response and convert it to json obj
+  .then((data) => { 
+      console.log("Log data:");
+      const items = data.map((item) => {
+        return new LogItem(
+          item.logged_at,
+          item.text,
+        );
+      });
+      console.log("logs", items);
+      setLog(items);
+  }) // log data
+  .catch((error) => console.error(error));
+}
+
 const updateTurn = async () => { 
   if (!roomCode) {
     return;
@@ -822,6 +962,7 @@ useEffect(() => {
     if (!rolling) { // todo shop
       updatePlayersData();
       updateTurn();
+      getLogData();
     }
   }, 1000);
   return () => clearInterval(interval);
@@ -839,48 +980,45 @@ const resetStatesToDefault = () => {
 
 const handleNoRolls = () => {
   if (!hasRolls) {
-    console.log("no rolls left, last rolled", numberRolled);
-    if (secondRoll) {
-      console.log("also rolled six");
-    }
-
     const amtToMove = !secondRoll ? 6 + numberRolled : numberRolled;
-    console.log("amt to move", numberRolled);
     handleNewPosition(amtToMove);
   }
-  console.log("som tu", hasRolls);
 }
 
 const handleNewPosition = async (amtToMove) => {
-  console.log("hanglind pos", amtToMove);
-  console.log("alp", allPlayers);
   const playerIndex = allPlayers.findIndex(player => player.session_id == sessionId);
 
   const newPlayer = {...allPlayers[playerIndex]};
 
+  const currentDate = new Date();
+  const dateString = `${currentDate.getMonth()+1}/${currentDate.getDate()}/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
+  const playerPrefix = "player with color " + newPlayer.color;
+
+  const playersRolls = playerPrefix + " has rolled " + amtToMove;
+  updateLog(dateString, playersRolls);
+
   if (newPlayer.rounds_frozen > 0) {
     newPlayer.rounds_frozen -= 1;
+    
+    const text = playerPrefix + "is frozen, switching turn.";
+    await updateLog(dateString, text);
+
     switchTurn();
     await updatePlayer(newPlayer);
     resetStatesToDefault();
     console.log("player was frozen, dec. rounds fr");
     return;
   }
-  console.log("player is not frz");
 
   const newPos = newPlayer.position + amtToMove; // this number overflows the amt of fields, handeled separately in next methods
 
-
-  console.log("handling players move");
-
-
   if (newPos >= numFields) {
     console.log("passed round");
-    incrementPlayersBalance(newPlayer, reward);
-  }
 
-  if (newPos >= numFields) {
-    console.log("Player passed the round."); // todo log it into a log.
+    const newRound = "Player has passed the round, incrementing balance with amount " + reward;
+    await updateLog(dateString, newRound);
+
+    incrementPlayersBalance(newPlayer, reward);
   }
 
   handleCards(newPlayer, newPos);
@@ -908,26 +1046,46 @@ const decrementPlayersBalance = (player, amt) => {
 
 const handleCards = async (player, position) => {
   console.log("position: ", position);
-  console.log("cards: ", card1pos, card2pos, card3pos, card4pos, card5pos);
+
+  const currentDate = new Date();
+  const dateString = `${currentDate.getMonth()+1}/${currentDate.getDate()}/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
+  const playerPrefix = "player with color " + player.color;
+
   if (card1pos == position) { // ok working
     const amtToMove = generateCard1Rule();
     const posToMove = (position + amtToMove);
     const newPos = posToMove % numFields;
+
+    const card1Passed = playerPrefix + " landed on a special field. He's being moved additionally + " + amtToMove;
+    await updateLog(dateString, card1Passed);
+
     console.log("nes pos", newPos);
     if (posToMove >= numFields) {
+      const newRound = "Player has passed the round, incrementing balance with amount " + reward;
+      await updateLog(dateString, newRound);
+      
       incrementPlayersBalance(player, reward);
     }
     player.position = newPos;
   } else if (card2pos == position) {
     const amtToMove = generateCard2Rule();
     const newPos = (position + amtToMove) % numFields;
-    console.log("nes pos", newPos);
+
+    const card2Passed = playerPrefix + " landed on a special field. He's being moved backwards + " + amtToMove;
+    await updateLog(dateString, card2Passed);
+
     player.position = newPos;
   } else if (card3pos != null && card3pos == position) { // reset to start, TODO check whether it is set or not.
+    const card3Passed = playerPrefix + " landed on a special field. Reseting to start.";
+    await updateLog(dateString, card3Passed);
+
     player.position = 0;
   } else if (card4pos == position) {
     player.rounds_frozen = card4RoundsStop; // todo doriesit
-    console.log("frozen");
+
+    const card4Passed = playerPrefix + " is being frozen for " + card4RoundsStop + " rounds.";
+    await updateLog(dateString, card4Passed);
+
     player.position = position % numFields;
   } else if (card5pos == position) {
     const ballChange = generateCard5Balance(card5Min, card5Max);
@@ -936,16 +1094,27 @@ const handleCards = async (player, position) => {
     } else {
       decrementPlayersBalance(player, ballChange);
     }
+
+    const card5Passed = playerPrefix + " balance is being changed due to special field with amount " + ballChange;
+    await updateLog(dateString, card5Passed);
+
     player.position = position % numFields;
-    console.log("nes pos", position % numFields);
   } else if (shopPos == position) {
-    showShopInventory();
     console.log("SHOWING SHOP");
+    const shopPassed = playerPrefix + " has entered the shop.";
+    await updateLog(dateString, shopPassed);
+
     player.position = position % numFields;
+    await showShopInventory();
+
     // todo await close
   } else { // normal field without any "card"
     player.position = position % numFields;
     console.log("normal pos");
+    const currentDate = new Date();
+    const dateString = `${currentDate.getMonth()+1}/${currentDate.getDate()}/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
+    const text = "player with color " + player.color + " has rolled " + numberRolled;
+    await updateLog(dateString, text);
   }
 
 
@@ -975,105 +1144,50 @@ const generateCard5Balance = (number1, number2) => {
 }
 
 // todo fix items
-const getRandomItemsFromList = () => {
-  if (shopItems.length > 0) {
-    const playerItems = shopItems.map((shopItem) => {
-      const randomPrice = Math.floor(Math.random() * (shopItem.price - shopItem.price_min + 1)) + shopItem.price_min;
+const getRandomItemsFromList = (items) => {
+  console.log("EE", items);
+  if (items.length > 0) {
+    const playerItems = items.map((shopItem) => {
+      const randomPrice = Math.floor(Math.random() * (shopItem.price_max - shopItem.price + 1)) + shopItem.price;
       return new PlayerItem(shopItem.name, shopItem.image, randomPrice);
     });
+    console.log("p it", playerItems);
     return playerItems;
   }
   return [];
 }
 
-const GenerateShopItemsList = () => {
-  console.log("maybe aj tu");
-  const itemsList = getRandomItemsFromList();
-  console.log("random itms", itemsList);
-  if (itemsList.length > 0) {
-    return (
-      <div className="grid grid-cols-3 gap-4 py-4">
-        {itemsList.map((shopItem) => {
-          const randomPrice = Math.floor(Math.random() * (shopItem.priceMax - shopItem.priceMin + 1)) + shopItem.priceMin;
-          return (
-            <div key={shopItem.name}>
-              <PlayerItem name={shopItem.name} price={randomPrice} imageUrl={shopItem.image} />
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-};
-
 // TODO pass player here as param
 const generateShopItemsModal = () => {
-  const [selectedItem, setSelectedItem] = useState(null);
-  const itemsList = getRandomItemsFromList();
+  console.log("showing SHOP");
 
-  const handleSelectItem = (event) => {
-    const selectedIndex = event.target.selectedIndex;
-    setSelectedItem(itemsList[selectedIndex]);
-  };
+  if (shopItemList.length == 0) {
+    return;
+  }
 
-  const handleBuy = () => {
-    if (selectedItem) {
-      const selectedItem = itemsList[selectedItemIndex];
-      console.log(`Buying item '${selectedItem.name}' for ${selectedItem.price} coins`);
-      // TODO: Implement the logic for actually buying the item
-    }
-  };
+// todo
 
   return (
-    <div className={`fixed z-50 inset-0 overflow-y-auto`}>
-      {/* <div className={`fixed z-50 inset-0 overflow-y-auto ${showShopModal ? "" : "hidden"}`}> */}
+    <div className={`fixed z-50 inset-0 overflow-y-auto ${showShopModal ? '' : 'hidden'}`}>
       <div className="flex items-center justify-center min-h-screen">
         <div className="fixed inset-0 transition-opacity">
           <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
         </div>
-        <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:max-w-lg" style={{ marginTop: "15vh" }}>
+        <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:max-w-lg" style={{marginTop: '15vh'}}>
           <div className="bg-gradient-to-r from-gray-500 to-white p-4">
             <div className="pb-4 sm:pb-6">
-              <h2 className="text-xl font-bold text-gray-900">Shop Inventory</h2>
+              <h2 className="text-xl font-bold text-gray-900">{shopName}</h2>
             </div>
             <div className="pt-4 sm:pt-6">
-              {itemsList.length > 0 ? (
-                <div className="grid grid-cols-3 gap-4 py-4">
-                  {itemsList.map((shopItem, index) => {
-                    const randomPrice = Math.floor(Math.random() * (shopItem.priceMax - shopItem.priceMin + 1)) + shopItem.priceMin;
-                    console.log("rand prc", randomPrice, shopItem.priceMin, shopItem.priceMax);
-                    return (
-                      <div key={shopItem.name}>
-                        <Item name={shopItem.name} price={randomPrice} imageUrl={shopItem.image}>
-                          <div className="mt-2 flex justify-between items-center">
-                            <select className="block w-full py-2 px-3 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                              {[...Array(itemsList.length)].map((_, i) => (
-                                <option key={i}>{i + 1}</option>
-                              ))}
-                            </select>
-                            <button
-                              type="button"
-                              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                            >
-                              Buy
-                            </button>
-                          </div>
-                        </Item>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-gray-700">There are no items available at the moment.</p>
-              )}
+              {/* <p className="text-gray-700">You have no items to display currently</p> */}
+              <ShopItemList/>
             </div>
           </div>
           <div className="bg-gradient-to-r from-gray-500 to-white px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <button
               type="button"
               className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              onClick={hideShopInventory}
-            >
+              onClick={hideShopInventory}>
               Close
             </button>
           </div>
@@ -1081,12 +1195,15 @@ const generateShopItemsModal = () => {
       </div>
     </div>
   );
- 
 }
 
 useEffect(() => {
   console.log("has no rolls left");
   if (currentTurn == sessionId) {
+    if (shopItems.length > 0) { // initializes the list whenever the turn changes for the player
+      console.log("been here once");
+      getRandomItemsFromList(shopItems);
+    }
     handleNoRolls();
   }
 }, [hasRolls]);
@@ -1139,6 +1256,7 @@ useEffect(() => {
               </div>
             ))}
             <Dice />
+            <ShowLog />
 
           </div>
         </div>

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import Room, ShopItem, Template, Player, User
+from api.models import Room, ShopItem, Template, Player, User, Log
 
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -218,3 +218,23 @@ class AuthorizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'name', 'password']
+
+class LogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Log
+        fields = ['id', 'room_code', 'logged_at', 'text']
+
+class CreateLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Log
+        fields = ['id', 'room_code', 'logged_at', 'text']
+
+class UpdateLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Log
+        fields = ['room_code', 'logged_at', 'text']
+
+class GetLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Log
+        fields = ['logged_at', 'text']

@@ -7,8 +7,8 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
-from api.models import Room, Template, ShopItem, Player, User
-from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer, UpdateTemplateSerializer, SetBalanceSerializer, SessionSerializer, UpdateTurnSerializer, UpdatePlayerSerializer, RoomPlayersSerializer
+from api.models import Room, Template, ShopItem, Player, User, Log
+from api.serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, TemplateSerializer,CreateTemplateSerializer, ShopItemSerializer, PlayerSerializer, GameStartSerializer, UserSerializer, AuthorizeSerializer, UpdateTemplateSerializer, SetBalanceSerializer, SessionSerializer, UpdateTurnSerializer, UpdatePlayerSerializer, RoomPlayersSerializer, LogSerializer, UpdateLogSerializer, GetLogSerializer
 from rest_framework.parsers import MultiPartParser
 import base64
 from django.core.files.base import ContentFile
@@ -870,3 +870,51 @@ class AuthorizeUser(APIView):
             return Response({'status': 'Invalid username', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)               
         print("error: ", serializer.data)
         return Response({'status': 'Invalid data', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+#######################################################################################################
+class LogView(generics.ListAPIView):
+    queryset = Log.objects.all()
+    serializer_class = LogSerializer
+
+@method_decorator(csrf_protect, name='dispatch')
+class UpdateLogView(APIView): # adds a new text field with time
+    serializer_class = UpdateLogSerializer
+    def post(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+
+        response = Response()
+        response['X-CSRFToken'] = get_token(request)
+
+        serializer = self.serializer_class(data=request.data)
+        print("S", serializer.is_valid())
+        print(serializer.data)
+        if serializer.is_valid():
+            room_code = serializer.data.get('room_code')
+            logged_at = serializer.data.get('logged_at')
+            text = serializer.data.get('text')
+
+            log = Log(room_code=room_code, 
+                        logged_at=logged_at, 
+                        text=text,
+                    )
+            log.save()
+            return Response(LogSerializer(log).data, status=status.HTTP_200_OK)
+            
+        print(serializer.errors)
+        return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST, headers=response)
+    
+
+@method_decorator(csrf_protect, name='dispatch')
+class GetLogView(APIView):
+    serializer_class = UpdateLogSerializer
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            room_code = serializer.validated_data.get('room_code')
+            logs = Log.objects.filter(room_code=room_code)
+            serialized_logs = GetLogSerializer(logs, many=True)
+            return Response(serialized_logs.data, status=status.HTTP_200_OK)
+            
+        print(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
