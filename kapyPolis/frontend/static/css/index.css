@@ -13,6 +13,9 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
+    background-image: url(http://127.0.0.1:8000/media/shopitem/0f1613f8-958d-460a-b4fc-5b44e06ad160.png);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
   }
   
   #app {

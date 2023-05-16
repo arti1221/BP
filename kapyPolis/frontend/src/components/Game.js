@@ -81,7 +81,8 @@ export default function Game() {
 
     const [allPlayers, setAllPlayers] = useState([]);
 
-    const [numberOfSquares, setNumberOfSquares] = useState(7);
+    const [numberOfSquares, setNumberOfSquares] = useState(5);
+    const [numberOfColumns] = useState(8);
     const [currentTurn, setCurrentTurn] = useState("");
 
     const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -468,28 +469,29 @@ export default function Game() {
         )
       };
       
-      const SquareBoard = ({ numberOfSquares, card1Img, card1pos, card2Img, card2pos, card3Img, card3pos, card4Img, card4pos, card5Img, card5pos, shopImg, shopPos }) => {
-        const lastIndex = numberOfSquares - 1;
+      const SquareBoard = ({ numberOfRows, numberOfColumns, card1Img, card1pos, card2Img, card2pos, card3Img, card3pos, card4Img, card4pos, card5Img, card5pos, shopImg, shopPos }) => {
+        const lastColumnIndex = numberOfColumns - 1;
+        const lastRowIndex = numberOfRows - 1;
         let counter = 0;
       
         const squares = [];
-        for (let i = 0; i < numberOfSquares; i++) {
+        for (let i = 0; i < numberOfRows; i++) {
           squares.push([]);
-          for (let j = 0; j < numberOfSquares; j++) {
+          for (let j = 0; j < numberOfColumns; j++) {
             squares[i].push(null);
           }
         }
       
-        for (let i = 0; i < numberOfSquares; i++) {
+        for (let i = 0; i < numberOfColumns; i++) {
           squares[0][i] = counter++;
         }
-        for (let i = 1; i < numberOfSquares; i++) {
-          squares[i][numberOfSquares - 1] = counter++;
+        for (let i = 1; i < numberOfRows; i++) {
+          squares[i][lastColumnIndex] = counter++;
         }
-        for (let i = numberOfSquares - 2; i >= 0; i--) {
-          squares[numberOfSquares - 1][i] = counter++;
+        for (let i = lastColumnIndex - 1; i >= 0; i--) {
+          squares[lastRowIndex][i] = counter++;
         }
-        for (let i = numberOfSquares - 2; i >= 1; i--) {
+        for (let i = lastRowIndex - 1; i >= 1; i--) {
           squares[i][0] = counter++;
         }
       
@@ -984,7 +986,7 @@ useEffect(() => {
       updatePlayersData();
       updateTurn();
     }
-  }, 1000);
+  }, 100000);
   return () => clearInterval(interval);
 }, []);
 
@@ -1239,7 +1241,8 @@ useEffect(() => {
         <div className="flex-1 m-4 mt-16">
           {/* Your game board code here */}
           <SquareBoard
-                    numberOfSquares={numberOfSquares}
+                    numberOfRows={numberOfSquares}
+                    numberOfColumns={numberOfColumns}
                     card1Img={card1Img}
                     card1pos={card1pos}
                     card2Img={card2Img}
@@ -1257,10 +1260,10 @@ useEffect(() => {
     
         
 
-        <div className="w-2/5 p-4 mt-16">
-          <div className="h-1/2 flex flex-wrap -mx-4">
+        <div className="w-1/5 p-4 mt-16">
+          <div className="flex flex-wrap -mx-4">
             {allPlayers.map((player) => (
-              <div className="w-1/2 px-4 mb-4">
+              <div className="px-4 mb-4">
                 <div className={`bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg ${currentTurn === player.session_id ? 'border-2 border-gradient-to-r from-red-400 to-yellow-500' : 'border-2 border-gray-800'}`}>
                   <div className="flex items-center justify-between mb-2">
                     <h2 className="text-xl font-bold">{player.player_name}</h2>
@@ -1274,13 +1277,10 @@ useEffect(() => {
             ))}
           </div>
           <div className="h-1/2 flex flex-wrap justify-between items-start">
-  <div className="w-1/2 flex justify-center items-center">
-   {currentTurn === sessionId && <Dice />}
-  </div>
-  <div className="w-1/2 flex justify-center items-center">
-    <ShowLog />
-  </div>
-</div>
+            <div className="w-1/2 flex justify-center items-center">
+            {currentTurn === sessionId && <Dice />}
+            </div>
+          </div>
 
         </div>
 
