@@ -12,11 +12,11 @@ import {useSelector, shallowEqual} from "react-redux";
 import {useDispatch} from 'react-redux';
 
 
-export function Square() {
-    return (
-        <div className={"h-20 w-20 bg-amber-500 rounded-xl"}/>
-    )
-}
+// export function Square() {
+//     return (
+//         <div className={"h-20 w-20 bg-amber-500 rounded-xl"}/>
+//     )
+// }
 
 function getCookie(name) {
     let cookieValue = null;
@@ -81,8 +81,10 @@ export default function Game() {
 
     const [allPlayers, setAllPlayers] = useState([]);
 
-    const [numberOfSquares, setNumberOfSquares] = useState(5);
-    const [numberOfColumns] = useState(8);
+    const [numberOfSquares] = useState(5);
+    const [numberOfColumns, setNumberOfColumns] = useState(0);
+    const [squareSize, setSquareSize] = useState(0);
+
     const [currentTurn, setCurrentTurn] = useState("");
 
     const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -257,6 +259,14 @@ export default function Game() {
         // setWinAmt(data.winning_amt);
 
         setNumFields(data.number_of_rounds);
+
+        const numCols = Math.round(Math.floor((data.number_of_rounds - 6) / 2));
+
+        setNumberOfColumns(numCols);
+
+        setSquareSize(Math.round(Math.floor(1000 / numCols)));
+
+
         setReward(data.reward_per_round);
         
 
@@ -293,7 +303,9 @@ export default function Game() {
             const data = await response.json();
             if (data.success === "Left the room and room has been deleted" || data.success === "Left the room") { 
               console.log("Leaving room and redirecting to homepage");
-              await switchTurn();
+              if (currentTurn == sessionId) {
+                await switchTurn();                
+              }
               navigate(`/`);
             } else {
               console.log('Error after navigate')
@@ -465,7 +477,7 @@ export default function Game() {
       
       const SquareTransparent = () => {
         return (
-          <div className={"h-20 w-20 bg-transparent rounded-xl"}></div>
+          <div className={"h-20 w-20 bg-transparent rounded-xl"} style={{ height: `${squareSize}px`, width: `${squareSize}px` }}></div>
         )
       };
       
@@ -719,7 +731,7 @@ const Figurine = ({ color }) => (
 
 const Square = ({ index, children }) => {
   return (
-    <div className="h-20 w-20 bg-gradient-to-br from-amber-700 via-orange-300 to-rose-800 rounded-xl flex items-center justify-center">
+    <div className="h-20 w-20 bg-gray-500 rounded-xl flex items-center justify-center" style={{ height: `${squareSize}px`, width: `${squareSize}px` }}>
       {index}
       {children}
     </div>
@@ -729,8 +741,8 @@ const Square = ({ index, children }) => {
 const SquareWithImage = ({ index, imageUrl, children }) => {
   return (
     <div
-      className={"h-20 w-20 bg-gradient-to-br from-amber-700 via-orange-300 to-rose-800 rounded-xl flex items-center justify-center"}
-      style={{ backgroundImage: `url(${imageUrl})`, backgroundSize: "cover" }}
+      className={"h-20 w-20 bg-gradient-to-r from-gray-800 via-gray-900 to-black rounded-xl flex items-center justify-center"}
+      style={{ backgroundImage: `url(${imageUrl})`, backgroundSize: "cover", height: `${squareSize}px`, width: `${squareSize}px`}}
     >
       {index}
       {children}
@@ -986,7 +998,7 @@ useEffect(() => {
       updatePlayersData();
       updateTurn();
     }
-  }, 100000);
+  }, 1000);
   return () => clearInterval(interval);
 }, []);
 
@@ -1230,7 +1242,7 @@ useEffect(() => {
 
 
     return (
-      <div className={"flex flex-row min-h-screen w-screen bg-gradient-to-br from-sky-900 via-violet-600 to-amber-200"}>
+      <div className={"flex flex-row min-h-screen w-screen"}>
         <ShowTopDetails/>
         <ShowBottomDetails/>
 
@@ -1238,33 +1250,36 @@ useEffect(() => {
 
         {showShopModal ? generateShopItemsModal() : null}
 
-        <div className="flex-1 m-4 mt-16">
-          {/* Your game board code here */}
-          <SquareBoard
-                    numberOfRows={numberOfSquares}
-                    numberOfColumns={numberOfColumns}
-                    card1Img={card1Img}
-                    card1pos={card1pos}
-                    card2Img={card2Img}
-                    card2pos={card2pos}
-                    card3Img={card3Img}
-                    card3pos={card3pos}
-                    card4Img={card4Img}
-                    card4pos={card4pos}
-                    card5Img={card5Img}
-                    card5pos={card5pos}
-                    shopImg={shopImg}
-                    shopPos={shopPos}
-                  />
-        </div>
-    
+        <div className="flex-1 m-4 mt-16 relative">
+          <div className="board-container">
+            <SquareBoard
+              numberOfRows={numberOfSquares}
+              numberOfColumns={numberOfColumns}
+              card1Img={card1Img}
+              card1pos={card1pos}
+              card2Img={card2Img}
+              card2pos={card2pos}
+              card3Img={card3Img}
+              card3pos={card3pos}
+              card4Img={card4Img}
+              card4pos={card4pos}
+              card5Img={card5Img}
+              card5pos={card5pos}
+              shopImg={shopImg}
+              shopPos={shopPos}
+            />
+          </div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <Dice />
+          </div>
+      </div>
         
 
         <div className="w-1/5 p-4 mt-16">
           <div className="flex flex-wrap -mx-4">
             {allPlayers.map((player) => (
               <div className="px-4 mb-4">
-                <div className={`bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg ${currentTurn === player.session_id ? 'border-2 border-gradient-to-r from-red-400 to-yellow-500' : 'border-2 border-gray-800'}`}>
+                <div className={`bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg ${currentTurn === player.session_id ? 'border-2 border-blue-700' : 'border-2 border-gray-800'}`}>
                   <div className="flex items-center justify-between mb-2">
                     <h2 className="text-xl font-bold">{player.player_name}</h2>
                     <div className="inline-block ml-2"><Figurine color={player.color} /></div>
@@ -1276,11 +1291,11 @@ useEffect(() => {
               </div>
             ))}
           </div>
-          <div className="h-1/2 flex flex-wrap justify-between items-start">
+          {/* <div className="h-1/2 flex flex-wrap justify-between items-start">
             <div className="w-1/2 flex justify-center items-center">
             {currentTurn === sessionId && <Dice />}
             </div>
-          </div>
+          </div> */}
 
         </div>
 
