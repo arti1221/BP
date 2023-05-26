@@ -13,6 +13,10 @@ export const getDefaultGlobalStructure = () => {
         lastRolled:null,
         isRolling:false,
         showShopModal:false,
+        winner:"",
+        winningAmt:0,
+        wintype1:false,
+        wintype2:false,
     }
 }
 

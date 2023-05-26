@@ -7,10 +7,10 @@ export default function Help() { // todo add props as in CreateRoom
 
     // constantes
     const [labelToShow, setLabelToShow] = useState("Help Menu");
-    const [winStrat1] = useState("Number of different cards");
+    const [winStrat1] = useState("Number of items");
     const [winStrat2] = useState("Inventory value");
     const [reset] = useState("User resets on start");
-    const [notReset] = useState("Free card");
+    const [notReset] = useState("Free field");
     // help
     const [gameHelpPressed, setGameHelpPressed] = useState(false);
     const [templateHelpPressed, setTemplateHelpPressed] = useState(false);
@@ -155,7 +155,7 @@ export default function Help() { // todo add props as in CreateRoom
 
                 <div>
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 inline-block text-center">
-                        Move forward card:
+                        Move forward field:
                     </span>
                 </div>
 
@@ -179,7 +179,7 @@ export default function Help() { // todo add props as in CreateRoom
 
                 <div>
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 inline-block text-center">
-                        Move backwards card:
+                        Move backwards field:
                     </span>
                 </div>
 
@@ -203,13 +203,13 @@ export default function Help() { // todo add props as in CreateRoom
 
                 <div>                    
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 inline-block text-center">
-                        Reset to start card:
+                        Reset to start field:
                     </span>
                 </div>
 
                 <div>                    
                     <span class="bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300 inline-block text-center">
-                        Defines whether the player gets restarted to start or continues without any changes (free card).
+                        Defines whether the player gets restarted to start or continues without any changes (free field).
                     </span>
                 </div>
 
@@ -227,7 +227,7 @@ export default function Help() { // todo add props as in CreateRoom
                 
                 <div>                    
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 inline-block text-center">
-                        Rounds stop card:
+                        Rounds stop field:
                     </span>
                 </div>
 
@@ -251,7 +251,7 @@ export default function Help() { // todo add props as in CreateRoom
 
                 <div>                    
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 inline-block text-center">
-                        Win/Lose money card:
+                        Win/Lose money field:
                     </span>
                 </div>
 
@@ -430,7 +430,7 @@ export default function Help() { // todo add props as in CreateRoom
 
                 <div>
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 inline-block text-center">
-                        Move forward card settings:
+                        Move forward field settings:
                     </span>
                 </div>
 
@@ -454,7 +454,7 @@ export default function Help() { // todo add props as in CreateRoom
 
                 <div>
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 inline-block text-center">
-                        Move backwards card settings: 
+                        Move backwards field settings: 
                     </span>
                 </div>
 
@@ -478,7 +478,7 @@ export default function Help() { // todo add props as in CreateRoom
 
                 <div>                    
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 inline-block text-center">
-                        Reset to start card settings:
+                        Reset to start field settings:
                     </span>
                 </div>
 
@@ -502,7 +502,7 @@ export default function Help() { // todo add props as in CreateRoom
                 
                 <div>                    
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 inline-block text-center">
-                        Rounds stop card settings:
+                        Rounds stop field settings:
                     </span>
                 </div>
 
@@ -526,7 +526,7 @@ export default function Help() { // todo add props as in CreateRoom
 
                 <div>                    
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 inline-block text-center">
-                        Win/Lose money card settings:
+                        Win/Lose money field settings:
                     </span>
                 </div>
 

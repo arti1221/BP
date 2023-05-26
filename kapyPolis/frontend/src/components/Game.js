@@ -7,16 +7,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FaSpinner } from "react-icons/fa";
 import classNames from "classnames";
 
-import {SET_NUMBER_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_IS_ROLLING, SET_SHOW_SHOP} from '../redux/actions/action'
+import {SET_NUMBER_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_IS_ROLLING, SET_SHOW_SHOP, SET_WINNER, SET_WIN_AMT, SET_WIN_TYPE1, SET_WIN_TYPE2} from '../redux/actions/action'
 import {useSelector, shallowEqual} from "react-redux"; 
 import {useDispatch} from 'react-redux';
 
-
-// export function Square() {
-//     return (
-//         <div className={"h-20 w-20 bg-amber-500 rounded-xl"}/>
-//     )
-// }
 
 function getCookie(name) {
     let cookieValue = null;
@@ -123,14 +117,21 @@ export default function Game() {
 
     const [roomId, setRoomId] = useState(null);
 
+    const [winningGoal, setWinningGoal] = useState("");
+    const [winningCondMet, setWinningCondMet] = useState(false);
+
     //
     const dispatch = useDispatch();
-    const [numberRolled, hasRolls, firstRoll, secondRoll, rolling, showShopModal] = useSelector((state) => [state.global.numberRolled,
+    const [numberRolled, hasRolls, firstRoll, secondRoll, rolling, showShopModal, winner, winningAmt, wintype1, wintype2] = useSelector((state) => [state.global.numberRolled,
       state.global.hasRolls,
       state.global.firstRoll,
       state.global.secondRoll,
       state.global.isRolling,
       state.global.showShopModal,
+      state.global.winner,
+      state.global.winningAmt,
+      state.global.wintype1,
+      state.global.wintype2,
     ], shallowEqual);
     
     // inventory
@@ -253,10 +254,9 @@ export default function Game() {
 
         setShopImg(data.shop_image);
         
-        // console.log("win1, win2", data.winning_pos1, data.winning_pos2);
-        // setWin1(data.winning_pos1);
-        // setWin2(data.winning_pos2);
-        // setWinAmt(data.winning_amt);
+        dispatch({type: SET_WIN_AMT, value: data.winning_amt});
+        console.log("dat w a", data.winning_amt);
+        console.log("wa", winningAmt);
 
         setNumFields(data.number_of_rounds);
 
@@ -268,8 +268,15 @@ export default function Game() {
 
 
         setReward(data.reward_per_round);
+        console.log("temp details fetch");
+        if (data.winning_pos1) {
+          setWinningGoal("Num. Items");
+          dispatch({type: SET_WIN_TYPE1, value: true});
+        } else {
+          setWinningGoal("Inv. value");
+          dispatch({type: SET_WIN_TYPE2, value: true});
+        }
         
-
         const items = data.shop_items.map((item) => {
           return new ShopItem(
             item.name,
@@ -355,9 +362,12 @@ export default function Game() {
       useEffect(() => {
       }, [showModal]);
 
+      useEffect(() => {
+        console.log("waaaa", winningAmt, wintype1, wintype2, winner);
+      }, [winningAmt, wintype1, wintype2, winner]);
 
+      
     const ShowLog = () => {
-      console.log("showing log");
       return (
         <div className="h-64 overflow-y-scroll bg-gradient-to-r from-gray-800 via-gray-900 to-black" style={{ width: '400px' }}>
           <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white px-4 py-2 rounded-lg border-2 border-gray-800 mb-2">
@@ -390,7 +400,6 @@ export default function Game() {
      
 
     const showInventory = () => {
-      console.log("showing inventory");
       return (
         <div className={`fixed z-50 inset-0 overflow-y-auto ${showModal ? '' : 'hidden'}`}>
           <div className="flex items-center justify-center min-h-screen">
@@ -421,9 +430,7 @@ export default function Game() {
       );
     };
     
-    const showShopItems = () => {
 
-    }
 
     const ShowTopDetails = () => {
       return (
@@ -451,6 +458,9 @@ export default function Game() {
     
             <span className="bg-gray-100 text-gray-700 font-bold py-1 px-2 rounded-lg mr-4">
               Balance: {balance}
+            </span>
+            <span className="bg-gray-100 text-gray-700 font-bold py-1 px-2 rounded-lg mr-4">
+              Winning type: {winningGoal} - {winningAmt}
             </span>
           </div>
           
@@ -507,7 +517,6 @@ export default function Game() {
           squares[i][0] = counter++;
         }
       
-        // console.log("card positions: ", card1pos, card2pos, card3pos, card4pos, card5pos, shopPos);
 
         return (
           <div className={"flex flex-col gap-4"}>
@@ -520,7 +529,7 @@ export default function Game() {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card1Img} />;
                     } else if (value === card2pos) {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card2Img} />;
-                    } else if (value === card3pos) {
+                    } else if (card3Reset != false && value === card3pos) {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card3Img} />;
                     } else if (value === card4pos) {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card4Img} />;
@@ -565,7 +574,6 @@ const Dice = () => {
       setTimeout(() => {
           dispatch({type: SET_IS_ROLLING, value: false});
           const newValue = Math.floor(Math.random() * 6) + 1;
-          console.log(newValue);
           dispatch({type: SET_NUMBER_ROLLED, value: newValue});
           if (firstRoll && secondRoll) {
             dispatch({type: SET_FIRST_ROLL, value: false});
@@ -587,8 +595,6 @@ const Dice = () => {
 
 
   useEffect( () => {
-    console.log(currentTurn);
-    console.log("ze", currentTurn, sessionId);
     getLogData();
   }, [currentTurn])
 
@@ -647,16 +653,6 @@ const Item = ({ name, price, imageUrl }) => {
 };
 
 
-const playerItemList = [
-  new PlayerItem('Player 1', 'http://127.0.0.1:8000/media/shopitem/feecb19b-0fbf-4329-a28e-5983cae0841f.png', 10.0),
-  new PlayerItem('Player 2', 'http://127.0.0.1:8000/media/shopitem/8c605682-b69c-4670-9500-b8589874d323.png', 15.0),
-  new PlayerItem('Player 3', 'http://127.0.0.1:8000/media/shopitem/721f41e2-6f6f-43f3-9d19-585cab45dd82.png', 20.0),
-  new PlayerItem('Player 4', 'http://127.0.0.1:8000/media/shopitem/721f41e2-6f6f-43f3-9d19-585cab45dd82.png', 24.0),
-  new PlayerItem('Player 5', 'http://127.0.0.1:8000/media/shopitem/721f41e2-6f6f-43f3-9d19-585cab45dd82.png', 25.0),
-  new PlayerItem('Player 66', 'http://127.0.0.1:8000/media/shopitem/721f41e2-6f6f-43f3-9d19-585cab45dd82.png', 8.0),
-  new PlayerItem('Player 734', 'http://127.0.0.1:8000/media/shopitem/721f41e2-6f6f-43f3-9d19-585cab45dd82.png', 19.0),
-];
-
 const PlayerItemList = () => {
   if (inventory.length == 0) {
     return <p className="text-gray-700">You have no items to display currently</p>;
@@ -683,6 +679,7 @@ const ShopItemList = () => {
 
     const newPlayer = {...allPlayers[playerIndex]};
     newPlayer.diff_items_amt += 1;
+    newPlayer.inventory_value += item.price;
     newPlayer.balance = balance - item.price;
     
     const currentDate = new Date();
@@ -823,7 +820,6 @@ const switchTurn = async () => {
     const nextPlayer = allPlayers[nextIndex];
     const nextTurn = nextPlayer.session_id;
 
-    console.log("next turn", nextTurn);
 
     const currentDate = new Date();
     const dateString = `${currentDate.getMonth()+1}/${currentDate.getDate()}/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
@@ -856,7 +852,6 @@ const switchTurn = async () => {
 
 const updatePlayer = async (player) => {
   
-  console.log("updating player", player);
       const requestOptions = {
         method: 'POST',
         headers: { 
@@ -904,6 +899,8 @@ const updatePlayersData = () => {
     .then(response => response.json())
     .then(data => {
       setAllPlayers(updatePlayerDetails(data.players));
+      console.log("data pl: ", data.players);
+      checkWinningConditionsMet(data.players); // TODO
     })
     .catch(error => {
       console.error(error);
@@ -964,10 +961,7 @@ const getLogData = async () => {
           item.text,
         );
       });
-      console.log("logs", items);
       if (items.length > log.length) {
-        console.log("il", items.length, log.length);
-        console.log("som tu zos logmi");
         setLog(items);
       }
   }) // log data
@@ -992,7 +986,6 @@ const updateTurn = async () => {
 };
 
 useEffect(() => {
-  console.log("has? ", hasRolls);
   const interval = setInterval(() => {
     if (!rolling) { // todo shop
       updatePlayersData();
@@ -1000,12 +993,11 @@ useEffect(() => {
     }
   }, 1000);
   return () => clearInterval(interval);
-}, []);
+}, [winningAmt, wintype1, wintype2]);
 
 
 
 const resetStatesToDefault = () => {
-  console.log("reseting data to default.");
   // dispatch({type: SET_NUMBER_ROLLED, value: 1}); // causes to rerender the dice and sets the number to 1.
   dispatch({type: SET_HAS_ROLLS, value: true});
   dispatch({type: SET_FIRST_ROLL, value: true});
@@ -1045,7 +1037,6 @@ const handleNewPosition = async (amtToMove) => {
   const newPos = newPlayer.position + amtToMove; // this number overflows the amt of fields, handeled separately in next methods
 
   if (newPos >= numFields) {
-    console.log("passed round");
 
     const newRound = "Player has passed the round, incrementing balance with amount " + reward;
     await updateLog(dateString, newRound);
@@ -1060,24 +1051,19 @@ const handleNewPosition = async (amtToMove) => {
 
 // reusable for cards as well as the round end
 const incrementPlayersBalance = (player, amt) => {
-  console.log(player.balance, amt, "player bal and amt");
   player.balance += parseInt(amt);
-  console.log("Balance incremented with amount: ", amt);
 }
 
 const decrementPlayersBalance = (player, amt) => {
-  console.log(player.balance, amt, "player bal and amt dec");
   const newBal = player.balance - amt;
   if (newBal < 0) {
     player.balance = 0;
   } else {
     player.balance = parseInt(newBal);
   }
-  console.log("bal decremented");
 }
 
 const handleCards = async (player, position) => {
-  console.log("position: ", position);
 
   const currentDate = new Date();
   const dateString = `${currentDate.getMonth()+1}/${currentDate.getDate()}/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
@@ -1091,7 +1077,6 @@ const handleCards = async (player, position) => {
     const card1Passed = playerPrefix + " landed on a special field. He's being moved additionally + " + amtToMove;
     await updateLog(dateString, card1Passed);
 
-    console.log("nes pos", newPos);
     if (posToMove >= numFields) {
       const newRound = "Player has passed the round, incrementing balance with amount " + reward;
       await updateLog(dateString, newRound);
@@ -1107,7 +1092,7 @@ const handleCards = async (player, position) => {
     await updateLog(dateString, card2Passed);
 
     player.position = newPos;
-  } else if (card3pos != null && card3pos == position) { // reset to start, TODO check whether it is set or not.
+  } else if (card3pos != null && !card3Reset && card3pos == position) { // reset to start, TODO check whether it is set or not.
     const card3Passed = playerPrefix + " landed on a special field. Reseting to start.";
     await updateLog(dateString, card3Passed);
 
@@ -1132,7 +1117,6 @@ const handleCards = async (player, position) => {
 
     player.position = position % numFields;
   } else if (shopPos == position) {
-    console.log("SHOWING SHOP");
     const shopPassed = playerPrefix + " has entered the shop.";
     await updateLog(dateString, shopPassed);
 
@@ -1142,7 +1126,6 @@ const handleCards = async (player, position) => {
     // todo await close
   } else { // normal field without any "card"
     player.position = position % numFields;
-    console.log("normal pos");
     const currentDate = new Date();
     const dateString = `${currentDate.getMonth()+1}/${currentDate.getDate()}/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
     const text = "player with color " + player.color + " has rolled " + numberRolled;
@@ -1150,11 +1133,31 @@ const handleCards = async (player, position) => {
   }
 
 
-  switchTurn();
+  switchTurn(player);
   await updatePlayer(player);
   resetStatesToDefault();
-  console.log("new player position to be set and turn switched", position);
 }
+
+const checkWinningConditionsMet = (players) => {
+  console.log("wa methd", winningAmt, players);
+  for (let i = 0; i < players.length; i++) {
+    const player = players[i];
+    console.log("mp", player, wintype1, wintype2);
+    if (wintype1) {
+      if (player.diff_items_amt >= winningAmt) {
+        console.log("som tu1");
+        dispatch({type: SET_WINNER, value: player.player_name});
+      }
+    } else {
+      console.log("gotcha gere", player.inventory_value, winningAmt);
+      if (player.inventory_value >= winningAmt) {
+        console.log("winning in method", winningAmt);
+        dispatch({type: SET_WINNER, value: player.player_name});
+      }
+    }
+  }
+}
+console.log(winner);
 
 const generateCard1Rule = () => {
   const range = card1Max - card1Min;
@@ -1177,13 +1180,11 @@ const generateCard5Balance = (number1, number2) => {
 
 // todo fix items
 const getRandomItemsFromList = (items) => {
-  console.log("EE", items);
   if (items.length > 0) {
     const playerItems = items.map((shopItem) => {
       const randomPrice = Math.floor(Math.random() * (shopItem.price_max - shopItem.price + 1)) + shopItem.price;
       return new PlayerItem(shopItem.name, shopItem.image, randomPrice);
     });
-    console.log("p it", playerItems);
     return playerItems;
   }
   return [];
@@ -1191,7 +1192,6 @@ const getRandomItemsFromList = (items) => {
 
 // TODO pass player here as param
 const generateShopItemsModal = () => {
-  console.log("showing SHOP");
 
   if (shopItemList.length == 0) {
     return;
@@ -1230,10 +1230,8 @@ const generateShopItemsModal = () => {
 }
 
 useEffect(() => {
-  console.log("has no rolls left");
   if (currentTurn == sessionId) {
     if (shopItems.length > 0) { // initializes the list whenever the turn changes for the player
-      console.log("been here once");
       getRandomItemsFromList(shopItems);
     }
     handleNoRolls();

@@ -301,7 +301,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                         class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
                         onChange={handleSelection}
                         >
-                    <option selected value="first">Number of diff cards</option>
+                    <option selected value="first">Number of items</option>
                     <option value="second">Inventory value </option>
                 </select>
             </div>
@@ -326,7 +326,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card1-rule" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Move forward card Min
+                    Move forward field Min
                 </label>
                 <input type="number" 
                         id="card1-rule" 
@@ -343,7 +343,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card1-max" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Move forward card Max
+                    Move forward field Max
                 </label>
                 <input type="number" 
                         id="card1-max" 
@@ -356,7 +356,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
             </div>
             <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card1-image">Move forward card image</label>
+                       for="card1-image">Move forward field image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card1-image" 
                        type="file"
@@ -371,7 +371,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card2-rule" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Move backwards card Min
+                    Move backwards field Min
                 </label>
                 <input type="number" 
                         id="card2-rule" 
@@ -388,7 +388,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card2-max" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Move backwards card Max
+                    Move backwards field Max
                 </label>
                 <input type="number" 
                         id="card2-max" 
@@ -401,7 +401,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
             </div>
             <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card2-image">Move backwards card image</label>
+                       for="card2-image">Move backwards field image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card2-image" 
                        type="file"
@@ -415,7 +415,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card3-rule" 
                     class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                     >
-                    Reset to start card
+                    Reset to start field
                 </label>
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" 
@@ -432,7 +432,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
             </div>
             <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card3-image">Reset to start card image</label>
+                       for="card3-image">Reset to start field image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card3-image" 
                        type="file"
@@ -446,7 +446,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card4-rule" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Rounds stop card
+                    Rounds stop field
                 </label>
                 <input type="number" 
                         id="card4-rule" 
@@ -459,7 +459,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
             </div>
             <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card4-image">Upload Rounds stop card image</label>
+                       for="card4-image">Upload Rounds stop field image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card4-image" 
                        type="file"
@@ -474,7 +474,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card5-rule" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Win/Lose money card Min
+                    Win/Lose money field Min
                 </label>
                 <input type="number" 
                         id="card5-rule" 
@@ -491,7 +491,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
                 <label for="card5-max" 
                        class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white"
                        >
-                    Win/Lose money card Max
+                    Win/Lose money field Max
                 </label>
                 <input type="number" 
                         id="card5-max" 
@@ -504,7 +504,7 @@ export default function CreateTemplate(props) { // todo add props as in CreateRo
             </div>
             <div className='flex flex-col gap-4'>
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" 
-                       for="card5-image">Upload Win/Lose money card image</label>
+                       for="card5-image">Upload Win/Lose money field image</label>
                 <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" 
                        id="card5-image" 
                        type="file"
