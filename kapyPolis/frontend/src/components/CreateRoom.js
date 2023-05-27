@@ -91,7 +91,7 @@ export default function CreateRoom(props) {
 
       while (randomNumbers.length < numNumbers) {
         console.log("ggg");
-        const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+        const randomNumber = Math.floor(Math.random() * (max - min)) + min;
         console.log(randomNumber);
         if (!randomNumbers.includes(randomNumber)) {
           randomNumbers.push(randomNumber);
