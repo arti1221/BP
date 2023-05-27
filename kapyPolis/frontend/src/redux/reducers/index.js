@@ -17,6 +17,7 @@ export const getDefaultGlobalStructure = () => {
         winningAmt:0,
         wintype1:false,
         wintype2:false,
+        hasWinner:false,
     }
 }
 

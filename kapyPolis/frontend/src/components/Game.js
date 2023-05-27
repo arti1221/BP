@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FaSpinner } from "react-icons/fa";
 import classNames from "classnames";
 
-import {SET_NUMBER_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_IS_ROLLING, SET_SHOW_SHOP, SET_WINNER, SET_WIN_AMT, SET_WIN_TYPE1, SET_WIN_TYPE2} from '../redux/actions/action'
+import {SET_NUMBER_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_IS_ROLLING, SET_SHOW_SHOP, SET_WINNER, SET_WIN_AMT, SET_WIN_TYPE1, SET_WIN_TYPE2, SET_HAS_WINNER} from '../redux/actions/action'
 import {useSelector, shallowEqual} from "react-redux"; 
 import {useDispatch} from 'react-redux';
 
@@ -120,9 +120,11 @@ export default function Game() {
     const [winningGoal, setWinningGoal] = useState("");
     const [winningCondMet, setWinningCondMet] = useState(false);
 
+    const [dicePos, setDicePos] = useState(100);
+
     //
     const dispatch = useDispatch();
-    const [numberRolled, hasRolls, firstRoll, secondRoll, rolling, showShopModal, winner, winningAmt, wintype1, wintype2] = useSelector((state) => [state.global.numberRolled,
+    const [numberRolled, hasRolls, firstRoll, secondRoll, rolling, showShopModal, winner, winningAmt, wintype1, wintype2, hasWinner] = useSelector((state) => [state.global.numberRolled,
       state.global.hasRolls,
       state.global.firstRoll,
       state.global.secondRoll,
@@ -132,6 +134,7 @@ export default function Game() {
       state.global.winningAmt,
       state.global.wintype1,
       state.global.wintype2,
+      state.global.hasWinner,
     ], shallowEqual);
     
     // inventory
@@ -255,8 +258,6 @@ export default function Game() {
         setShopImg(data.shop_image);
         
         dispatch({type: SET_WIN_AMT, value: data.winning_amt});
-        console.log("dat w a", data.winning_amt);
-        console.log("wa", winningAmt);
 
         setNumFields(data.number_of_rounds);
 
@@ -264,11 +265,13 @@ export default function Game() {
 
         setNumberOfColumns(numCols);
 
-        setSquareSize(Math.round(Math.floor(1000 / numCols)));
+        let size = Math.round(Math.floor(1000 / numCols));
+        setSquareSize(size);
+
+        setDicePos(size * (numCols / 2) + 100/numCols);
 
 
         setReward(data.reward_per_round);
-        console.log("temp details fetch");
         if (data.winning_pos1) {
           setWinningGoal("Num. Items");
           dispatch({type: SET_WIN_TYPE1, value: true});
@@ -363,7 +366,6 @@ export default function Game() {
       }, [showModal]);
 
       useEffect(() => {
-        console.log("waaaa", winningAmt, wintype1, wintype2, winner);
       }, [winningAmt, wintype1, wintype2, winner]);
 
       
@@ -430,7 +432,36 @@ export default function Game() {
       );
     };
     
-
+    const showWinner = () => {
+      return (
+        <div className={`fixed z-50 inset-0 overflow-y-auto`}>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="fixed inset-0 transition-opacity">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:max-w-lg" style={{marginTop: '15vh'}}>
+              <div className="bg-gradient-to-r from-gray-500 to-white p-4">
+                <div className="pb-4 sm:pb-6">
+                  <h2 className="text-xl font-bold text-gray-900">Game Ended</h2>
+                </div>
+                <div className="pt-4 sm:pt-6">
+                  {/* <p className="text-gray-700">You have no items to display currently</p> */}
+                  <p className="text-gray-700">Player with name {winner} has won the game.</p>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-gray-500 to-white px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={leaveGame}>
+                  Leave Game
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
 
     const ShowTopDetails = () => {
       return (
@@ -899,8 +930,7 @@ const updatePlayersData = () => {
     .then(response => response.json())
     .then(data => {
       setAllPlayers(updatePlayerDetails(data.players));
-      console.log("data pl: ", data.players);
-      checkWinningConditionsMet(data.players); // TODO
+      checkWinningConditionsMet(data.players);
     })
     .catch(error => {
       console.error(error);
@@ -1139,25 +1169,21 @@ const handleCards = async (player, position) => {
 }
 
 const checkWinningConditionsMet = (players) => {
-  console.log("wa methd", winningAmt, players);
   for (let i = 0; i < players.length; i++) {
     const player = players[i];
-    console.log("mp", player, wintype1, wintype2);
     if (wintype1) {
       if (player.diff_items_amt >= winningAmt) {
-        console.log("som tu1");
         dispatch({type: SET_WINNER, value: player.player_name});
+        dispatch({type: SET_HAS_WINNER, value: true});
       }
     } else {
-      console.log("gotcha gere", player.inventory_value, winningAmt);
       if (player.inventory_value >= winningAmt) {
-        console.log("winning in method", winningAmt);
         dispatch({type: SET_WINNER, value: player.player_name});
+        dispatch({type: SET_HAS_WINNER, value: true});
       }
     }
   }
 }
-console.log(winner);
 
 const generateCard1Rule = () => {
   const range = card1Max - card1Min;
@@ -1248,6 +1274,8 @@ useEffect(() => {
 
         {showShopModal ? generateShopItemsModal() : null}
 
+        {hasWinner ? showWinner() : null}
+
         <div className="flex-1 m-4 mt-16 relative">
           <div className="board-container">
             <SquareBoard
@@ -1267,9 +1295,10 @@ useEffect(() => {
               shopPos={shopPos}
             />
           </div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <Dice />
-          </div>
+          <div className="absolute" style={{ top: squareSize * 2 - 100/(numberOfColumns / 4), left: dicePos }}>
+          <Dice />
+        </div>
+
       </div>
         
 

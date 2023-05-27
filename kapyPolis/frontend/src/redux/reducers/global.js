@@ -1,4 +1,4 @@
-import {SET_ENTERED, SET_LOGGED_IN, SET_NAME, SET_NUMBER_ROLLED, SET_HAS_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_LAST_ROLLED, SET_IS_ROLLING, SET_SHOW_SHOP, SET_WINNER, SET_WIN_AMT, SET_WIN_TYPE1, SET_WIN_TYPE2} from '../actions/action'
+import {SET_ENTERED, SET_LOGGED_IN, SET_NAME, SET_NUMBER_ROLLED, SET_HAS_ROLLED, SET_HAS_ROLLS, SET_FIRST_ROLL, SET_SECOND_ROLL, SET_LAST_ROLLED, SET_IS_ROLLING, SET_SHOW_SHOP, SET_WINNER, SET_WIN_AMT, SET_WIN_TYPE1, SET_WIN_TYPE2, SET_HAS_WINNER} from '../actions/action'
 
 // reducer that handles events defined in actions. In the case that 2 reducers are created and same event is passed - both 
 // reducers handle the event!
@@ -64,6 +64,10 @@ export function globalReducer(state, action) {
         case SET_WIN_TYPE2:
             return {
                 ...state, wintype2:action.value
+            }
+        case SET_HAS_WINNER:
+            return {
+                ...state, hasWinner:action.value
             }
         default:
             return state

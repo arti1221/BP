@@ -14,3 +14,4 @@ export const SET_WINNER = "SET_WINNER";
 export const SET_WIN_AMT = "SET_WIN_AMT";
 export const SET_WIN_TYPE1 = "SET_WIN_TYPE1";
 export const SET_WIN_TYPE2 = "SET_WIN_TYPE2";
+export const SET_HAS_WINNER = "SET_HAS_WINNER";
