@@ -34,7 +34,10 @@ class CreateRoomView(APIView):
 
         # Set CSRF token in response
         response = Response()
+        print("s", response)
         response['X-CSRFToken'] = get_token(request)
+        print("ttt", get_token(request))
+        print(response)
 
         serializer = self.serializer_class(data=request.data)
         print("S", serializer.is_valid())

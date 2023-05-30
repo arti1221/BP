@@ -33,6 +33,7 @@ export default function Room() {
     const [roomId, setRoomId] = useState(null);
     const [selectedTemplate, setSelectedTemplate] = useState("")
     const navigate = useNavigate();
+    let waitingLabel = "Waiting for game to Start...";
 
     const getRoomDetails = () => { 
         if (!roomCode) {
@@ -348,10 +349,13 @@ export default function Room() {
             </div>
             
             {/* Number of players in the room */}
-            <div className='flex justify-center'> 
+            <div className='flex flex-col justify-center'> 
               <h6 class="mt-0 mb-2 text-5xl font-medium leading-tight text-white font-sans content-center">
                   Current number of players: {currentNumberOfPlayers} / {maxNumberOfPlayers}
               </h6>
+              <p class="mt-0 mb-2 text-2xl font-medium leading-tight text-white font-sans text-center">
+                {isHost ? null : waitingLabel}
+              </p>
             </div>
 
         {/* Update Max Players Button */}

@@ -232,20 +232,16 @@ export default function EditTemplate() {
 
     const getSelection = () => {
         return (
-            <div className='flex flex-row justify-center'>  
+            <div className='flex flex-row justify-center'>
             <div className='flex flex-col gap-4'>
-              <label for="strategy" 
-                   class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a template</label>
-              <select id="strategy" 
-                      class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
-                      onChange={handleSelection}
-                      >
-                  {templateNames.map(name => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
-            </div> 
-          </div> 
+              <label for="strategy" class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a template</label>
+              <select id="strategy"                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" onChange={handleSelection}>
+                {templateNames.map(name => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         );
     }
 
@@ -387,7 +383,7 @@ export default function EditTemplate() {
                     <label for="strategy" 
                         class="block mb-0.5 text-sm font-medium text-gray-900 dark:text-white">Choose a win strategy</label>
                     <select id="strategy" 
-                            class="block py-2.5 px-0 w-full text-sm text-gray-500 bg-transparent border-0 border-b-2 border-gray-200 appearance-none dark:text-gray-400 dark:border-gray-700 focus:outline-none focus:ring-0 focus:border-gray-200 peer"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             onChange={handleSelectionGame}
                             onClick={hideDefaultOption}
                             >

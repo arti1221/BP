@@ -141,6 +141,9 @@ export default function Game() {
     const [showModal, setShowModal] = useState(false);
     const [inventory, setInventory] = useState([]);
 
+    const [showSpecialModal, setShowSpecialModal] = useState(false);
+    const [specText, setSpecText] = useState("");
+    
     const [shopItemList, setShopItemList] = useState([]);
 
     const [log, setLog] = useState([]);
@@ -152,6 +155,15 @@ export default function Game() {
     const hidePlayerInventory = () => {
       setShowModal(false);
     };
+
+    const showSpecial = () => {
+      setShowSpecialModal(true);
+    }
+
+    const hideSpecial = () => {
+      setSpecText("");
+      setShowSpecialModal(false);
+    }
 
     const showShopInventory = async () => {
       dispatch({type: SET_SHOW_SHOP, value: true});
@@ -366,6 +378,9 @@ export default function Game() {
       }, [showModal]);
 
       useEffect(() => {
+      }, [showSpecialModal]);
+
+      useEffect(() => {
       }, [winningAmt, wintype1, wintype2, winner]);
 
       
@@ -455,6 +470,37 @@ export default function Game() {
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                   onClick={leaveGame}>
                   Leave Game
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const showSpecialField = () => {
+      return (
+        <div className={`fixed z-50 inset-0 overflow-y-auto ${showSpecialModal ? '' : 'hidden'}`}>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="fixed inset-0 transition-opacity">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:max-w-lg" style={{marginTop: '15vh'}}>
+              <div className="bg-gradient-to-r from-gray-500 to-white p-4">
+                <div className="pb-4 sm:pb-6">
+                  <h2 className="text-xl font-bold text-gray-900">You Landed on a special field</h2>
+                </div>
+                <div className="pt-4 sm:pt-6">
+                  {/* <p className="text-gray-700">You have no items to display currently</p> */}
+                  <p className="text-gray-700">{specText}</p>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-gray-500 to-white px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={hideSpecial}>
+                  close
                 </button>
               </div>
             </div>
@@ -560,8 +606,11 @@ export default function Game() {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card1Img} />;
                     } else if (value === card2pos) {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card2Img} />;
-                    } else if (card3Reset != false && value === card3pos) {
-                      return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card3Img} />;
+                    } else if (value === card3pos) {
+                      if (card3Reset != false) {
+                        return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card3Img} />;
+                      }
+                      return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={false} imageUrl={null} />;
                     } else if (value === card4pos) {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card4Img} />;
                     } else if (value === card5pos) {
@@ -1103,8 +1152,11 @@ const handleCards = async (player, position) => {
     const amtToMove = generateCard1Rule();
     const posToMove = (position + amtToMove);
     const newPos = posToMove % numFields;
+    setShowSpecialModal(true);
 
-    const card1Passed = playerPrefix + " landed on a special field. He's being moved additionally + " + amtToMove;
+    const card1Passed = "Landed on a special field. Being moved additionally + " + amtToMove;
+    setSpecText(card1Passed);
+
     await updateLog(dateString, card1Passed);
 
     if (posToMove >= numFields) {
@@ -1116,33 +1168,41 @@ const handleCards = async (player, position) => {
     player.position = newPos;
   } else if (card2pos == position) {
     const amtToMove = generateCard2Rule();
-    const newPos = (position + amtToMove) % numFields;
+    const newPos = (position - amtToMove) % numFields;
+    setShowSpecialModal(true);
 
-    const card2Passed = playerPrefix + " landed on a special field. He's being moved backwards + " + amtToMove;
+    const card2Passed = "Landed on a special field. Being moved backwards - " + amtToMove;
+    setSpecText(card2Passed);
     await updateLog(dateString, card2Passed);
 
     player.position = newPos;
-  } else if (card3pos != null && !card3Reset && card3pos == position) { // reset to start, TODO check whether it is set or not.
-    const card3Passed = playerPrefix + " landed on a special field. Reseting to start.";
+  } else if (card3pos != null && card3Reset && card3pos == position) { // reset to start, TODO check whether it is set or not.
+    const card3Passed = "Landed on a special field. Reseting to start.";
     await updateLog(dateString, card3Passed);
+    setShowSpecialModal(true);
+    setSpecText(card3Passed);
 
     player.position = 0;
   } else if (card4pos == position) {
     player.rounds_frozen = card4RoundsStop; // todo doriesit
 
-    const card4Passed = playerPrefix + " is being frozen for " + card4RoundsStop + " rounds.";
+    const card4Passed = "Landed on a special field. Being frozen for " + card4RoundsStop + " rounds.";
+    setShowSpecialModal(true);
+    setSpecText(card4Passed);
     await updateLog(dateString, card4Passed);
 
     player.position = position % numFields;
   } else if (card5pos == position) {
     const ballChange = generateCard5Balance(card5Min, card5Max);
+    setShowSpecialModal(true);
     if (ballChange > 0) {
       incrementPlayersBalance(player, ballChange);
     } else {
       decrementPlayersBalance(player, ballChange);
     }
 
-    const card5Passed = playerPrefix + " balance is being changed due to special field with amount " + ballChange;
+    const card5Passed = "Landed on a special field. Balance is being changed with amount " + ballChange;
+    setSpecText(card5Passed);
     await updateLog(dateString, card5Passed);
 
     player.position = position % numFields;
@@ -1271,6 +1331,8 @@ useEffect(() => {
         <ShowBottomDetails/>
 
         {showModal ? showInventory() : null}
+
+        {showSpecialModal ? showSpecialField() : null}
 
         {showShopModal ? generateShopItemsModal() : null}
 
