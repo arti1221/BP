@@ -107,6 +107,12 @@ export default function Game() {
     const [card5Min, setCard5Min] = useState(0);
     const [card5Max, setCard5Max] = useState(0);
 
+    // cards positions
+
+    const [card1List, setCard1List] = useState([]);
+    const [card2List, setCard2List] = useState([]);
+    const [shopList, setShopList] = useState([]);
+
     const [shopName, setShopName] = useState("");
     const [shopImg, setShopImg] = useState("");
     const [shopPos, setShopPos] = useState(0);
@@ -171,6 +177,25 @@ export default function Game() {
 
     const hideShopInventory = () => {
       dispatch({type: SET_SHOW_SHOP, value: false});
+    }
+
+    const getRandomNumbers = async (numOfRounds) => {
+      const min = 1; 
+      const max = numOfRounds; // todo set max based on selected template
+      console.log("amt rounds", max);
+      const numNumbers = ((max - 4) / 2) + 1;
+  
+      const randomNumbers = [];
+  
+      while (randomNumbers.length < numNumbers) {
+        console.log("ggg");
+        const randomNumber = Math.floor(Math.random() * (max - min)) + min;
+        console.log(randomNumber);
+        if (!randomNumbers.includes(randomNumber)) {
+          randomNumbers.push(randomNumber);
+        }
+      }
+      return randomNumbers;
     }
     
     const getRoomDetails = async () => { 
@@ -303,7 +328,59 @@ export default function Game() {
         
         setShopItems(items);
         setShopItemList(getRandomItemsFromList(items));
+
+        // positions:
+        const min = 1; 
+        const max = data.number_of_rounds; // todo set max based on selected template
+        console.log("amt rounds", max);
+        const numNumbers = ((max - 4) / 2) + 4;
+    
+        const randomNumbers = [];
         
+        for (let i = 0; i < max; i += 3) {
+          randomNumbers.push(i - 1);
+        }
+
+        for (let i = 5; i < max; i += 5) {
+          randomNumbers.push(i);
+        }
+
+        // while (randomNumbers.length < numNumbers) {
+        //   console.log("ggg");
+        //   const randomNumber = Math.floor(Math.random() * (max - min)) + min;
+        //   console.log(randomNumber);
+        //   if (!randomNumbers.includes(randomNumber)) {
+        //     randomNumbers.push(randomNumber);
+        //   }
+        // }
+        const lastNums = randomNumbers.slice(-6);
+        console.log("rr numbs", randomNumbers);
+        
+        const card3 = lastNums[0];
+        const card4 = lastNums[1];
+        const card5 = lastNums[2];
+        const shop = [lastNums[3], lastNums[4], lastNums[5]];
+        
+        // helping list
+        const remainingNumbers = randomNumbers.slice(0, -6);
+        let list1 = [];
+        let list2 = [];
+
+        for (let i = 0; i < remainingNumbers.length; i++) {
+          if (i % 2 == 0) {
+            list1.push(remainingNumbers[i]);
+          } else {
+            list2.push(remainingNumbers[i]);
+          }
+        }
+        // const list1 = remainingNumbers.slice(0, Math.ceil(remainingNumbers.length / 2));
+        // const list2 = remainingNumbers.slice(Math.ceil(remainingNumbers.length / 2));
+        setCard1List(list1);
+        setCard2List(list2);
+        setCard3Pos(card3);
+        setCard4Pos(card4);
+        setCard5Pos(card5);
+        setShopList(shop);
         })
         .catch((e) => {
             console.log("error fetching template", e);
@@ -367,6 +444,11 @@ export default function Game() {
       useEffect(() => {
         getRoomDetails();
       }, []);
+
+      useEffect(() => {
+        console.log("list 1 and 2: ", card1List, " and ", card2List);
+        console.log("card 3, 4...,", card3pos, card4pos, card5pos, " sh list ", shopList);
+      }, [card1List, card2List, card3pos, card4pos, card5pos, shopList]);
       
       useEffect(() => {
         if (selectedTemplate) {
@@ -449,7 +531,7 @@ export default function Game() {
     
     const showWinner = () => {
       return (
-        <div className={`fixed z-50 inset-0 overflow-y-auto`}>
+        <div className={`fixed z-50 inset-0 overflow-y-auto ${hasWinner ? '' : 'hidden'}`}>
           <div className="flex items-center justify-center min-h-screen">
             <div className="fixed inset-0 transition-opacity">
               <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
@@ -545,6 +627,25 @@ export default function Game() {
       );
     };
 
+    const ShowTopLeftDetails = () => {
+      const currentPlayer = allPlayers.find(player => player.session_id === currentTurn);
+    
+      return (
+        <div className={"fixed top-[1%] left-[5%] flex flex-row gap-4"}>
+          <div className="flex items-center px-4 py-2 bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white rounded-full">
+            Current turn: {currentPlayer && (
+              <div className="flex items-center justify-between mb-2">
+                <div className="inline-block ml-2">
+                  <Figurine color={currentPlayer.color} />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+    
+
     const ShowBottomDetails = () => {
         return (
           <div className={"fixed bottom-[1%] right-[5%] flex flex-row gap-4"}>
@@ -602,9 +703,9 @@ export default function Game() {
                 {row.map((value, indexCol) => {
                   if (value !== null) {
                     // Check if current value matches any of the cardXpos values
-                    if (value === card1pos) {
+                    if (card1List.includes(value)) {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card1Img} />;
-                    } else if (value === card2pos) {
+                    } else if (card2List.includes(value)) {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card2Img} />;
                     } else if (value === card3pos) {
                       if (card3Reset != false) {
@@ -615,7 +716,7 @@ export default function Game() {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card4Img} />;
                     } else if (value === card5pos) {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={card5Img} />;
-                    } else if (value === shopPos) {
+                    } else if (shopList.includes(value)) {
                       return <SquareF index={value} key={`square-${indexRow}-${indexCol}`} useImage={true} imageUrl={shopImg} />;
                     } else {
                       // If current value doesn't match any of the cardXpos values, render a normal Square
@@ -1148,7 +1249,7 @@ const handleCards = async (player, position) => {
   const dateString = `${currentDate.getMonth()+1}/${currentDate.getDate()}/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`;
   const playerPrefix = "player with color " + player.color;
 
-  if (card1pos == position) { // ok working
+  if (card1List.includes(position)) { // ok working
     const amtToMove = generateCard1Rule();
     const posToMove = (position + amtToMove);
     const newPos = posToMove % numFields;
@@ -1166,7 +1267,7 @@ const handleCards = async (player, position) => {
       incrementPlayersBalance(player, reward);
     }
     player.position = newPos;
-  } else if (card2pos == position) {
+  } else if (card2List.includes(position)) {
     const amtToMove = generateCard2Rule();
     const newPos = (position - amtToMove) % numFields;
     setShowSpecialModal(true);
@@ -1206,7 +1307,7 @@ const handleCards = async (player, position) => {
     await updateLog(dateString, card5Passed);
 
     player.position = position % numFields;
-  } else if (shopPos == position) {
+  } else if (shopList.includes(position)) {
     const shopPassed = playerPrefix + " has entered the shop.";
     await updateLog(dateString, shopPassed);
 
@@ -1329,7 +1430,7 @@ useEffect(() => {
       <div className={"flex flex-row min-h-screen w-screen"}>
         <ShowTopDetails/>
         <ShowBottomDetails/>
-
+        <ShowTopLeftDetails/>
         {showModal ? showInventory() : null}
 
         {showSpecialModal ? showSpecialField() : null}
@@ -1358,7 +1459,7 @@ useEffect(() => {
             />
           </div>
           <div className="absolute" style={{ top: squareSize * 2 - 100/(numberOfColumns / 4), left: dicePos }}>
-          <Dice />
+          {currentTurn === sessionId && <Dice />}
         </div>
 
       </div>
